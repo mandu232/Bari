@@ -1,0 +1,23 @@
+[gd_scene format=3 uid="uid://de2rv5dgrponb"]
+
+[ext_resource type="Script" uid="uid://bsruwgulh4bsr" path="res://scripts/museum/PowerPlant.gd" id="1_2wptf"]
+[ext_resource type="Texture2D" uid="uid://cbous7fnbltat" path="res://AutoLoad/assets/PowerPlant/powerplant_Lv1.png" id="2_yujnv"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_8qlat"]
+size = Vector2(19, 27.375)
+
+[node name="PowerPlant" type="Node2D" unique_id=1611918973]
+z_index = -1
+script = ExtResource("1_2wptf")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=2048847430]
+texture = ExtResource("2_yujnv")
+offset = Vector2(0, -8)
+
+[node name="StaticBody2D" type="StaticBody2D" parent="." unique_id=308902019]
+position = Vector2(0, -8)
+collision_layer = 16
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D" unique_id=242179454]
+position = Vector2(2.5, 0)
+shape = SubResource("RectangleShape2D_8qlat")

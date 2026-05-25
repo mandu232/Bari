@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="BuildableItem" format=3 uid="uid://bph8842hbmr"]
+
+[ext_resource type="Texture2D" uid="uid://d3pkpv8g313tt" path="res://AutoLoad/assets/PowerPlant/powerplant_Lv2.png" id="1_xfwxs"]
+[ext_resource type="PackedScene" uid="uid://c4qtr7nx8otdc" path="res://AutoLoad/scenes/PowerPlant_2.tscn" id="2_0uc8g"]
+[ext_resource type="Script" uid="uid://rfwfdifnaeyn" path="res://scripts/museum/BuildableItem.gd" id="3_ava8p"]
+
+[resource]
+script = ExtResource("3_ava8p")
+item_name = "기혼로"
+description = "일정한 전력을 생산하는 시설"
+icon = ExtResource("1_xfwxs")
+scene = ExtResource("2_0uc8g")
+cost = 120
+power_output = 80
+metadata/_custom_type_script = "uid://rfwfdifnaeyn"

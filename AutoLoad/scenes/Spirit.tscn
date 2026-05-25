@@ -1,0 +1,40 @@
+[gd_scene format=3 uid="uid://df2d2mqrq6d5a"]
+
+[ext_resource type="Script" uid="uid://n6wg01hddee1" path="res://scripts/spirit/Spirit.gd" id="1_jbckr"]
+[ext_resource type="SpriteFrames" uid="uid://bjxt1anbuuqeu" path="res://AutoLoad/assets/Spirit/spirit_SpriteFrames.tres" id="2_3hn08"]
+[ext_resource type="FontFile" uid="uid://c6oayswa1a3mm" path="res://AutoLoad/assets/Font/DungGeunMo.ttf" id="3_3hn08"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_3rm74"]
+radius = 8.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_4v23l"]
+radius = 16.0
+
+[node name="Spirit" type="CharacterBody2D" unique_id=723215340]
+scale = Vector2(0.9, 0.9)
+script = ExtResource("1_jbckr")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=327778497]
+sprite_frames = ExtResource("2_3hn08")
+animation = &"float"
+frame_progress = 0.1657072
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1007496615]
+shape = SubResource("CircleShape2D_3rm74")
+
+[node name="InteractArea" type="Area2D" parent="." unique_id=2024756131]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="InteractArea" unique_id=8800807]
+shape = SubResource("CircleShape2D_4v23l")
+
+[node name="NameLabel" type="Label" parent="." unique_id=2066717146]
+visible = false
+offset_left = -20.0
+offset_top = -24.0
+offset_right = 20.0
+offset_bottom = -13.0
+theme_override_fonts/font = ExtResource("3_3hn08")
+theme_override_font_sizes/font_size = 6
+text = "혼"
+horizontal_alignment = 1
+vertical_alignment = 1

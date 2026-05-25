@@ -1,0 +1,52 @@
+[gd_scene format=3 uid="uid://dp1ttfewt20l4"]
+
+[ext_resource type="SpriteFrames" uid="uid://dmotoiobvxts7" path="res://AutoLoad/assets/Player/player_SpriteFrames.tres" id="1_gqo85"]
+[ext_resource type="Script" uid="uid://bafrlwt3gchh8" path="res://scripts/player/Player.gd" id="1_u4nha"]
+[ext_resource type="Script" uid="uid://b6ir2ftejax54" path="res://scripts/player/Camera_2d.gd" id="3_yewid"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_u4nha"]
+size = Vector2(12, 11)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_yewid"]
+size = Vector2(12, 23)
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_mdhf6"]
+radius = 20.0
+
+[node name="Player" type="CharacterBody2D" unique_id=1103668238]
+collision_mask = 58
+script = ExtResource("1_u4nha")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=704528494]
+sprite_frames = ExtResource("1_gqo85")
+animation = &"attack_sheathe_side"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=307869615]
+position = Vector2(0, 3.5)
+shape = SubResource("RectangleShape2D_u4nha")
+
+[node name="HurtBox" type="Area2D" parent="." unique_id=1324718265]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HurtBox" unique_id=450333103]
+position = Vector2(0, -2.5)
+shape = SubResource("RectangleShape2D_yewid")
+debug_color = Color(0.9949663, 0, 0.21634322, 0.41960785)
+
+[node name="AttackBox" type="Area2D" parent="." unique_id=718810469]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="AttackBox" unique_id=1769750563]
+position = Vector2(0, -2)
+shape = SubResource("CircleShape2D_mdhf6")
+debug_color = Color(0.59737396, 0.54504997, 1.92523e-07, 0.41960785)
+
+[node name="DashParticles" type="GPUParticles2D" parent="." unique_id=908139750]
+visible = false
+
+[node name="InvincibilityTimer" type="Timer" parent="." unique_id=1628104037]
+wait_time = 0.6
+one_shot = true
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=1918127263]
+process_callback = 0
+position_smoothing_enabled = true
+script = ExtResource("3_yewid")

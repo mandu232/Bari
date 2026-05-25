@@ -1,0 +1,20 @@
+[gd_scene format=3 uid="uid://byaoe511y6y0g"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_8ljyg"]
+
+[node name="Enemy" type="CharacterBody2D" unique_id=1670133853]
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=705204279]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=411800248]
+
+[node name="NavigationAgent2D" type="NavigationAgent2D" parent="." unique_id=917629]
+
+[node name="DetectionArea" type="Area2D" parent="." unique_id=1986569163]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DetectionArea" unique_id=2059989402]
+shape = SubResource("CircleShape2D_8ljyg")
+
+[node name="HealthBar" type="ProgressBar" parent="." unique_id=948385109]
+offset_right = 4.0
+offset_bottom = 27.0

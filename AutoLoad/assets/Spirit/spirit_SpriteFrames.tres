@@ -1,0 +1,25 @@
+[gd_resource type="SpriteFrames" format=3 uid="uid://bjxt1anbuuqeu"]
+
+[ext_resource type="Texture2D" uid="uid://bhrsulloc16by" path="res://AutoLoad/assets/Spirit/spirit.png" id="1_481ej"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_481ej"]
+atlas = ExtResource("1_481ej")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_n44xp"]
+atlas = ExtResource("1_481ej")
+region = Rect2(32, 0, 32, 32)
+
+[resource]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_481ej")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_n44xp")
+}],
+"loop": true,
+"name": &"float",
+"speed": 0.5
+}]

@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="BuildableItem" format=3 uid="uid://blgjpvf250ms6"]
+
+[ext_resource type="Texture2D" uid="uid://dpcmajugxpm53" path="res://AutoLoad/assets/ArtifactSlot/pedestal_icon.png" id="1_uou1m"]
+[ext_resource type="PackedScene" uid="uid://jdye7bm5cm6o" path="res://AutoLoad/scenes/ArtifactSlot.tscn" id="2_fyg73"]
+[ext_resource type="Script" uid="uid://rfwfdifnaeyn" path="res://scripts/museum/BuildableItem.gd" id="3_6c3a0"]
+
+[resource]
+script = ExtResource("3_6c3a0")
+item_name = "전시대"
+description = "수집한 유물 데이터를 전시할 수 있다."
+icon = ExtResource("1_uou1m")
+scene = ExtResource("2_fyg73")
+cost = 50
+power_consumption = 20
