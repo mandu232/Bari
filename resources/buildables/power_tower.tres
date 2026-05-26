@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="BuildableItem" format=3 uid="uid://c5ca62tejp4q3"]
+
+[ext_resource type="Texture2D" uid="uid://bvvosla1htm5r" path="res://AutoLoad/assets/PowerTower/PowerTower_icon.png" id="1_2yvjd"]
+[ext_resource type="PackedScene" uid="uid://c5ca62tejp4q2" path="res://AutoLoad/scenes/PowerTower.tscn" id="2_scene"]
+[ext_resource type="Script" uid="uid://rfwfdifnaeyn" path="res://scripts/museum/BuildableItem.gd" id="3_script"]
+
+[resource]
+script = ExtResource("3_script")
+item_name = "송전탑"
+description = "전력을 중계하여 발전소 범위 밖 건물에도 전달합니다. 체인 연결 가능."
+icon = ExtResource("1_2yvjd")
+scene = ExtResource("2_scene")
+cost = 80
+power_range = 120.0
+relay_capacity = 60
+chain_range = 200.0
+metadata/_custom_type_script = "uid://rfwfdifnaeyn"

@@ -74,6 +74,7 @@ radius = 39.012817
 size = Vector2(39, 34)
 
 [node name="ArtifactSlot" type="Node2D" unique_id=929378457]
+z_index = -1
 script = ExtResource("1_51rda")
 spirit_scene = ExtResource("2_cg56x")
 
@@ -114,9 +115,9 @@ vertical_alignment = 1
 [node name="HintLabel" type="Label" parent="." unique_id=1505374570]
 visible = false
 offset_left = -23.0
-offset_top = 12.0
+offset_top = 15.0
 offset_right = 23.0
-offset_bottom = 35.0
+offset_bottom = 38.0
 theme_override_colors/font_color = Color(0.56078434, 0.972549, 0.8862745, 1)
 theme_override_fonts/font = ExtResource("4_0n2q6")
 theme_override_font_sizes/font_size = 7

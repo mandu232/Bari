@@ -17,11 +17,21 @@ var _lines_shown:     bool          = false   # 현재 선 표시 상태 (중복
 # {node: Node2D, item_path: String} 형태로 동적 배치 항목 추적
 var _dynamic_nodes:   Array         = []
 
+# ── 수동 배선 상태
+var _manual_connections:  Array   = []      # [{from: Node2D, to: Node2D}] 수동 전선 목록
+var _is_wiring:           bool    = false   # 현재 전선을 드래그 중인지
+var _wire_source:         Node2D  = null    # 전선의 시작 노드
+var _wire_preview_glow:   Line2D  = null    # 드래그 전선 글로우 (넓고 반투명)
+var _wire_preview_core:   Line2D  = null    # 드래그 전선 코어 (얇고 선명)
+var _range_circle:        Line2D  = null    # 소스 노드의 최대 연결 범위 원
+var _wire_in_range:       bool    = true    # 플레이어가 소스 연결 범위 안에 있는지
+
 func _ready() -> void:
 	for slot in slots.get_children():
 		if slot is ArtifactSlot:
 			slot.essence_generated.connect(_on_essence_generated)
 			slot.interact_requested.connect(_on_slot_interact_requested)
+			slot.wire_requested.connect(_on_wire_requested)
 
 	dungeon_trigger.body_entered.connect(_on_dungeon_trigger_entered)
 	artifact_select.artifact_selected.connect(_on_artifact_selected)
@@ -30,8 +40,9 @@ func _ready() -> void:
 
 	_setup_build_manager()
 	_place_player()
-	_restore_pedestals()    # 동적 전시대 먼저 복원
-	_reallocate_power()     # 유물 복원 전에 전력 할당 확정
+	_restore_pedestals()          # 동적 전시대 먼저 복원
+	_restore_manual_connections() # 수동 배선 복원 (노드가 모두 생성된 뒤)
+	_reallocate_power()           # 유물 복원 전에 전력 할당 확정
 	_restore_artifacts()
 	_recalculate_essence_rate()
 
@@ -61,8 +72,44 @@ func _process(_delta: float) -> void:
 				if is_instance_valid(n):
 					n.modulate = Color.WHITE
 
-	# ── 철거 가능 건물 호버 하이라이트 (건설 메뉴 열린 상태에서만)
-	if _build_ui != null and _build_ui.visible and not _build_manager.is_active:
+	# ── 전선 미리보기: 플레이어 위치를 따라가며 범위 초과 시 빨간색으로 전환
+	if _is_wiring and is_instance_valid(_wire_source):
+		var player := get_tree().get_first_node_in_group("player") as Node2D
+		if player:
+			var src_pos  := to_local(_wire_source.global_position)
+			var ply_pos  := to_local(player.global_position)
+			var dist     := _wire_source.global_position.distance_to(player.global_position)
+			_wire_in_range = dist <= _get_source_range()
+
+			# 시간 기반 알파 펄스 (트윈 없이 직접 계산 — 색상이 확실히 반영됨)
+			var pulse := (sin(Time.get_ticks_msec() * 0.0044) + 1.0) * 0.5  # 0~1, 약 1.4s 주기
+
+			var col_glow:   Color
+			var col_core:   Color
+			var col_circle: Color
+			if _wire_in_range:
+				col_glow   = Color(0.30, 0.75, 1.0, lerpf(0.10, 0.40, pulse))
+				col_core   = Color(0.65, 0.93, 1.0, 0.90)
+				col_circle = Color(0.30, 0.85, 1.0, lerpf(0.40, 0.65, pulse))
+			else:
+				col_glow   = Color(1.0,  0.22, 0.22, lerpf(0.10, 0.38, pulse))
+				col_core   = Color(1.0,  0.50, 0.50, 0.90)
+				col_circle = Color(1.0,  0.20, 0.20, lerpf(0.45, 0.70, pulse))
+
+			if is_instance_valid(_wire_preview_glow):
+				_wire_preview_glow.set_point_position(0, src_pos)
+				_wire_preview_glow.set_point_position(1, ply_pos)
+				_wire_preview_glow.default_color = col_glow
+			if is_instance_valid(_wire_preview_core):
+				_wire_preview_core.set_point_position(0, src_pos)
+				_wire_preview_core.set_point_position(1, ply_pos)
+				_wire_preview_core.default_color = col_core
+			if is_instance_valid(_range_circle):
+				_range_circle.default_color = col_circle
+
+	# ── 건설 메뉴 열린 상태: 철거 가능 건물 빨간 호버 하이라이트
+	if _build_ui != null and _build_ui.visible and not _build_manager.is_active \
+			and not _is_wiring:
 		var mouse_world := get_global_mouse_position()
 		for entry in _dynamic_nodes:
 			var n := entry["node"] as Node2D
@@ -87,6 +134,12 @@ func _setup_build_manager() -> void:
 	_build_ui.cancelled.connect(_on_build_cancelled)
 
 func _unhandled_input(event: InputEvent) -> void:
+	# 배선 중 ESC → 취소 (건설 모드 상태와 무관하게 최우선 처리)
+	if _is_wiring and event.is_action_pressed("ui_cancel"):
+		_cancel_wire()
+		get_viewport().set_input_as_handled()
+		return
+
 	if event.is_action_pressed("build_mode"):
 		if _build_manager.is_active:
 			_build_manager.deactivate()
@@ -121,13 +174,14 @@ func _unhandled_input(event: InputEvent) -> void:
 				get_viewport().set_input_as_handled()
 
 func _on_build_mode_changed(_active: bool) -> void:
-	pass
+	if not _active:
+		_cancel_wire()   # 배치 모드 종료 시 진행 중이던 배선 취소
 
 func _on_build_item_selected(item: BuildableItem) -> void:
 	_build_manager.activate(item)
 
 func _on_build_cancelled() -> void:
-	pass
+	_cancel_wire()
 
 # ───────────────────────────────
 #  건물 철거
@@ -176,8 +230,116 @@ func _demolish_node(entry: Dictionary) -> void:
 	node.modulate = Color.WHITE   # 혹시 남은 하이라이트 초기화
 	node.queue_free()
 
+	# 철거된 노드와 연결된 수동 배선도 제거
+	# (queue_free 직후엔 is_instance_valid가 여전히 true이므로 노드도 명시 제외)
+	_manual_connections = _manual_connections.filter(
+		func(c: Dictionary) -> bool:
+			return c["from"] != node and c["to"] != node \
+				and is_instance_valid(c["from"]) and is_instance_valid(c["to"])
+	)
 	_save_pedestal_positions()
+	_save_manual_connections()
 	_reallocate_power()
+
+# ───────────────────────────────
+#  수동 배선 — F키 + 플레이어 이동 방식
+# ───────────────────────────────
+## 발전소 또는 송전탑에서 [F] 신호 수신
+##  • 배선 중 아닐 때  : 해당 노드를 출발점으로 배선 시작
+##  • 배선 중, 출발점  : 취소
+##  • 배선 중, 다른 탑 : 연결 완료 (토글)
+##  • 배선 중, 발전소  : 취소 (발전소는 연결 대상 불가)
+func _on_wire_requested(node: Node2D) -> void:
+	if not _is_wiring:
+		# 전원 노드(발전소/송전탑)만 배선 출발점으로 허용
+		if node is PowerPlant or node is PowerTower:
+			_start_wire_from(node)
+	elif node == _wire_source:
+		_cancel_wire()
+	elif node is PowerTower:
+		# 발전소/탑 → 탑 수동 연결 (파란 전선)
+		_toggle_connection(_wire_source, node)
+		_cancel_wire()
+	elif node is ArtifactSlot \
+			and _wire_source is PowerPlant \
+			and (node as ArtifactSlot).power_cost > 0:
+		# 발전소 → 전시대 수동 직접 연결 (노란 전선)
+		# 탑 → 전시대는 output_range 내에서 자동 공급이므로 수동 연결 불필요
+		_toggle_connection(_wire_source, node)
+		_cancel_wire()
+	else:
+		_cancel_wire()
+
+## 지정한 노드를 출발점으로 배선 모드 시작 + 미리보기 선·범위 원 생성
+func _start_wire_from(node: Node2D) -> void:
+	_wire_source   = node
+	_is_wiring     = true
+	_wire_in_range = true
+
+	var src_pos := to_local(node.global_position)
+
+	# ── 범위 원 (소스 노드 중심)
+	_range_circle = _make_wire_circle(src_pos, _get_source_range(),
+									  Color(0.3, 0.85, 1.0, 0.55))
+	_range_circle.z_index = 9
+	add_child(_range_circle)
+
+	# ── 글로우 선 (넓고 반투명)
+	_wire_preview_glow = Line2D.new()
+	_wire_preview_glow.z_index       = 10
+	_wire_preview_glow.width         = 7.0
+	_wire_preview_glow.default_color = Color(0.3, 0.75, 1.0, 0.22)
+	_wire_preview_glow.begin_cap_mode = Line2D.LINE_CAP_ROUND
+	_wire_preview_glow.end_cap_mode   = Line2D.LINE_CAP_ROUND
+	_wire_preview_glow.add_point(src_pos)
+	_wire_preview_glow.add_point(src_pos)
+	add_child(_wire_preview_glow)
+
+	# ── 코어 선 (얇고 선명) + 펄스 애니메이션
+	_wire_preview_core = Line2D.new()
+	_wire_preview_core.z_index       = 11
+	_wire_preview_core.width         = 1.5
+	_wire_preview_core.default_color = Color(0.65, 0.93, 1.0, 0.9)
+	_wire_preview_core.begin_cap_mode = Line2D.LINE_CAP_ROUND
+	_wire_preview_core.end_cap_mode   = Line2D.LINE_CAP_ROUND
+	_wire_preview_core.add_point(src_pos)
+	_wire_preview_core.add_point(src_pos)
+	add_child(_wire_preview_core)
+	# 펄스 애니메이션은 _process() 에서 Time 기반으로 직접 계산
+	# (트윈과 _process() 직접 대입이 충돌하면 색상이 반영되지 않으므로)
+
+## 두 노드 사이의 수동 연결을 토글 (없으면 추가, 있으면 제거)
+## 범위 밖(_wire_in_range == false)이면 새 연결은 추가하지 않는다
+func _toggle_connection(from: Node2D, to: Node2D) -> void:
+	for i in _manual_connections.size():
+		var conn := _manual_connections[i] as Dictionary
+		if conn["from"] == from and conn["to"] == to:
+			# 이미 연결된 경우 → 제거(토글)는 범위와 무관하게 허용
+			_manual_connections.remove_at(i)
+			_save_manual_connections()
+			_reallocate_power()
+			return
+	# 새 연결 추가 — 범위 안일 때만
+	if not _wire_in_range:
+		return
+	_manual_connections.append({"from": from, "to": to})
+	_save_manual_connections()
+	_reallocate_power()
+
+## 진행 중인 배선 취소
+func _cancel_wire() -> void:
+	_is_wiring     = false
+	_wire_source   = null
+	_wire_in_range = true
+	if is_instance_valid(_wire_preview_glow):
+		_wire_preview_glow.queue_free()
+	_wire_preview_glow = null
+	if is_instance_valid(_wire_preview_core):
+		_wire_preview_core.queue_free()
+	_wire_preview_core = null
+	if is_instance_valid(_range_circle):
+		_range_circle.queue_free()
+	_range_circle = null
 
 func _on_item_placed(item: BuildableItem, world_pos: Vector2) -> void:
 	if item.scene == null:
@@ -191,9 +353,22 @@ func _on_item_placed(item: BuildableItem, world_pos: Vector2) -> void:
 		slots.add_child(node)
 		slot.essence_generated.connect(_on_essence_generated)
 		slot.interact_requested.connect(_on_slot_interact_requested)
+		slot.wire_requested.connect(_on_wire_requested)
 	elif node is PowerPlant:
-		(node as PowerPlant).power_output = item.power_output  # _ready() 전에 주입
+		var pp := node as PowerPlant
+		pp.power_output = item.power_output  # _ready() 전에 주입
 		add_child(node)
+		pp.wire_requested.connect(_on_wire_requested)
+	elif node is PowerTower:
+		var pt := node as PowerTower
+		if item.relay_capacity > 0:
+			pt.relay_capacity = item.relay_capacity
+		if item.chain_range > 0.0:
+			pt.chain_range = item.chain_range
+		if item.power_range > 0.0:
+			pt.output_range = item.power_range
+		add_child(node)
+		pt.wire_requested.connect(_on_wire_requested)
 	else:
 		add_child(node)
 
@@ -299,19 +474,69 @@ func remove_artifact_from_slot(slot: ArtifactSlot) -> void:
 # ───────────────────────────────
 #  전력 중앙 할당
 # ───────────────────────────────
-## 발전소별 남은 용량을 계산하고, 범위 내 슬롯에 그리디하게 전력 배분
+## 발전소 → 송전탑(BFS 체이닝) → 건물 순서로 전력을 그리디 배분
 func _reallocate_power() -> void:
 	_in_reallocate = true
 
-	# ① 발전소 → 남은 용량 테이블
-	var remaining: Dictionary = {}
+	# ① 발전소 남은 용량 초기화
+	var plant_remaining: Dictionary = {}
 	for plant in get_tree().get_nodes_in_group("power_plant"):
 		var pp := plant as PowerPlant
 		if pp:
-			remaining[pp] = pp.power_output
+			plant_remaining[pp] = pp.power_output
 
-	# ② placed_structure 그룹의 슬롯에 배분 + 연결 정보 수집
-	var connections: Array = []   # [ {plant: PowerPlant, slot: ArtifactSlot} ]
+	# ② 송전탑 초기화 + 유효하지 않은 수동 연결 정리
+	for tower in get_tree().get_nodes_in_group("power_tower"):
+		var pt := tower as PowerTower
+		if pt:
+			pt.is_active       = false
+			pt.remaining_relay = 0
+			pt.source          = null
+	_manual_connections = _manual_connections.filter(
+		func(c: Dictionary) -> bool:
+			return is_instance_valid(c["from"]) and is_instance_valid(c["to"])
+	)
+
+	# BFS: 수동 연결을 따라 탑 활성화
+	# 발전소 → 탑 → 탑 순서로 반복(탑이 이미 활성화된 탑을 source로 쓸 수 있게)
+	var activated_any := true
+	while activated_any:
+		activated_any = false
+		for tower in get_tree().get_nodes_in_group("power_tower"):
+			var pt := tower as PowerTower
+			if pt == null or pt.is_active:
+				continue
+			# 이 탑을 target으로 하는 수동 연결이 있는지 확인
+			for conn in _manual_connections:
+				if conn["to"] != pt:
+					continue
+				var src := conn["from"] as Node2D
+				var src_ok := false
+				if src is PowerPlant:
+					src_ok = true          # 발전소는 항상 유효한 전원
+				elif src is PowerTower:
+					src_ok = (src as PowerTower).is_active   # 이미 활성화된 탑만
+				if src_ok:
+					pt.is_active       = true
+					pt.remaining_relay = pt.relay_capacity
+					pt.source          = src
+					activated_any      = true
+					break
+
+	# ③ placed_structure 그룹의 슬롯에 배분 + 연결 정보 수집
+	# connections 형식: {from: Node2D, to: Node2D}
+	#   - 발전소/탑 → ArtifactSlot : 노란 전선
+	#   - 발전소/탑 → PowerTower   : 파란 전선 (탑 연결)
+	var connections: Array = []
+
+	# ③-a. 활성화된 수동 연결선 수집 (발전소/탑 → 탑, 파란 전선)
+	for conn in _manual_connections:
+		var to_tower := conn["to"] as PowerTower
+		if to_tower != null and to_tower.is_active:
+			connections.append({"from": conn["from"] as Node2D, "to": to_tower})
+
+	# ③-b. 건물(ArtifactSlot) 전력 배분
+	#  우선순위: ① 발전소→슬롯 수동 연결  ② 범위 내 활성 송전탑 자동 공급
 	for node in get_tree().get_nodes_in_group("placed_structure"):
 		var slot := node as ArtifactSlot
 		if slot == null:
@@ -321,27 +546,84 @@ func _reallocate_power() -> void:
 			continue
 
 		var powered := false
-		for plant in remaining.keys():
-			var pp := plant as PowerPlant
-			var dist := slot.global_position.distance_to(pp.global_position)
-			if dist <= pp.power_range and remaining[pp] >= slot.power_cost:
-				remaining[pp] -= slot.power_cost
-				powered = true
-				connections.append({"plant": pp, "slot": slot})
-				break
+
+		# ① 발전소 → 전시대 수동 직접 연결
+		for conn in _manual_connections:
+			if conn["to"] != slot:
+				continue
+			var src := conn["from"] as Node2D
+			if src is PowerPlant:
+				var pp := src as PowerPlant
+				if plant_remaining.get(pp, 0) >= slot.power_cost:
+					plant_remaining[pp] -= slot.power_cost
+					powered = true
+					connections.append({"from": pp, "to": slot})
+					break
+
+		# ② 수동 연결 없으면 → output_range 내 활성 송전탑에서 자동 공급
+		if not powered:
+			for tower in get_tree().get_nodes_in_group("power_tower"):
+				var pt := tower as PowerTower
+				if pt == null or not pt.is_active:
+					continue
+				var dist := slot.global_position.distance_to(pt.global_position)
+				if dist <= pt.output_range \
+						and _can_supply_via_chain(pt, slot.power_cost, plant_remaining):
+					_deduct_via_chain(pt, slot.power_cost, plant_remaining)
+					powered = true
+					connections.append({"from": pt, "to": slot})
+					break
+
 		slot.set_powered(powered)
 
-	# ③ GameManager 동기화 + EssenceUI 갱신
+	# ③-c. 송전탑 스프라이트 애니메이션 갱신 (is_active 확정 후)
+	for tower in get_tree().get_nodes_in_group("power_tower"):
+		var pt := tower as PowerTower
+		if pt:
+			pt.refresh_visuals()
+
+	# ④ GameManager 동기화
 	var used := 0
-	for plant in remaining.keys():
+	for plant in plant_remaining.keys():
 		var pp := plant as PowerPlant
-		used += pp.power_output - remaining[pp]
+		used += pp.power_output - plant_remaining[pp]
 	GameManager.used_power = used
 	GameManager.power_changed.emit(GameManager.used_power, GameManager.total_power)
 
 	_in_reallocate = false
-	_update_power_lines(connections)   # ④ 연결선 갱신
+	_update_power_lines(connections)
 	_recalculate_essence_rate()
+
+## 탑 → (탑 →)* 발전소 체인 전체에 amount 만큼 용량이 남아있는지 확인
+func _can_supply_via_chain(tower: PowerTower, amount: int,
+		plant_remaining: Dictionary) -> bool:
+	var current: Node2D = tower
+	while current != null:
+		if current is PowerTower:
+			var pt := current as PowerTower
+			if pt.remaining_relay < amount:
+				return false
+			current = pt.source
+		elif current is PowerPlant:
+			return plant_remaining.get(current, 0) >= amount
+		else:
+			return false
+	return false
+
+## 체인 전체(탑들 + 최상위 발전소)에서 amount 를 차감
+func _deduct_via_chain(tower: PowerTower, amount: int,
+		plant_remaining: Dictionary) -> void:
+	var current: Node2D = tower
+	while current != null:
+		if current is PowerTower:
+			var pt := current as PowerTower
+			pt.remaining_relay -= amount
+			current = pt.source
+		elif current is PowerPlant:
+			plant_remaining[current] -= amount
+			break
+		else:
+			break
 
 # ───────────────────────────────
 #  전력 연결선 시각화
@@ -354,27 +636,40 @@ func _update_power_lines(connections: Array) -> void:
 	_power_lines.clear()
 
 	for conn in connections:
-		var pp   := conn["plant"] as PowerPlant
-		var slot := conn["slot"]  as ArtifactSlot
-		if not is_instance_valid(pp) or not is_instance_valid(slot):
+		var from_node := conn["from"] as Node2D
+		var to_node   := conn["to"]   as Node2D
+		if not is_instance_valid(from_node) or not is_instance_valid(to_node):
 			continue
 
-		var from := to_local(pp.global_position)
-		var to   := to_local(slot.global_position)
+		var from := to_local(from_node.global_position)
+		var to   := to_local(to_node.global_position)
 
-		# 글로우 선 (넓고 반투명)
-		var glow := _make_power_line(from, to, 7.0, Color(1.0, 0.88, 0.25, 0.18))
+		# 탑 연결선(파란색) / 건물 연결선(노란색) 구분
+		var is_tower_link := to_node is PowerTower
+		var col_glow: Color
+		var col_core: Color
+		var col_peak: Color
+		if is_tower_link:
+			col_glow = Color(0.3, 0.75, 1.0, 0.18)
+			col_peak = Color(0.3, 0.75, 1.0, 0.36)
+			col_core = Color(0.6, 0.92, 1.0, 0.9)
+		else:
+			col_glow = Color(1.0, 0.88, 0.25, 0.18)
+			col_peak = Color(1.0, 0.88, 0.25, 0.36)
+			col_core = Color(1.0, 0.95, 0.6,  0.9)
+
+		# 글로우 선 (넓고 반투명) + 펄스 애니메이션
+		var glow := _make_power_line(from, to, 7.0, col_glow)
 		add_child(glow)
 		_power_lines.append(glow)
-		# 글로우 펄스 애니메이션
 		var gt := glow.create_tween().set_loops()
-		gt.tween_property(glow, "default_color", Color(1.0, 0.88, 0.25, 0.36), 0.9) \
+		gt.tween_property(glow, "default_color", col_peak,                         0.9) \
 			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-		gt.tween_property(glow, "default_color", Color(1.0, 0.88, 0.25, 0.08), 0.9) \
+		gt.tween_property(glow, "default_color", col_glow.darkened(0.3), 0.9) \
 			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
 		# 중심 선 (얇고 선명)
-		var core := _make_power_line(from, to, 1.5, Color(1.0, 0.95, 0.6, 0.9))
+		var core := _make_power_line(from, to, 1.5, col_core)
 		add_child(core)
 		_power_lines.append(core)
 
@@ -389,6 +684,28 @@ func _make_power_line(from: Vector2, to: Vector2, width: float, color: Color) ->
 	ln.end_cap_mode      = Line2D.LINE_CAP_ROUND
 	ln.add_point(from)
 	ln.add_point(to)
+	return ln
+
+## 배선 드래그 중 소스 노드의 연결 가능 최대 거리를 반환
+## 탑은 chain_range(수동 배선 거리), 발전소는 power_range 사용
+func _get_source_range() -> float:
+	if _wire_source is PowerPlant:
+		return (_wire_source as PowerPlant).power_range
+	elif _wire_source is PowerTower:
+		return (_wire_source as PowerTower).chain_range
+	return 0.0
+
+## 배선 드래그 중 범위 표시에 쓸 원형 Line2D 생성 (64 세그먼트)
+func _make_wire_circle(center: Vector2, radius: float, color: Color) -> Line2D:
+	var ln := Line2D.new()
+	ln.width         = 1.5
+	ln.default_color = color
+	ln.begin_cap_mode = Line2D.LINE_CAP_NONE
+	ln.end_cap_mode   = Line2D.LINE_CAP_NONE
+	var seg := 64
+	for i in seg + 1:
+		var angle := TAU * float(i) / seg
+		ln.add_point(center + Vector2(cos(angle), sin(angle)) * radius)
 	return ln
 
 # ───────────────────────────────
@@ -461,12 +778,24 @@ func _restore_pedestals() -> void:
 			slots.add_child(node)
 			slot.essence_generated.connect(_on_essence_generated)
 			slot.interact_requested.connect(_on_slot_interact_requested)
+			slot.wire_requested.connect(_on_wire_requested)
 		elif node is PowerPlant:
 			var pp := node as PowerPlant
 			pp.power_output = item.power_output          # _ready() 전에 주입
 			if item.power_range > 0.0:
 				pp.power_range = item.power_range        # .tres 에서 범위 오버라이드
 			add_child(node)
+			pp.wire_requested.connect(_on_wire_requested)
+		elif node is PowerTower:
+			var pt := node as PowerTower
+			if item.relay_capacity > 0:
+				pt.relay_capacity = item.relay_capacity
+			if item.chain_range > 0.0:
+				pt.chain_range = item.chain_range
+			if item.power_range > 0.0:
+				pt.output_range = item.power_range
+			add_child(node)
+			pt.wire_requested.connect(_on_wire_requested)
 		else:
 			add_child(node)
 
@@ -499,6 +828,58 @@ func _restore_artifacts() -> void:
 		var data := ResourceLoader.load(path) as ArtifactData
 		if data:
 			(slot_list[i] as ArtifactSlot).place_artifact(data)
+
+# ───────────────────────────────
+#  수동 배선 저장 / 복원
+# ───────────────────────────────
+const WIRE_SAVE := "user://power_wires.cfg"
+
+## 수동 연결을 (from 위치, to 위치) 쌍으로 저장
+func _save_manual_connections() -> void:
+	var cfg   := ConfigFile.new()
+	var count := 0
+	for conn in _manual_connections:
+		var f := conn["from"] as Node2D
+		var t := conn["to"]   as Node2D
+		if is_instance_valid(f) and is_instance_valid(t):
+			cfg.set_value("wires", str(count) + "_from", f.global_position)
+			cfg.set_value("wires", str(count) + "_to",   t.global_position)
+			count += 1
+	cfg.save(WIRE_SAVE)
+
+## 저장된 연결을 위치 기준으로 노드를 찾아 복원
+func _restore_manual_connections() -> void:
+	var cfg := ConfigFile.new()
+	if cfg.load(WIRE_SAVE) != OK:
+		return
+
+	# 복원 가능한 노드 목록 수집 (전원 노드 + 전력 비용이 있는 전시대)
+	var candidates: Array[Node2D] = []
+	for n in get_tree().get_nodes_in_group("power_plant"):
+		candidates.append(n as Node2D)
+	for n in get_tree().get_nodes_in_group("power_tower"):
+		candidates.append(n as Node2D)
+	for n in get_tree().get_nodes_in_group("placed_structure"):
+		var s := n as ArtifactSlot
+		if s != null and s.power_cost > 0:
+			candidates.append(s)
+
+	var i := 0
+	while cfg.has_section_key("wires", str(i) + "_from"):
+		var from_pos: Vector2 = cfg.get_value("wires", str(i) + "_from")
+		var to_pos:   Vector2 = cfg.get_value("wires", str(i) + "_to")
+		var from_node := _find_node_near(candidates, from_pos)
+		var to_node   := _find_node_near(candidates, to_pos)
+		if from_node != null and to_node != null:
+			_manual_connections.append({"from": from_node, "to": to_node})
+		i += 1
+
+## 노드 배열에서 pos 에 가장 가까운 노드를 반환 (허용 오차 8px)
+func _find_node_near(nodes: Array[Node2D], pos: Vector2, tol: float = 8.0) -> Node2D:
+	for n in nodes:
+		if n.global_position.distance_to(pos) <= tol:
+			return n
+	return null
 
 # ───────────────────────────────
 #  플레이어 스폰

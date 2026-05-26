@@ -5,7 +5,7 @@ extends Node
 # ───────────────────────────────
 #  전역 데이터
 # ───────────────────────────────
-var spirit_essence: int              = 100
+var spirit_essence: int              = 9999
 var total_spirits: int               = 0
 var artifacts: Array[ArtifactData]   = []
 var dungeon_depth: int               = 1
@@ -68,6 +68,10 @@ func _init_starting_blueprints() -> void:
 	var plant_3 := load("res://resources/buildables/power_plant_Lv3.tres") as BuildableItem
 	if plant_3:
 		unlocked_blueprints.append(plant_3)
+
+	var powertower := load("res://resources/buildables/power_tower.tres") as BuildableItem
+	if powertower:
+		unlocked_blueprints.append(powertower)
 
 # ───────────────────────────────
 #  설계도

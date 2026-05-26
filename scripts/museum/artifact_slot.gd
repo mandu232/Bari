@@ -32,6 +32,7 @@ signal artifact_placed(slot: ArtifactSlot, data: ArtifactData)
 signal artifact_removed(slot: ArtifactSlot)
 signal essence_generated(amount: int)
 signal interact_requested(slot: ArtifactSlot)   # Museum 으로 전달
+signal wire_requested(source: Node2D)            # [F] 전선 연결 — Museum 이 처리
 
 # ───────────────────────────────
 #  NODES
@@ -63,8 +64,12 @@ func _ready() -> void:
 # ───────────────────────────────
 func _process(delta: float) -> void:
 	# 영력 생성 — 전력이 공급된 경우에만 생성
+	# 정령의 기분(needs.essence_multiplier)이 생산량에 곱해짐
 	if is_occupied and artifact != null and is_powered:
-		_essence_accum += artifact.essence_per_second * delta
+		var mult := 1.0
+		if is_instance_valid(spirit) and spirit.needs != null:
+			mult = spirit.needs.essence_multiplier
+		_essence_accum += artifact.essence_per_second * mult * delta
 		if _essence_accum >= 1.0:
 			var amount := int(_essence_accum)
 			_essence_accum -= amount
@@ -87,6 +92,9 @@ func place_artifact(data: ArtifactData) -> void:
 	_start_float()
 	_spawn_spirit()
 	artifact_placed.emit(self, data)
+	# 유물이 배치되면 충만도·만족도 즉시 회복
+	_fulfill_spirit_needs(&"충만도", 35.0)
+	_fulfill_spirit_needs(&"만족도", 15.0)
 
 func remove_artifact() -> ArtifactData:
 	if not is_occupied:
@@ -162,6 +170,9 @@ func set_powered(value: bool) -> void:
 		return
 	is_powered = value
 	_update_powered_visuals()
+	# 전력이 들어오면 충만도 회복 / 끊기면 자연 감소에 맡김
+	if is_powered:
+		_fulfill_spirit_needs(&"충만도", 25.0)
 
 ## 전력 상태에 따라 배치대 애니메이션 전환
 func _update_powered_visuals() -> void:
@@ -175,21 +186,41 @@ func _update_powered_visuals() -> void:
 
 ## 플레이어 근처일 때 힌트 레이블 상태 업데이트
 func _update_nearby_ui() -> void:
-	if not is_powered:
+
+	if not is_powered and power_cost > 0:
 		slot_label.visible = false
 		hint_label.text    = "⚡ 전력 없음"
 		hint_label.add_theme_color_override("font_color", Color(1.0, 0.35, 0.35))
 		hint_label.visible = true
 	elif is_occupied:
 		slot_label.visible = true
-		hint_label.text    = "E - 유물 교체"
+		hint_label.text    = "[E] 유물 교체"
 		hint_label.add_theme_color_override("font_color", Color(0.56078434, 0.972549, 0.8862745))
 		hint_label.visible = true
 	else:
 		slot_label.visible = false
-		hint_label.text    = "E - 유물 배치"
+		hint_label.text    = "[E] 유물 배치"
 		hint_label.add_theme_color_override("font_color", Color(0.56078434, 0.972549, 0.8862745))
 		hint_label.visible = true
+
+# ───────────────────────────────
+#  NEEDS 헬퍼
+# ───────────────────────────────
+## 이 슬롯의 정령이 유효하고 needs 가 있을 때만 회복
+func _fulfill_spirit_needs(need_id: StringName, amount: float) -> void:
+	if is_instance_valid(spirit) and spirit.needs != null:
+		spirit.needs.fulfill(need_id, amount)
+
+# ───────────────────────────────
+#  [F] 키 — 배선 요청
+# ───────────────────────────────
+## 플레이어가 근처에 있을 때만 처리 — 전력 비용이 있는 슬롯만 배선 대상으로 허용
+func _unhandled_input(event: InputEvent) -> void:
+	if not _player_nearby or power_cost == 0:
+		return
+	if event.is_action_pressed("sub_interact"):
+		wire_requested.emit(self)
+		get_viewport().set_input_as_handled()
 
 func _notification(what: int) -> void:
 	pass  # 범위 기반 전력: 해제 시 별도 반환 불필요

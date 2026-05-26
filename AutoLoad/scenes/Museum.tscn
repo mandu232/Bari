@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://bwgmxkmct387j"]
 
-[ext_resource type="Script" uid="uid://30m52yxkouth" path="res://scripts/museum/museum.gd" id="1_qnho5"]
+[ext_resource type="Script" uid="uid://d3yoco0g1xn0p" path="res://scripts/museum/Museum.gd" id="1_qnho5"]
 [ext_resource type="PackedScene" uid="uid://dp1ttfewt20l4" path="res://AutoLoad/scenes/Player.tscn" id="3_gmab4"]
 [ext_resource type="PackedScene" uid="uid://mps44d3ngo5l" path="res://AutoLoad/scenes/ArtifactSelectUI.tscn" id="3_ucdta"]
 
