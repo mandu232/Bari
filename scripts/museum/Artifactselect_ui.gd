@@ -66,7 +66,7 @@ func _on_item_selected(index: int) -> void:
 	if index < 0 or index >= _artifacts_cache.size():
 		return
 	var data := _artifacts_cache[index]
-	var spirit_info := data.spirit_name
+	var spirit_info := data.echo_name
 	var passive     := data.passive_description if data.passive_description != "" else data.description
 	desc_label.text  = "%s\n%s\n영력/초: %.1f" % [spirit_info, passive, data.essence_per_second]
 	confirm_btn.disabled = false

@@ -1,15 +1,15 @@
 extends RefCounted
-class_name SpiritNeed
-## 혼(Spirit)의 욕구 수치 하나를 표현
+class_name EchoNeed
+## Echo의 욕구 수치 하나를 표현
 ## 값은 0~100 사이를 유지하며, 매 프레임 decay_per_sec 만큼 자연 감소합니다.
 
 # ───────────────────────────────
 #  SIGNALS
 # ───────────────────────────────
 ## 수치가 변할 때마다 발신
-signal value_changed(need: SpiritNeed, old_val: float, new_val: float)
+signal value_changed(need: EchoNeed, old_val: float, new_val: float)
 ## 구간(tier)이 바뀔 때 발신 — going_down: true = 수치가 떨어지며 교차
-signal threshold_crossed(need: SpiritNeed, tier: StringName, going_down: bool)
+signal threshold_crossed(need: EchoNeed, tier: StringName, going_down: bool)
 
 # ───────────────────────────────
 #  DATA
@@ -31,7 +31,7 @@ var _current_tier: StringName = &""
 ## id, 레이블, 감소율, 구간 배열을 한 번에 설정
 ## tiers 예시: [{threshold=70.0, tier=&"행복"}, {threshold=40.0, tier=&"보통"}, ...]
 func setup(p_id: StringName, p_label: String,
-           p_decay: float, tiers: Array) -> void:
+		   p_decay: float, tiers: Array) -> void:
 	id            = p_id
 	label         = p_label
 	decay_per_sec = p_decay
@@ -42,7 +42,7 @@ func setup(p_id: StringName, p_label: String,
 # ───────────────────────────────
 #  TICK / RESTORE
 # ───────────────────────────────
-## SpiritNeedsManager._process() 에서 호출 — 자연 감소
+## EchoNeedsManager._process() 에서 호출 — 자연 감소
 func tick(delta: float) -> void:
 	_set_value(value - decay_per_sec * delta)
 

@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bhrsulloc16by"
-path="res://.godot/imported/spirit.png-1c029e3e9500ac6c6100a7d69e20d657.ctex"
+path="res://.godot/imported/echo.png-94b2de6158bbac9408ac7412080cc87b.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://AutoLoad/assets/Spirit/spirit.png"
-dest_files=["res://.godot/imported/spirit.png-1c029e3e9500ac6c6100a7d69e20d657.ctex"]
+source_file="res://AutoLoad/assets/Echo/echo.png"
+dest_files=["res://.godot/imported/echo.png-94b2de6158bbac9408ac7412080cc87b.ctex"]
 
 [params]
 

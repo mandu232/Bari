@@ -17,7 +17,7 @@ func _ready() -> void:
 	GameManager.essence_changed.connect(_on_essence_changed)
 	GameManager.essence_rate_changed.connect(_on_rate_changed)
 	GameManager.power_changed.connect(_on_power_changed)
-	_on_essence_changed(GameManager.spirit_essence)
+	_on_essence_changed(GameManager.echo_essence)
 	_on_rate_changed(GameManager.essence_rate)
 	_on_power_changed(GameManager.used_power, GameManager.total_power)
 

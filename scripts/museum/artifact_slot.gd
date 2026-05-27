@@ -6,13 +6,13 @@ class_name ArtifactSlot
 # ───────────────────────────────
 #  EXPORT
 # ───────────────────────────────
-@export var spirit_scene: PackedScene = null
+@export var echo_scene: PackedScene = null
 
 # ───────────────────────────────
 #  STATE
 # ───────────────────────────────
 var artifact: ArtifactData = null
-var spirit: Spirit         = null
+var echo: Echo             = null
 var is_occupied: bool      = false
 var is_powered: bool       = false   # 전력이 공급되면 true
 var power_cost: int        = 0       # museum.gd 이 배치 전에 주입
@@ -64,11 +64,11 @@ func _ready() -> void:
 # ───────────────────────────────
 func _process(delta: float) -> void:
 	# 영력 생성 — 전력이 공급된 경우에만 생성
-	# 정령의 기분(needs.essence_multiplier)이 생산량에 곱해짐
+	# Echo의 기분(needs.essence_multiplier)이 생산량에 곱해짐
 	if is_occupied and artifact != null and is_powered:
 		var mult := 1.0
-		if is_instance_valid(spirit) and spirit.needs != null:
-			mult = spirit.needs.essence_multiplier
+		if is_instance_valid(echo) and echo.needs != null:
+			mult = echo.needs.essence_multiplier
 		_essence_accum += artifact.essence_per_second * mult * delta
 		if _essence_accum >= 1.0:
 			var amount := int(_essence_accum)
@@ -90,16 +90,16 @@ func place_artifact(data: ArtifactData) -> void:
 	is_occupied = true
 	_refresh_visuals()
 	_start_float()
-	_spawn_spirit()
+	_spawn_echo()
 	artifact_placed.emit(self, data)
-	# 유물이 배치되면 충만도·만족도 즉시 회복
-	_fulfill_spirit_needs(&"충만도", 35.0)
-	_fulfill_spirit_needs(&"만족도", 15.0)
+	# 유물이 배치되면 출력·안정도 즉시 회복
+	_fulfill_echo_needs(&"출력",   35.0)
+	_fulfill_echo_needs(&"안정도", 15.0)
 
 func remove_artifact() -> ArtifactData:
 	if not is_occupied:
 		return null
-	_despawn_spirit()
+	_despawn_echo()
 	_stop_float()
 	var removed   := artifact
 	artifact       = null
@@ -110,20 +110,20 @@ func remove_artifact() -> ArtifactData:
 	return removed
 
 # ───────────────────────────────
-#  SPIRIT
+#  ECHO
 # ───────────────────────────────
-func _spawn_spirit() -> void:
-	if spirit_scene == null:
-		push_warning("ArtifactSlot: spirit_scene 미설정")
+func _spawn_echo() -> void:
+	if echo_scene == null:
+		push_warning("ArtifactSlot: echo_scene 미설정")
 		return
-	spirit = spirit_scene.instantiate() as Spirit
-	get_parent().add_child(spirit)
-	spirit.setup(artifact, global_position)
+	echo = echo_scene.instantiate() as Echo
+	get_parent().add_child(echo)
+	echo.setup(artifact, global_position)
 
-func _despawn_spirit() -> void:
-	if is_instance_valid(spirit):
-		spirit.queue_free()
-	spirit = null
+func _despawn_echo() -> void:
+	if is_instance_valid(echo):
+		echo.queue_free()
+	echo = null
 
 # ───────────────────────────────
 #  PLAYER 감지
@@ -170,9 +170,9 @@ func set_powered(value: bool) -> void:
 		return
 	is_powered = value
 	_update_powered_visuals()
-	# 전력이 들어오면 충만도 회복 / 끊기면 자연 감소에 맡김
+	# 전력이 들어오면 출력 회복 / 끊기면 자연 감소에 맡김
 	if is_powered:
-		_fulfill_spirit_needs(&"충만도", 25.0)
+		_fulfill_echo_needs(&"출력", 25.0)
 
 ## 전력 상태에 따라 배치대 애니메이션 전환
 func _update_powered_visuals() -> void:
@@ -206,10 +206,10 @@ func _update_nearby_ui() -> void:
 # ───────────────────────────────
 #  NEEDS 헬퍼
 # ───────────────────────────────
-## 이 슬롯의 정령이 유효하고 needs 가 있을 때만 회복
-func _fulfill_spirit_needs(need_id: StringName, amount: float) -> void:
-	if is_instance_valid(spirit) and spirit.needs != null:
-		spirit.needs.fulfill(need_id, amount)
+## 이 슬롯의 Echo가 유효하고 needs 가 있을 때만 회복
+func _fulfill_echo_needs(need_id: StringName, amount: float) -> void:
+	if is_instance_valid(echo) and echo.needs != null:
+		echo.needs.fulfill(need_id, amount)
 
 # ───────────────────────────────
 #  [F] 키 — 배선 요청

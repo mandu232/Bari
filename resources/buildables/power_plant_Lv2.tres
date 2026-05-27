@@ -6,8 +6,8 @@
 
 [resource]
 script = ExtResource("3_ava8p")
-item_name = "기혼로"
-description = "일정한 전력을 생산하는 시설"
+item_name = "아크 리액터"
+description = "산업 지구에서 회수된 중형 반응 장치"
 icon = ExtResource("1_xfwxs")
 scene = ExtResource("2_0uc8g")
 cost = 120

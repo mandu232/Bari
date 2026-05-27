@@ -1,6 +1,6 @@
 extends CharacterBody2D
-class_name Spirit
-## 유물에 묶인 혼(魂)
+class_name Echo
+## 유물에 묶인 에코
 ## ArtifactSlot 이 생성하며, home_position 주변을 배회
 
 # ───────────────────────────────
@@ -39,20 +39,20 @@ var _target: Vector2    = Vector2.ZERO
 #  NEEDS
 # ───────────────────────────────
 ## 욕구 시스템 — 만족도·충만도·활력 관리
-var needs: SpiritNeedsManager = null
+var needs: EchoNeedsManager = null
 
 # ───────────────────────────────
 #  STATUS UI
 # ───────────────────────────────
-var _player_nearby: bool              = false   # 근접 감지 영역 안에 있는지
-var _canvas_layer:  CanvasLayer       = null    # 상태 패널용 스크린 레이어
-var _status_panel:  SpiritStatusPanel = null    # 현재 열린 상태 패널
-var _hint_label:    Label             = null    # "[F] 상태 확인" 근접 힌트
+var _player_nearby: bool           = false   # 근접 감지 영역 안에 있는지
+var _canvas_layer:  CanvasLayer    = null    # 상태 패널용 스크린 레이어
+var _status_panel:  EchoStatusPanel = null   # 현재 열린 상태 패널
+var _hint_label:    Label          = null    # "[F] 상태 확인" 근접 힌트
 
 # ───────────────────────────────
 #  SIGNALS
 # ───────────────────────────────
-signal player_interacted(spirit: Spirit)
+signal player_interacted(echo: Echo)
 
 # ───────────────────────────────
 #  NODES
@@ -70,7 +70,7 @@ func _ready() -> void:
 	interact_area.body_exited.connect(_on_interact_area_exited)
 
 	# 욕구 시스템 초기화
-	needs = SpiritNeedsManager.new()
+	needs = EchoNeedsManager.new()
 	add_child(needs)
 	needs.mood_changed.connect(_on_mood_changed)
 	needs.need_critical.connect(_on_need_critical)
@@ -94,12 +94,12 @@ func setup(data: ArtifactData, home: Vector2) -> void:
 
 func _apply_data() -> void:
 	if sprite:
-		# spirit_frames 가 지정된 경우 교체, 없으면 씬 기본값 유지
-		if artifact_data.spirit_frames:
-			sprite.sprite_frames = artifact_data.spirit_frames
+		# echo_frames 가 지정된 경우 교체, 없으면 씬 기본값 유지
+		if artifact_data.echo_frames:
+			sprite.sprite_frames = artifact_data.echo_frames
 		sprite.play("float")
 	if name_label:
-		name_label.text = artifact_data.spirit_name
+		name_label.text = artifact_data.echo_name
 	_start_pulse()
 	_start_squeeze()
 
@@ -116,21 +116,21 @@ func _start_pulse() -> void:
 	var speed:    float
 	var alpha_lo: float
 	var alpha_hi: float
-	var cur_mood := needs.mood if needs else &"보통"
+	var cur_mood := needs.mood if needs else &"유지"
 	match cur_mood:
-		&"행복":
+		&"안정":
 			speed    = 0.9    # 빠른 활기찬 펄스
 			alpha_lo = 0.6
 			alpha_hi = 1.0
-		&"불만":
-			speed    = 2.8    # 느린 축 처진 펄스
+		&"불안정":
+			speed    = 2.8    # 느린 불안정 펄스
 			alpha_lo = 0.3
 			alpha_hi = 0.65
-		&"고통":
+		&"붕괴":
 			speed    = 4.0    # 매우 느리고 희미한 펄스
 			alpha_lo = 0.15
 			alpha_hi = 0.45
-		_:                    # 보통
+		_:                    # 유지
 			speed    = 1.8
 			alpha_lo = 0.4
 			alpha_hi = 0.8
@@ -220,10 +220,10 @@ func _process_bumped(delta: float) -> void:
 func start_interact() -> void:
 	state    = State.INTERACT
 	velocity = Vector2.ZERO
-	# 상호작용 시 만족도·활력 회복
+	# 상호작용 시 안정도·활성도 회복
 	if needs:
-		needs.fulfill(&"만족도", 22.0)
-		needs.fulfill(&"활력",   12.0)
+		needs.fulfill(&"안정도", 22.0)
+		needs.fulfill(&"활성도", 12.0)
 	player_interacted.emit(self)
 
 func end_interact() -> void:
@@ -237,29 +237,29 @@ func _on_mood_changed(new_mood: StringName) -> void:
 	# 스프라이트 색조
 	var base_color: Color
 	match new_mood:
-		&"행복": base_color = Color(1.05, 0.98, 0.75)   # 따뜻한 황금빛
-		&"불만": base_color = Color(0.80, 0.85, 0.95)   # 차가운 회청
-		&"고통": base_color = Color(1.00, 0.52, 0.52)   # 붉은 고통
-		_:       base_color = Color.WHITE
+		&"안정":   base_color = Color(0.75, 1.05, 0.85)   # 청록 — 안정적
+		&"불안정": base_color = Color(0.80, 0.85, 0.95)   # 차가운 회청
+		&"붕괴":   base_color = Color(1.00, 0.52, 0.52)   # 붉은 위험
+		_:         base_color = Color.WHITE                # 유지
 	# alpha 는 펄스 트윈이 관리하므로 RGB 만 교체
 	sprite.modulate = Color(base_color.r, base_color.g, base_color.b,
 							sprite.modulate.a)
 
-	# 기분에 따라 배회 반경 조정 — 행복할수록 멀리, 고통스러우면 구석에만
+	# 상태에 따라 배회 반경 조정 — 안정적일수록 멀리, 붕괴 시 구석에만
 	if artifact_data:
 		match new_mood:
-			&"행복": wander_radius = artifact_data.wander_radius * 1.4
-			&"불만": wander_radius = artifact_data.wander_radius * 0.5
-			&"고통": wander_radius = artifact_data.wander_radius * 0.15
-			_:       wander_radius = artifact_data.wander_radius
+			&"안정":   wander_radius = artifact_data.wander_radius * 1.4
+			&"불안정": wander_radius = artifact_data.wander_radius * 0.5
+			&"붕괴":   wander_radius = artifact_data.wander_radius * 0.15
+			_:         wander_radius = artifact_data.wander_radius
 
 	# 펄스 속도·밝기 재시작
 	_start_pulse()
 
 ## 수치가 위험 구간("고통"/"고갈")에 진입했을 때 반응
-func _on_need_critical(need: SpiritNeed) -> void:
+func _on_need_critical(need: EchoNeed) -> void:
 	# TODO: 말풍선 또는 느낌표 이펙트 추가
-	push_warning("혼 [%s] 의 %s 이 위험합니다 (%.0f%%)" \
+	push_warning("Echo [%s] 의 %s 이 위험합니다 (%.0f%%)" \
 		% [name, need.label, need.get_ratio() * 100.0])
 
 # ───────────────────────────────
@@ -291,7 +291,7 @@ func _on_interact_area_exited(body: Node2D) -> void:
 # ───────────────────────────────
 #  상태 확인 UI
 # ───────────────────────────────
-## 기존 interact_area(20px)보다 넓은 감지 영역(50px) — 정령에 닿지 않아도 F 누를 수 있음
+## 기존 interact_area(20px)보다 넓은 감지 영역(50px) — Echo에 닿지 않아도 F 누를 수 있음
 func _setup_status_area() -> void:
 	var area   := Area2D.new()
 	var shape  := CollisionShape2D.new()
@@ -352,7 +352,7 @@ func _open_status_panel() -> void:
 	_canvas_layer.layer = 10
 	get_tree().get_root().add_child(_canvas_layer)
 
-	_status_panel = SpiritStatusPanel.new()
+	_status_panel = EchoStatusPanel.new()
 	_canvas_layer.add_child(_status_panel)
 	_status_panel.setup(self)
 

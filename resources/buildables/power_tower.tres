@@ -6,8 +6,8 @@
 
 [resource]
 script = ExtResource("3_script")
-item_name = "송전탑"
-description = "전력을 중계하여 발전소 범위 밖 건물에도 전달합니다. 체인 연결 가능."
+item_name = "릴레이 타워"
+description = "시설 간 전력 및 에코 신호를 중게한다."
 icon = ExtResource("1_2yvjd")
 scene = ExtResource("2_scene")
 cost = 80

@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://jdye7bm5cm6o"]
 
 [ext_resource type="Script" uid="uid://bwlqoglqs1mk5" path="res://scripts/museum/artifact_slot.gd" id="1_51rda"]
-[ext_resource type="PackedScene" uid="uid://df2d2mqrq6d5a" path="res://AutoLoad/scenes/Spirit.tscn" id="2_cg56x"]
+[ext_resource type="PackedScene" uid="uid://dvckv05px5j8w" path="res://AutoLoad/scenes/Echo.tscn" id="2_cg56x"]
 [ext_resource type="Texture2D" uid="uid://dtjwr5bxyomo0" path="res://AutoLoad/assets/ArtifactSlot/pedestal.png" id="3_0n2q6"]
 [ext_resource type="FontFile" uid="uid://c6oayswa1a3mm" path="res://AutoLoad/assets/Font/DungGeunMo.ttf" id="4_0n2q6"]
 
@@ -76,7 +76,7 @@ size = Vector2(39, 34)
 [node name="ArtifactSlot" type="Node2D" unique_id=929378457]
 z_index = -1
 script = ExtResource("1_51rda")
-spirit_scene = ExtResource("2_cg56x")
+echo_scene = ExtResource("2_cg56x")
 
 [node name="PedestalSprite" type="AnimatedSprite2D" parent="." unique_id=1023089491]
 sprite_frames = SubResource("SpriteFrames_pedestal")

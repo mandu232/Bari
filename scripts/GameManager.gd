@@ -5,8 +5,8 @@ extends Node
 # ───────────────────────────────
 #  전역 데이터
 # ───────────────────────────────
-var spirit_essence: int              = 9999
-var total_spirits: int               = 0
+var echo_essence: int              = 9999
+var total_echoes: int               = 0
 var artifacts: Array[ArtifactData]   = []
 var dungeon_depth: int               = 1
 var current_run_active: bool         = false
@@ -38,7 +38,7 @@ signal essence_changed(new_value: int)
 signal essence_rate_changed(rate: float)
 signal power_changed(used: int, total: int)
 signal artifact_added(artifact: ArtifactData)
-signal spirit_count_changed(count: int)
+signal echo_count_changed(count: int)
 signal run_started(depth: int)
 signal run_ended(success: bool)
 
@@ -52,7 +52,7 @@ func _ready() -> void:
 	_init_starting_blueprints()
 
 func _init_starting_blueprints() -> void:
-	# .tres 파일에서 직접 로드 — 값 변경은 에디터 인스펙터에서
+	
 	var stand := load("res://resources/buildables/artifact_stand.tres") as BuildableItem
 	if stand:
 		unlocked_blueprints.append(stand)
@@ -124,14 +124,14 @@ func reset_power() -> void:
 #  영력 (靈力)
 # ───────────────────────────────
 func add_essence(amount: int) -> void:
-	spirit_essence += amount
-	essence_changed.emit(spirit_essence)
+	echo_essence += amount
+	essence_changed.emit(echo_essence)
 
 func spend_essence(amount: int) -> bool:
-	if spirit_essence < amount:
+	if echo_essence < amount:
 		return false
-	spirit_essence -= amount
-	essence_changed.emit(spirit_essence)
+	echo_essence -= amount
+	essence_changed.emit(echo_essence)
 	return true
 
 # ───────────────────────────────
@@ -147,9 +147,9 @@ func remove_artifact(artifact: ArtifactData) -> void:
 # ───────────────────────────────
 #  혼 (魂)
 # ───────────────────────────────
-func add_spirit(count: int = 1) -> void:
-	total_spirits += count
-	spirit_count_changed.emit(total_spirits)
+func add_echo(count: int = 1) -> void:
+	total_echoes += count
+	echo_count_changed.emit(total_echoes)
 
 # ───────────────────────────────
 #  씬 전환
@@ -173,8 +173,8 @@ const SAVE_PATH := "user://savegame.cfg"
 
 func save_game() -> void:
 	var cfg := ConfigFile.new()
-	cfg.set_value("player", "essence",       spirit_essence)
-	cfg.set_value("player", "spirits",       total_spirits)
+	cfg.set_value("player", "essence",       echo_essence)
+	cfg.set_value("player", "echoes",       total_echoes)
 	cfg.set_value("player", "dungeon_depth", dungeon_depth)
 	cfg.set_value("player", "max_health",    player_max_health)
 	cfg.set_value("player", "damage_bonus",  player_damage_bonus)
@@ -185,8 +185,8 @@ func load_game() -> void:
 	var cfg := ConfigFile.new()
 	if cfg.load(SAVE_PATH) != OK:
 		return
-	spirit_essence      = cfg.get_value("player", "essence",       0)
-	total_spirits       = cfg.get_value("player", "spirits",       0)
+	echo_essence      = cfg.get_value("player", "essence",       0)
+	total_echoes       = cfg.get_value("player", "echoes",       0)
 	dungeon_depth       = cfg.get_value("player", "dungeon_depth", 1)
 	player_max_health   = cfg.get_value("player", "max_health",    6)
 	player_damage_bonus = cfg.get_value("player", "damage_bonus",  0)

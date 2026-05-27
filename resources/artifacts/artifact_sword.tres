@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="ArtifactData" format=3 uid="uid://cglfw5g0oly12"]
 
 [ext_resource type="Script" uid="uid://urkryft166ev" path="res://scripts/artifact/ArtifactData.gd" id="1_lex6m"]
-[ext_resource type="Texture2D" uid="uid://bhrsulloc16by" path="res://AutoLoad/assets/Spirit/spirit.png" id="2_mw10j"]
+[ext_resource type="SpriteFrames" uid="uid://bjxt1anbuuqeu" path="res://AutoLoad/assets/Echo/Echo_SpriteFrames.tres" id="1_mw10j"]
 [ext_resource type="Texture2D" uid="uid://cxy3fgnn3xfhr" path="res://AutoLoad/assets/Artifact/artifact_sword.png" id="3_58cc4"]
 
 [resource]
@@ -9,8 +9,8 @@ script = ExtResource("1_lex6m")
 artifact_name = "세형동검"
 description = "전쟁의 혼이 깃든 검"
 texture = ExtResource("3_58cc4")
-spirit_name = "전쟁의 혼"
-spirit_texture = ExtResource("2_mw10j")
-spirit_power = 3
+echo_name = "전쟁의 혼"
+echo_frames = ExtResource("1_mw10j")
+echo_power = 3
 wander_radius = 80.0
 metadata/_custom_type_script = "uid://urkryft166ev"

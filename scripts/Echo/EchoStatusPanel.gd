@@ -1,7 +1,7 @@
 extends Control
-class_name SpiritStatusPanel
-## 혼(Spirit)의 욕구 수치를 보여주는 화면 우측 고정 패널
-## Spirit._open_status_panel() 이 CanvasLayer 위에 생성합니다.
+class_name EchoStatusPanel
+## Echo의 욕구 수치를 보여주는 화면 우측 고정 패널
+## Echo._open_status_panel() 이 CanvasLayer 위에 생성합니다.
 
 # ───────────────────────────────
 #  레이아웃 상수
@@ -20,19 +20,19 @@ const FOOTER_H:  float = 14.0   # 하단 기분·닫기 힌트 영역 높이
 # ───────────────────────────────
 #  STATE
 # ───────────────────────────────
-var _spirit: Spirit = null
-var _font:   Font   = null
+var _echo: Echo = null
+var _font: Font = null
 
 # ───────────────────────────────
 #  SETUP
 # ───────────────────────────────
-func setup(spirit: Spirit) -> void:
-	_spirit = spirit
-	_font   = load("res://AutoLoad/assets/Font/DungGeunMo.ttf") as Font
+func setup(echo: Echo) -> void:
+	_echo = echo
+	_font = load("res://AutoLoad/assets/Font/DungGeunMo.ttf") as Font
 
-	if spirit.needs:
-		spirit.needs.mood_changed.connect(_on_needs_changed.unbind(1))
-		for need: SpiritNeed in spirit.needs.get_all_needs():
+	if echo.needs:
+		echo.needs.mood_changed.connect(_on_needs_changed.unbind(1))
+		for need: EchoNeed in echo.needs.get_all_needs():
 			need.value_changed.connect(_on_needs_changed.unbind(3))
 
 	_reposition()
@@ -44,9 +44,9 @@ func _on_needs_changed() -> void:
 
 ## 패널 높이 계산 후 화면 우측 중앙에 배치
 func _reposition() -> void:
-	if _spirit == null or _spirit.needs == null:
+	if _echo == null or _echo.needs == null:
 		return
-	var needs_count := _spirit.needs.get_all_needs().size()
+	var needs_count := _echo.needs.get_all_needs().size()
 	var panel_h := PAD + HEADER_H + SEP_H + ROW_H * needs_count + FOOTER_H + PAD
 	var vp      := get_viewport().get_visible_rect().size
 	position    = Vector2(vp.x - PANEL_W - MARGIN, (vp.y - panel_h) * 0.5)
@@ -56,10 +56,10 @@ func _reposition() -> void:
 #  DRAW  (Control 좌표 — (0,0) 이 패널 좌상단)
 # ───────────────────────────────
 func _draw() -> void:
-	if _spirit == null or _spirit.needs == null or _font == null:
+	if _echo == null or _echo.needs == null or _font == null:
 		return
 
-	var needs_list: Array = _spirit.needs.get_all_needs()
+	var needs_list: Array = _echo.needs.get_all_needs()
 	var panel_h := PAD + HEADER_H + SEP_H + ROW_H * needs_list.size() + FOOTER_H + PAD
 
 	var ox: float = 0.0
@@ -69,12 +69,12 @@ func _draw() -> void:
 
 	var cy := oy + PAD
 
-	# ── 헤더: 기분 심볼 + 혼 이름
-	var spirit_name := _spirit.artifact_data.spirit_name if _spirit.artifact_data else "???"
-	var header_str  := _mood_symbol(_spirit.needs.mood) + "  " + spirit_name
+	# ── 헤더: 기분 심볼 + Echo 이름
+	var echo_name  := _echo.artifact_data.echo_name if _echo.artifact_data else "???"
+	var header_str := _mood_symbol(_echo.needs.mood) + "  " + echo_name
 	draw_string(_font, Vector2(ox + PAD, cy + 16.0),
 				header_str, HORIZONTAL_ALIGNMENT_LEFT,
-				PANEL_W - PAD * 2, 14, Color(0.88, 0.93, 1.0))
+				PANEL_W - PAD * 2, 17, Color(0.88, 0.93, 1.0))
 	cy += HEADER_H
 
 	# ── 구분선
@@ -84,19 +84,19 @@ func _draw() -> void:
 	cy += SEP_H
 
 	# ── 수치 행
-	for need: SpiritNeed in needs_list:
+	for need: EchoNeed in needs_list:
 		_draw_need_row(need, ox + PAD, cy)
 		cy += ROW_H
 
 	# ── 하단: 현재 기분 + [F] 닫기
-	var mood_str   := "기분: " + _mood_label(_spirit.needs.mood)
-	var mood_color := _mood_color(_spirit.needs.mood)
+	var mood_str   := "기분: " + _mood_label(_echo.needs.mood)
+	var mood_color := _mood_color(_echo.needs.mood)
 	draw_string(_font, Vector2(ox + PAD, cy + 14.0),
 				mood_str, HORIZONTAL_ALIGNMENT_LEFT,
-				PANEL_W * 0.60, 12, mood_color)
+				PANEL_W * 0.60, 14, mood_color)
 	draw_string(_font, Vector2(ox + PANEL_W - PAD, cy + 14.0),
 				"[F] 닫기", HORIZONTAL_ALIGNMENT_RIGHT,
-				70.0, 11, Color(0.50, 0.55, 0.65))
+				70.0, 13, Color(0.50, 0.55, 0.65))
 
 # ─── 배경 & 테두리 ──────────────────────────────────────
 func _draw_panel_bg(x: float, y: float, w: float, h: float) -> void:
@@ -110,11 +110,11 @@ func _draw_panel_bg(x: float, y: float, w: float, h: float) -> void:
 			  Color(0.55, 0.75, 1.0, 0.35), 1.5)
 
 # ─── 수치 한 행 ──────────────────────────────────────────
-func _draw_need_row(need: SpiritNeed, x: float, y: float) -> void:
+func _draw_need_row(need: EchoNeed, x: float, y: float) -> void:
 	# 이름 레이블
 	draw_string(_font, Vector2(x, y + 12.0),
 				need.label, HORIZONTAL_ALIGNMENT_LEFT,
-				LABEL_W, 12, Color(0.72, 0.76, 0.90))
+				LABEL_W, 14, Color(0.72, 0.76, 0.90))
 
 	# 진행 바 영역
 	var bx := x + LABEL_W + 4.0
@@ -135,33 +135,38 @@ func _draw_need_row(need: SpiritNeed, x: float, y: float) -> void:
 	# 수치 숫자
 	draw_string(_font, Vector2(bx + bw + 5.0, y + 12.0),
 				"%d" % int(need.value), HORIZONTAL_ALIGNMENT_LEFT,
-				NUM_W, 12, Color(0.60, 0.65, 0.78))
+				NUM_W, 14, Color(0.60, 0.65, 0.78))
 
 # ─── 색상·텍스트 헬퍼 ────────────────────────────────────
 func _mood_symbol(mood: StringName) -> String:
 	match mood:
-		&"행복": return "★"
-		&"불만": return "▼"
-		&"고통": return "✕"
-		_:       return "●"
+		&"안정":   return "◆"
+		&"불안정": return "▼"
+		&"붕괴":   return "✕"
+		_:         return "●"   # 유지
 
 func _mood_label(mood: StringName) -> String:
 	match mood:
-		&"행복": return "행복"
-		&"불만": return "불만"
-		&"고통": return "고통"
-		_:       return "보통"
+		&"안정":   return "안정"
+		&"불안정": return "불안정"
+		&"붕괴":   return "붕괴"
+		_:         return "유지"
 
 func _mood_color(mood: StringName) -> Color:
 	match mood:
-		&"행복": return Color(0.35, 0.92, 0.55)
-		&"불만": return Color(0.96, 0.66, 0.20)
-		&"고통": return Color(0.96, 0.30, 0.30)
-		_:       return Color(0.60, 0.82, 0.96)
+		&"안정":   return Color(0.35, 0.92, 0.55)   # 초록
+		&"불안정": return Color(0.96, 0.66, 0.20)   # 주황
+		&"붕괴":   return Color(0.96, 0.30, 0.30)   # 빨강
+		_:         return Color(0.60, 0.82, 0.96)   # 파랑 (유지)
 
 func _tier_color(tier: StringName) -> Color:
 	match tier:
-		&"행복", &"충만", &"활기": return Color(0.28, 0.85, 0.48)
-		&"불만", &"공허", &"피로": return Color(0.96, 0.65, 0.18)
-		&"고통", &"고갈":          return Color(0.96, 0.28, 0.28)
-		_:                         return Color(0.48, 0.72, 0.96)
+		# 안정도 good / 출력 peak / 활성도 good
+		&"안정", &"과출력", &"활성": return Color(0.28, 0.85, 0.48)   # 초록
+		# 안정도 mid / 활성도 mid
+		&"유지", &"반응":            return Color(0.48, 0.72, 0.96)   # 파랑
+		# 안정도 bad / 출력 low / 활성도 slow
+		&"불안정", &"저출력", &"둔화": return Color(0.96, 0.65, 0.18) # 주황
+		# 안정도 crit / 출력 stop / 활성도 silent
+		&"붕괴", &"정지", &"침묵":   return Color(0.96, 0.28, 0.28)   # 빨강
+		_:                           return Color(0.48, 0.72, 0.96)
