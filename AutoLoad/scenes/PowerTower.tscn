@@ -1,15 +1,67 @@
 [gd_scene format=3 uid="uid://c5ca62tejp4q2"]
 
 [ext_resource type="Script" uid="uid://dpe6gtcfhdd6c" path="res://scripts/museum/PowerTower.gd" id="1_tower"]
-[ext_resource type="Texture2D" uid="uid://cy2kql56y8es6" path="res://AutoLoad/assets/PowerTower/PowerTower.png" id="2_j5eat"]
+[ext_resource type="Texture2D" uid="uid://c6nsr7x8w0vyk" path="res://AutoLoad/assets/PowerTower/PowerTower_bodyLayer.png" id="2_j5eat"]
+[ext_resource type="Texture2D" uid="uid://daq4vl88kj7y7" path="res://AutoLoad/assets/PowerTower/PowerTower_StandLayer.png" id="2_x245i"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_fuhrt"]
+atlas = ExtResource("2_x245i")
+region = Rect2(0, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_4r2og"]
+atlas = ExtResource("2_x245i")
+region = Rect2(0, 0, 64, 64)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_jf0v6"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_fuhrt")
+}],
+"loop": false,
+"name": &"off",
+"speed": 0.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_4r2og")
+}],
+"loop": false,
+"name": &"on",
+"speed": 0.0
+}]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_x245i"]
 atlas = ExtResource("2_j5eat")
-region = Rect2(64, 0, 64, 64)
+region = Rect2(0, 0, 64, 64)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_jjrc2"]
 atlas = ExtResource("2_j5eat")
-region = Rect2(0, 0, 64, 64)
+region = Rect2(0, 64, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_0q0xe"]
+atlas = ExtResource("2_j5eat")
+region = Rect2(64, 64, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ta5km"]
+atlas = ExtResource("2_j5eat")
+region = Rect2(128, 64, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_pc1yf"]
+atlas = ExtResource("2_j5eat")
+region = Rect2(192, 64, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ygddy"]
+atlas = ExtResource("2_j5eat")
+region = Rect2(256, 64, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ya5a4"]
+atlas = ExtResource("2_j5eat")
+region = Rect2(320, 64, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_j7lkm"]
+atlas = ExtResource("2_j5eat")
+region = Rect2(384, 64, 64, 64)
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_0q0xe"]
 animations = [{
@@ -24,30 +76,62 @@ animations = [{
 "frames": [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_jjrc2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_0q0xe")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ta5km")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_pc1yf")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ygddy")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ya5a4")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_j7lkm")
 }],
-"loop": false,
+"loop": true,
 "name": &"on",
-"speed": 0.0
+"speed": 7.0
 }]
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_bpie0"]
+size = Vector2(14, 21)
+
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_tower"]
-size = Vector2(18, 36)
+size = Vector2(22, 18)
 
 [node name="PowerTower" type="Node2D" unique_id=1787855393]
 z_index = -1
 script = ExtResource("1_tower")
 
-[node name="Sprite2D" type="AnimatedSprite2D" parent="." unique_id=756631500]
+[node name="Stand" type="AnimatedSprite2D" parent="." unique_id=2076093209]
+position = Vector2(0, -8)
+sprite_frames = SubResource("SpriteFrames_jf0v6")
+animation = &"off"
+
+[node name="Body" type="AnimatedSprite2D" parent="." unique_id=756631500]
 modulate = Color(0.4, 0.8, 1, 1)
-position = Vector2(0, -6)
 sprite_frames = SubResource("SpriteFrames_0q0xe")
-animation = &"on"
+animation = &"off"
 offset = Vector2(0, -8)
 
-[node name="StaticBody2D" type="StaticBody2D" parent="." unique_id=1762455529]
+[node name="Body_stBody" type="StaticBody2D" parent="." unique_id=811404529]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Body_stBody" unique_id=2055671585]
+position = Vector2(0, -14.5)
+shape = SubResource("RectangleShape2D_bpie0")
+debug_color = Color(0.5932201, 0.5468423, 0, 0.41960785)
+
+[node name="Stand_stBody" type="StaticBody2D" parent="." unique_id=1762455529]
 position = Vector2(0, -8)
 collision_layer = 16
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D" unique_id=1293599388]
-position = Vector2(0, -5)
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Stand_stBody" unique_id=1293599388]
+position = Vector2(0, 13)
 shape = SubResource("RectangleShape2D_tower")

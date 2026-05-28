@@ -61,14 +61,6 @@ func _init_starting_blueprints() -> void:
 	if plant_1:
 		unlocked_blueprints.append(plant_1)
 
-	var plant_2 := load("res://resources/buildables/power_plant_Lv2.tres") as BuildableItem
-	if plant_2:
-		unlocked_blueprints.append(plant_2)
-
-	var plant_3 := load("res://resources/buildables/power_plant_Lv3.tres") as BuildableItem
-	if plant_3:
-		unlocked_blueprints.append(plant_3)
-
 	var powertower := load("res://resources/buildables/power_tower.tres") as BuildableItem
 	if powertower:
 		unlocked_blueprints.append(powertower)

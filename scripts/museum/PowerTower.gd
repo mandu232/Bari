@@ -25,9 +25,10 @@ var source:         Node2D  = null   # 연결된 상위 전원 노드 (PowerPlan
 # ───────────────────────────────
 #  INTERNAL
 # ───────────────────────────────
-@onready var _sprite:     AnimatedSprite2D = $Sprite2D
-var           _info_label: Label           = null
-var           _show_range: bool            = false
+@onready var _body_sprite:    AnimatedSprite2D = $Body
+var           _info_label:    Label           = null
+var           _show_range:    bool            = false
+var           _player_in_body: bool           = false
 
 # ───────────────────────────────
 #  READY
@@ -36,6 +37,7 @@ func _ready() -> void:
 	add_to_group("placed_structure")
 	add_to_group("power_tower")
 	_setup_interact_area()
+	_setup_body_area()
 	_setup_label()
 
 # ───────────────────────────────
@@ -64,6 +66,21 @@ func _setup_interact_area() -> void:
 	add_child(area)
 	area.body_entered.connect(_on_body_entered)
 	area.body_exited.connect(_on_body_exited)
+
+# ───────────────────────────────
+#  바디 투명화 감지 영역 생성
+# ───────────────────────────────
+func _setup_body_area() -> void:
+	var area  := Area2D.new()
+	var shape := CollisionShape2D.new()
+	var rect  := RectangleShape2D.new()
+	rect.size      = Vector2(14, 32)
+	shape.shape    = rect
+	shape.position = Vector2(0, -9)
+	area.add_child(shape)
+	add_child(area)
+	area.body_entered.connect(_on_body_area_entered)
+	area.body_exited.connect(_on_body_area_exited)
 
 # ───────────────────────────────
 #  정보 레이블 생성
@@ -101,6 +118,19 @@ func _on_body_exited(body: Node2D) -> void:
 		queue_redraw()
 
 # ───────────────────────────────
+#  바디 투명화 콜백
+# ───────────────────────────────
+func _on_body_area_entered(body: Node2D) -> void:
+	if body.is_in_group("player"):
+		_player_in_body        = true
+		_body_sprite.modulate.a = 0.3
+
+func _on_body_area_exited(body: Node2D) -> void:
+	if body.is_in_group("player"):
+		_player_in_body        = false
+		_body_sprite.modulate.a = 1.0
+
+# ───────────────────────────────
 #  [F] 키 — 배선 요청
 # ───────────────────────────────
 func _unhandled_input(event: InputEvent) -> void:
@@ -114,10 +144,11 @@ func _unhandled_input(event: InputEvent) -> void:
 #  비주얼 갱신 — _reallocate_power() 완료 후 Museum 에서 호출
 # ───────────────────────────────
 func refresh_visuals() -> void:
-	if _sprite == null:
+	if _body_sprite == null:
 		return
-	_sprite.modulate = Color.WHITE           # 파란 색조 제거
-	_sprite.play("on" if is_active else "off")
+	var alpha              := 0.3 if _player_in_body else 1.0
+	_body_sprite.modulate   = Color(1, 1, 1, alpha)
+	_body_sprite.play("on" if is_active else "off")
 
 # ───────────────────────────────
 #  CLEANUP

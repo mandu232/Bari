@@ -5,47 +5,94 @@
 [ext_resource type="Texture2D" uid="uid://dtjwr5bxyomo0" path="res://AutoLoad/assets/ArtifactSlot/pedestal.png" id="3_0n2q6"]
 [ext_resource type="FontFile" uid="uid://c6oayswa1a3mm" path="res://AutoLoad/assets/Font/DungGeunMo.ttf" id="4_0n2q6"]
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_b6i68"]
-atlas = ExtResource("3_0n2q6")
-region = Rect2(0, 64, 64, 64)
-
 [sub_resource type="AtlasTexture" id="AtlasTexture_qi4ex"]
 atlas = ExtResource("3_0n2q6")
 region = Rect2(0, 0, 64, 64)
 
+[sub_resource type="AtlasTexture" id="AtlasTexture_0n2q6"]
+atlas = ExtResource("3_0n2q6")
+region = Rect2(0, 64, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_b6i68"]
+atlas = ExtResource("3_0n2q6")
+region = Rect2(64, 64, 64, 64)
+
 [sub_resource type="AtlasTexture" id="AtlasTexture_5l8ef"]
 atlas = ExtResource("3_0n2q6")
-region = Rect2(64, 0, 64, 64)
+region = Rect2(128, 64, 64, 64)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_0wxxl"]
 atlas = ExtResource("3_0n2q6")
-region = Rect2(128, 0, 64, 64)
+region = Rect2(192, 64, 64, 64)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_m0ams"]
 atlas = ExtResource("3_0n2q6")
-region = Rect2(192, 0, 64, 64)
+region = Rect2(256, 64, 64, 64)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_xhmj5"]
 atlas = ExtResource("3_0n2q6")
-region = Rect2(256, 0, 64, 64)
+region = Rect2(320, 64, 64, 64)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_ucf3e"]
 atlas = ExtResource("3_0n2q6")
-region = Rect2(320, 0, 64, 64)
+region = Rect2(384, 64, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ynvmt"]
+atlas = ExtResource("3_0n2q6")
+region = Rect2(448, 64, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_sgglq"]
+atlas = ExtResource("3_0n2q6")
+region = Rect2(512, 64, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_fhprw"]
+atlas = ExtResource("3_0n2q6")
+region = Rect2(576, 64, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_rvgk0"]
+atlas = ExtResource("3_0n2q6")
+region = Rect2(640, 64, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_g60gg"]
+atlas = ExtResource("3_0n2q6")
+region = Rect2(704, 64, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_rikdj"]
+atlas = ExtResource("3_0n2q6")
+region = Rect2(768, 64, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_dy13m"]
+atlas = ExtResource("3_0n2q6")
+region = Rect2(832, 64, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_e8ksw"]
+atlas = ExtResource("3_0n2q6")
+region = Rect2(896, 64, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_5u86f"]
+atlas = ExtResource("3_0n2q6")
+region = Rect2(960, 64, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_0mw41"]
+atlas = ExtResource("3_0n2q6")
+region = Rect2(1024, 64, 64, 64)
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_pedestal"]
 animations = [{
 "frames": [{
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_b6i68")
+"texture": SubResource("AtlasTexture_qi4ex")
 }],
-"loop": true,
+"loop": false,
 "name": &"off",
-"speed": 1.0
+"speed": 0.0
 }, {
 "frames": [{
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_qi4ex")
+"texture": SubResource("AtlasTexture_0n2q6")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_b6i68")
 }, {
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_5l8ef")
@@ -61,10 +108,40 @@ animations = [{
 }, {
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_ucf3e")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ynvmt")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_sgglq")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_fhprw")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_rvgk0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_g60gg")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_rikdj")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_dy13m")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_e8ksw")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_5u86f")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_0mw41")
 }],
 "loop": true,
 "name": &"on",
-"speed": 7.0
+"speed": 8.0
 }]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_51rda"]
@@ -79,8 +156,10 @@ script = ExtResource("1_51rda")
 echo_scene = ExtResource("2_cg56x")
 
 [node name="PedestalSprite" type="AnimatedSprite2D" parent="." unique_id=1023089491]
+position = Vector2(0, -9)
 sprite_frames = SubResource("SpriteFrames_pedestal")
-animation = &"off"
+animation = &"on"
+frame_progress = 0.42108315
 
 [node name="ArtifactSprite" type="Sprite2D" parent="." unique_id=1063238234]
 

@@ -1,14 +1,14 @@
 [gd_resource type="Resource" script_class="BuildableItem" format=3 uid="uid://mqvpe5i655tc"]
 
-[ext_resource type="Texture2D" uid="uid://cbous7fnbltat" path="res://AutoLoad/assets/PowerPlant/powerplant_Lv1.png" id="1_l3ye0"]
+[ext_resource type="Texture2D" uid="uid://cpcl1q4c3fsi5" path="res://AutoLoad/assets/PowerPlant/powerplant_Lv1_icon.png" id="1_ihfqr"]
 [ext_resource type="PackedScene" uid="uid://de2rv5dgrponb" path="res://AutoLoad/scenes/PowerPlant_1.tscn" id="2_7lpnr"]
 [ext_resource type="Script" uid="uid://rfwfdifnaeyn" path="res://scripts/museum/BuildableItem.gd" id="3_6jhf5"]
 
 [resource]
 script = ExtResource("3_6jhf5")
-item_name = "펄스 코어"
-description = "저출력 동력 코어. 시설 유지에 사용된다."
-icon = ExtResource("1_l3ye0")
+item_name = "발전기 Lv.1"
+description = "적은 양의 전력을 생산합니다."
+icon = ExtResource("1_ihfqr")
 scene = ExtResource("2_7lpnr")
 power_output = 20
 metadata/_custom_type_script = "uid://rfwfdifnaeyn"

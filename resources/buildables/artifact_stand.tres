@@ -6,8 +6,8 @@
 
 [resource]
 script = ExtResource("3_6c3a0")
-item_name = "에코 베이"
-description = "에코를 활성화 및 보존하는 전시 장치."
+item_name = "전시대"
+description = "유물을 전시할 수 있는 시설."
 icon = ExtResource("1_uou1m")
 scene = ExtResource("2_fyg73")
 cost = 50

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cbous7fnbltat"
-path="res://.godot/imported/powerplant_Lv1.png-eb50c2594921fb8f417216608d65e867.ctex"
+uid="uid://c6nsr7x8w0vyk"
+path="res://.godot/imported/PowerTower_bodyLayer.png-ce3fc5bbdba5d0ffa3dfc9912b205710.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://AutoLoad/assets/PowerPlant/powerplant_Lv1.png"
-dest_files=["res://.godot/imported/powerplant_Lv1.png-eb50c2594921fb8f417216608d65e867.ctex"]
+source_file="res://AutoLoad/assets/PowerTower/PowerTower_bodyLayer.png"
+dest_files=["res://.godot/imported/PowerTower_bodyLayer.png-ce3fc5bbdba5d0ffa3dfc9912b205710.ctex"]
 
 [params]
 
