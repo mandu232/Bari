@@ -16,3 +16,7 @@ class_name BuildableItem
 @export var power_range:       float = 0.0   # 전력 공급/출력 반경 (0 = 스크립트 기본값 사용)
 @export var relay_capacity:    int   = 0     # 최대 중계 전력량 (송전탑 전용, 0 = 스크립트 기본값)
 @export var chain_range:       float = 0.0   # 수동 배선 최대 거리 (송전탑 전용, 0 = 스크립트 기본값)
+
+@export_group("분수 효과")
+@export var stability_bonus: float = 0.0  # 홀로그램 분수 — 영력 생산량 보너스 배율 (예: 0.5 = +50%)
+@export var stability_range: float = 0.0  # 홀로그램 분수 — 효과 반경 (0 = 스크립트 기본값 사용)

@@ -10,5 +10,5 @@ item_name = "발전기 Lv.1"
 description = "적은 양의 전력을 생산합니다."
 icon = ExtResource("1_ihfqr")
 scene = ExtResource("2_7lpnr")
-power_output = 20
+power_output = 40
 metadata/_custom_type_script = "uid://rfwfdifnaeyn"

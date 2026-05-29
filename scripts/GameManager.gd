@@ -65,6 +65,10 @@ func _init_starting_blueprints() -> void:
 	if powertower:
 		unlocked_blueprints.append(powertower)
 
+	var hologram_fountain := load("res://resources/buildables/hologram_fountain.tres") as BuildableItem
+	if hologram_fountain:
+		unlocked_blueprints.append(hologram_fountain)
+
 # ───────────────────────────────
 #  설계도
 # ───────────────────────────────

@@ -65,6 +65,9 @@ signal player_interacted(echo: Echo)
 #  READY
 # ───────────────────────────────
 func _ready() -> void:
+	# 에코는 유령 — 항상 건물(z_index ≈ y좌표) 위에 렌더링
+	z_as_relative = false
+	z_index       = 3000
 	_idle_timer = randf_range(IDLE_TIME_MIN, IDLE_TIME_MAX)
 	interact_area.body_entered.connect(_on_interact_area_entered)
 	interact_area.body_exited.connect(_on_interact_area_exited)

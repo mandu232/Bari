@@ -148,7 +148,7 @@ animations = [{
 radius = 39.012817
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_pedestal"]
-size = Vector2(39, 34)
+size = Vector2(32, 25)
 
 [node name="ArtifactSlot" type="Node2D" unique_id=929378457]
 z_index = -1
@@ -156,7 +156,7 @@ script = ExtResource("1_51rda")
 echo_scene = ExtResource("2_cg56x")
 
 [node name="PedestalSprite" type="AnimatedSprite2D" parent="." unique_id=1023089491]
-position = Vector2(0, -9)
+position = Vector2(0, -7)
 sprite_frames = SubResource("SpriteFrames_pedestal")
 animation = &"on"
 frame_progress = 0.42108315
@@ -177,6 +177,7 @@ collision_layer = 16
 collision_mask = 0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="PedestalBody" unique_id=987654321]
+position = Vector2(0, 3.5)
 shape = SubResource("RectangleShape2D_pedestal")
 
 [node name="SlotLabel" type="Label" parent="." unique_id=276516129]

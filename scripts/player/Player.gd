@@ -89,6 +89,9 @@ func _ready() -> void:
 #  PROCESS
 # ───────────────────────────────
 func _physics_process(delta: float) -> void:
+	# 탑다운 뷰 Y-소팅 — y가 클수록 앞에 렌더링
+	z_as_relative = false
+	z_index       = int(global_position.y)
 	_tick_timers(delta)
 
 	match state:

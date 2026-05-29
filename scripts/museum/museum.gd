@@ -52,6 +52,10 @@ func _ready() -> void:
 	# 전력 토폴로지가 바뀌면 전력 재할당
 	GameManager.power_changed.connect(_on_power_changed_museum)
 
+	# 씬 트리가 완전히 구성된 뒤 z_index 초기화
+	call_deferred("_refresh_z_sort")
+	call_deferred("_fix_tilemap_sort")
+
 # ───────────────────────────────
 #  건설 모드 공통 업데이트
 # ───────────────────────────────
@@ -267,6 +271,12 @@ func _on_wire_requested(node: Node2D) -> void:
 		# 탑 → 전시대는 output_range 내에서 자동 공급이므로 수동 연결 불필요
 		_toggle_connection(_wire_source, node)
 		_cancel_wire()
+	elif node is HologramFountain \
+			and _wire_source is PowerPlant \
+			and (node as HologramFountain).power_cost > 0:
+		# 발전소 → 홀로그램 분수 수동 직접 연결 (청록 전선)
+		_toggle_connection(_wire_source, node)
+		_cancel_wire()
 	else:
 		_cancel_wire()
 
@@ -369,11 +379,21 @@ func _on_item_placed(item: BuildableItem, world_pos: Vector2) -> void:
 			pt.output_range = item.power_range
 		add_child(node)
 		pt.wire_requested.connect(_on_wire_requested)
+	elif node is HologramFountain:
+		var hf := node as HologramFountain
+		hf.power_cost = item.power_consumption   # _ready() 전에 주입
+		if item.stability_bonus > 0.0:
+			hf.stability_bonus = item.stability_bonus
+		if item.stability_range > 0.0:
+			hf.effect_range = item.stability_range
+		add_child(node)
+		hf.wire_requested.connect(_on_wire_requested)
 	else:
 		add_child(node)
 
 	_play_place_anim(node)   # 뽀잉 설치 애니메이션
 	_dynamic_nodes.append({"node": node, "item_path": item.resource_path})
+	_apply_y_sort(node)      # 배치 위치 기준 z_index 설정
 	_save_pedestal_positions()
 	_reallocate_power()      # 새 구조물 설치 후 전력 재할당
 
@@ -523,10 +543,11 @@ func _reallocate_power() -> void:
 					activated_any      = true
 					break
 
-	# ③ placed_structure 그룹의 슬롯에 배분 + 연결 정보 수집
+	# ③ placed_structure 그룹의 소비 건물에 배분 + 연결 정보 수집
 	# connections 형식: {from: Node2D, to: Node2D}
-	#   - 발전소/탑 → ArtifactSlot : 노란 전선
-	#   - 발전소/탑 → PowerTower   : 파란 전선 (탑 연결)
+	#   - 발전소/탑 → ArtifactSlot     : 노란 전선
+	#   - 발전소/탑 → HologramFountain : 청록 전선
+	#   - 발전소/탑 → PowerTower       : 파란 전선 (탑 연결)
 	var connections: Array = []
 
 	# ③-a. 활성화된 수동 연결선 수집 (발전소/탑 → 탑, 파란 전선)
@@ -535,46 +556,53 @@ func _reallocate_power() -> void:
 		if to_tower != null and to_tower.is_active:
 			connections.append({"from": conn["from"] as Node2D, "to": to_tower})
 
-	# ③-b. 건물(ArtifactSlot) 전력 배분
-	#  우선순위: ① 발전소→슬롯 수동 연결  ② 범위 내 활성 송전탑 자동 공급
+	# ③-b. 전력 소비 건물(ArtifactSlot / HologramFountain) 전력 배분
+	#  우선순위: ① 발전소→건물 수동 연결  ② 범위 내 활성 송전탑 자동 공급
 	for node in get_tree().get_nodes_in_group("placed_structure"):
-		var slot := node as ArtifactSlot
-		if slot == null:
+		# 전력 소비 노드 확인
+		var node_power_cost: int
+		if node is ArtifactSlot:
+			node_power_cost = (node as ArtifactSlot).power_cost
+		elif node is HologramFountain:
+			node_power_cost = (node as HologramFountain).power_cost
+		else:
 			continue
-		if slot.power_cost == 0:
-			slot.set_powered(true)
+
+		if node_power_cost == 0:
+			node.call("set_powered", true)
 			continue
 
 		var powered := false
+		var node2d := node as Node2D   # placed_structure 는 반드시 Node2D 파생
 
-		# ① 발전소 → 전시대 수동 직접 연결
+		# ① 발전소 → 건물 수동 직접 연결
 		for conn in _manual_connections:
-			if conn["to"] != slot:
+			if conn["to"] != node2d:
 				continue
 			var src := conn["from"] as Node2D
 			if src is PowerPlant:
 				var pp := src as PowerPlant
-				if plant_remaining.get(pp, 0) >= slot.power_cost:
-					plant_remaining[pp] -= slot.power_cost
+				if plant_remaining.get(pp, 0) >= node_power_cost:
+					plant_remaining[pp] -= node_power_cost
 					powered = true
-					connections.append({"from": pp, "to": slot})
+					connections.append({"from": pp, "to": node2d})
 					break
 
 		# ② 수동 연결 없으면 → output_range 내 활성 송전탑에서 자동 공급
-		if not powered:
+		if not powered and node2d != null:
 			for tower in get_tree().get_nodes_in_group("power_tower"):
 				var pt := tower as PowerTower
 				if pt == null or not pt.is_active:
 					continue
-				var dist := slot.global_position.distance_to(pt.global_position)
+				var dist := node2d.global_position.distance_to(pt.global_position)
 				if dist <= pt.output_range \
-						and _can_supply_via_chain(pt, slot.power_cost, plant_remaining):
-					_deduct_via_chain(pt, slot.power_cost, plant_remaining)
+						and _can_supply_via_chain(pt, node_power_cost, plant_remaining):
+					_deduct_via_chain(pt, node_power_cost, plant_remaining)
 					powered = true
-					connections.append({"from": pt, "to": slot})
+					connections.append({"from": pt, "to": node2d})
 					break
 
-		slot.set_powered(powered)
+		node.call("set_powered", powered)
 
 	# ③-c. 송전탑 스프라이트 애니메이션 갱신 (is_active 확정 후)
 	for tower in get_tree().get_nodes_in_group("power_tower"):
@@ -644,19 +672,22 @@ func _update_power_lines(connections: Array) -> void:
 		var from := to_local(from_node.global_position)
 		var to   := to_local(to_node.global_position)
 
-		# 탑 연결선(파란색) / 건물 연결선(노란색) 구분
-		var is_tower_link := to_node is PowerTower
+		# 탑 연결선(파란색) / 분수 연결선(청록색) / 전시대 연결선(노란색) 구분
 		var col_glow: Color
 		var col_core: Color
 		var col_peak: Color
-		if is_tower_link:
-			col_glow = Color(0.3, 0.75, 1.0, 0.18)
-			col_peak = Color(0.3, 0.75, 1.0, 0.36)
-			col_core = Color(0.6, 0.92, 1.0, 0.9)
+		if to_node is PowerTower:
+			col_glow = Color(0.3,  0.75, 1.0,  0.18)
+			col_peak = Color(0.3,  0.75, 1.0,  0.36)
+			col_core = Color(0.6,  0.92, 1.0,  0.9)
+		elif to_node is HologramFountain:
+			col_glow = Color(0.15, 0.9,  0.7,  0.18)
+			col_peak = Color(0.15, 0.9,  0.7,  0.36)
+			col_core = Color(0.3,  1.0,  0.85, 0.9)
 		else:
-			col_glow = Color(1.0, 0.88, 0.25, 0.18)
-			col_peak = Color(1.0, 0.88, 0.25, 0.36)
-			col_core = Color(1.0, 0.95, 0.6,  0.9)
+			col_glow = Color(1.0,  0.88, 0.25, 0.18)
+			col_peak = Color(1.0,  0.88, 0.25, 0.36)
+			col_core = Color(1.0,  0.95, 0.6,  0.9)
 
 		# 글로우 선 (넓고 반투명) + 펄스 애니메이션
 		var glow := _make_power_line(from, to, 7.0, col_glow)
@@ -737,6 +768,38 @@ func _on_dungeon_trigger_entered(body: Node2D) -> void:
 		GameManager.start_dungeon_run()
 
 # ───────────────────────────────
+#  Y-소팅 — 탑다운 뷰 앞뒤 정렬
+# ───────────────────────────────
+## 노드 하나의 z_index 를 y 좌표 기반으로 설정
+## z_as_relative = false 로 부모 z_index 영향을 받지 않게 고정
+func _apply_y_sort(node: Node2D) -> void:
+	if not is_instance_valid(node):
+		return
+	node.z_as_relative = false
+	node.z_index       = int(node.global_position.y)
+
+## 씬 전체 건물(정적 슬롯 + 동적 노드)의 z_index 일괄 갱신
+func _refresh_z_sort() -> void:
+	for child in slots.get_children():
+		_apply_y_sort(child as Node2D)
+	for entry in _dynamic_nodes:
+		_apply_y_sort(entry["node"] as Node2D)
+
+## 씬 내 모든 타일맵을 가장 뒤에 고정
+## Godot 4.3+ TileMapLayer 와 구버전 TileMap 모두 처리
+func _fix_tilemap_sort() -> void:
+	for node in find_children("*", "TileMap", true, false):
+		var ci := node as CanvasItem
+		if ci:
+			ci.z_as_relative = false
+			ci.z_index       = -1000
+	for node in find_children("*", "TileMapLayer", true, false):
+		var ci := node as CanvasItem
+		if ci:
+			ci.z_as_relative = false
+			ci.z_index       = -1000
+
+# ───────────────────────────────
 #  동적 전시대 저장 / 복원
 # ───────────────────────────────
 const PEDESTALS_SAVE := "user://museum_pedestals.cfg"
@@ -796,9 +859,19 @@ func _restore_pedestals() -> void:
 				pt.output_range = item.power_range
 			add_child(node)
 			pt.wire_requested.connect(_on_wire_requested)
+		elif node is HologramFountain:
+			var hf := node as HologramFountain
+			hf.power_cost = item.power_consumption
+			if item.stability_bonus > 0.0:
+				hf.stability_bonus = item.stability_bonus
+			if item.stability_range > 0.0:
+				hf.effect_range = item.stability_range
+			add_child(node)
+			hf.wire_requested.connect(_on_wire_requested)
 		else:
 			add_child(node)
 
+		_apply_y_sort(node)
 		_dynamic_nodes.append({"node": node, "item_path": item_path})
 		i += 1
 
@@ -853,7 +926,7 @@ func _restore_manual_connections() -> void:
 	if cfg.load(WIRE_SAVE) != OK:
 		return
 
-	# 복원 가능한 노드 목록 수집 (전원 노드 + 전력 비용이 있는 전시대)
+	# 복원 가능한 노드 목록 수집 (전원 노드 + 전력 비용이 있는 소비 건물)
 	var candidates: Array[Node2D] = []
 	for n in get_tree().get_nodes_in_group("power_plant"):
 		candidates.append(n as Node2D)
@@ -863,6 +936,10 @@ func _restore_manual_connections() -> void:
 		var s := n as ArtifactSlot
 		if s != null and s.power_cost > 0:
 			candidates.append(s)
+	for n in get_tree().get_nodes_in_group("hologram_fountain"):
+		var hf := n as HologramFountain
+		if hf != null and hf.power_cost > 0:
+			candidates.append(hf)
 
 	var i := 0
 	while cfg.has_section_key("wires", str(i) + "_from"):

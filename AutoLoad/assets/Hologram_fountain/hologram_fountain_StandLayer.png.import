@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bsdey3v8lus8c"
-path="res://.godot/imported/powerplant_Lv3.png-bd0f197dddb49ceb5b8b535332da4064.ctex"
+uid="uid://cjmwq4yt6f2t4"
+path="res://.godot/imported/hologram_fountain_StandLayer.png-952d3915cfaf945a20f18114602f402d.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://AutoLoad/assets/PowerPlant/powerplant_Lv3.png"
-dest_files=["res://.godot/imported/powerplant_Lv3.png-bd0f197dddb49ceb5b8b535332da4064.ctex"]
+source_file="res://AutoLoad/assets/Hologram_fountain/hologram_fountain_StandLayer.png"
+dest_files=["res://.godot/imported/hologram_fountain_StandLayer.png-952d3915cfaf945a20f18114602f402d.ctex"]
 
 [params]
 

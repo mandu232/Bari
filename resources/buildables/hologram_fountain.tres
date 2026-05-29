@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="BuildableItem" format=3 uid="uid://x67fd7360rth"]
+
+[ext_resource type="Script" uid="uid://rfwfdifnaeyn" path="res://scripts/museum/BuildableItem.gd" id="1_buildable"]
+[ext_resource type="Texture2D" uid="uid://d0lswpwly2g2o" path="res://AutoLoad/assets/Hologram_fountain/hologram_fountain_icon.png" id="1_k4shm"]
+[ext_resource type="PackedScene" uid="uid://bf8ouuhjjw5x1" path="res://AutoLoad/scenes/HologramFountain.tscn" id="2_c5fdv"]
+
+[resource]
+script = ExtResource("1_buildable")
+item_name = "홀로그램 분수"
+description = "범위 내 전시대에 깃든 에코의 안정도를 지속적으로 회복시킵니다. 전력 공급이 필요합니다."
+icon = ExtResource("1_k4shm")
+scene = ExtResource("2_c5fdv")
+cost = 80
+power_consumption = 15
+stability_bonus = 5.0
+stability_range = 120.0

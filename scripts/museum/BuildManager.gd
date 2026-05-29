@@ -164,11 +164,29 @@ func _flash_ghost_red() -> void:
 func _is_blocked(pos: Vector2) -> bool:
 	if not is_inside_tree():
 		return false
-	# "placed_structure" 그룹에 등록된 모든 구조물(전시대·발전소 등) 검사
+
+	# ① 기존 건물 중첩 검사
 	for node in get_tree().get_nodes_in_group("placed_structure"):
 		var n := node as Node2D
 		if n and n.global_position.distance_to(pos) < min_place_dist:
 			return true
+
+	# ② 벽·지형 충돌 검사 (물리 공간에 쿼리)
+	var space  := get_world_2d().direct_space_state
+	var params := PhysicsPointQueryParameters2D.new()
+	params.position            = pos
+	params.collide_with_bodies = true
+	params.collide_with_areas  = false
+	params.collision_mask      = 0xFFFFFFFF   # 모든 레이어 검사
+	for result in space.intersect_point(params):
+		var body := result["collider"] as Node
+		if body == null:
+			continue
+		# 플레이어와 이미 배치된 건물은 제외 (빌드 블록 대상 아님)
+		if body.is_in_group("player") or body.is_in_group("placed_structure"):
+			continue
+		return true   # 그 외 = 벽·지형 → 배치 불가
+
 	return false
 
 func _snapped_pos() -> Vector2:
