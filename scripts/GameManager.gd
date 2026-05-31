@@ -17,7 +17,8 @@ var essence_rate: float = 0.0
 # ───────────────────────────────
 #  박물관 본관 (MuseumHQ)
 # ───────────────────────────────
-var museum_hq_level: int            = 0    # 0 = 미배치, 1~3 = 레벨
+var hq_museum_level: int            = 0    # 박물관 업그레이드 레벨 (0=미배치, 1~10)
+var hq_player_level: int            = 0    # 플레이어 업그레이드 레벨 (0=미배치, 1~10)
 var essence_multiplier: float       = 1.0  # 전시대 영력 생산 배율
 var max_dynamic_artifact_slots: int = 2    # 배치 가능한 동적 전시대 최대 수
 
@@ -69,6 +70,9 @@ func _ready() -> void:
 
 	var tanged_tool = load("res://resources/artifacts/artifact_tanged_tool.tres")
 	add_artifact(tanged_tool)
+	#테스트용 시작시 박물관 레벨 1레벨로 고정
+	hq_museum_level = 1
+	hq_player_level = 1
 	
 	_init_starting_blueprints()
 
@@ -101,25 +105,26 @@ func _init_starting_blueprints() -> void:
 # ───────────────────────────────
 #  본관 보너스
 # ───────────────────────────────
-## 본관이 전력 공급 시 호출 — 레벨별 보너스를 플레이어/전역 수치에 반영
-func set_hq_bonuses(level: int, mult: float, health: int, damage: int, speed: float, slots: int) -> void:
-	# 이전 보너스 제거
+## 박물관 강화 보너스 적용 (영력 배율·전시대 슬롯)
+func set_hq_museum_bonuses(level: int, mult: float, slots: int) -> void:
+	essence_multiplier         = mult
+	max_dynamic_artifact_slots = 2 + slots
+	hq_museum_level            = level
+	essence_multiplier_changed.emit(mult)
+
+## 플레이어 강화 보너스 적용 (체력·공격·속도)
+func set_hq_player_bonuses(level: int, health: int, damage: int, speed: float) -> void:
 	player_max_health   -= _hq_health_delta
 	player_damage_bonus -= _hq_damage_delta
 	player_speed_bonus  -= _hq_speed_delta
-	# 새 보너스 적용
 	_hq_health_delta  = health
 	_hq_damage_delta  = damage
 	_hq_speed_delta   = speed
 	player_max_health   += health
 	player_damage_bonus += damage
 	player_speed_bonus  += speed
-	# 전역 배율 및 슬롯 수
-	essence_multiplier          = mult
-	max_dynamic_artifact_slots  = 2 + slots
-	museum_hq_level             = level
+	hq_player_level = level
 	hq_level_changed.emit(level)
-	essence_multiplier_changed.emit(mult)
 
 ## 본관이 씬에서 제거될 때 (편집기 등) 보너스 초기화용
 func clear_hq_bonuses() -> void:
@@ -131,6 +136,8 @@ func clear_hq_bonuses() -> void:
 	_hq_speed_delta   = 0.0
 	essence_multiplier         = 1.0
 	max_dynamic_artifact_slots = 2
+	hq_museum_level = 0
+	hq_player_level = 0
 	essence_multiplier_changed.emit(1.0)
 
 # ───────────────────────────────
@@ -240,7 +247,8 @@ func save_game() -> void:
 	cfg.set_value("player", "max_health",    player_max_health   - _hq_health_delta)
 	cfg.set_value("player", "damage_bonus",  player_damage_bonus - _hq_damage_delta)
 	cfg.set_value("player", "speed_bonus",   player_speed_bonus  - _hq_speed_delta)
-	cfg.set_value("museum", "hq_level",      museum_hq_level)
+	cfg.set_value("museum", "hq_museum_level", hq_museum_level)
+	cfg.set_value("museum", "hq_player_level", hq_player_level)
 	cfg.save(SAVE_PATH)
 
 func load_game() -> void:
@@ -253,4 +261,5 @@ func load_game() -> void:
 	player_max_health   = cfg.get_value("player", "max_health",    6)
 	player_damage_bonus = cfg.get_value("player", "damage_bonus",  0)
 	player_speed_bonus  = cfg.get_value("player", "speed_bonus",   0.0)
-	museum_hq_level     = cfg.get_value("museum", "hq_level",      0)
+	hq_museum_level = cfg.get_value("museum", "hq_museum_level", 0)
+	hq_player_level = cfg.get_value("museum", "hq_player_level", 0)

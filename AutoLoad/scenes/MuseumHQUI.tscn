@@ -1,0 +1,526 @@
+[gd_scene format=3 uid="uid://chquiscene001"]
+
+[ext_resource type="Script" uid="uid://bkh62cyj0a5r7" path="res://scripts/museum/MuseumHQUI.gd" id="1_hquis"]
+[ext_resource type="FontFile" uid="uid://c6oayswa1a3mm" path="res://AutoLoad/assets/Font/DungGeunMo.ttf" id="2_font"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+content_margin_left = 30.0
+content_margin_top = 24.0
+content_margin_right = 30.0
+content_margin_bottom = 24.0
+bg_color = Color(0.07, 0.05, 0.04, 0.97)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.85, 0.65, 0.2, 0.9)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_museum"]
+content_margin_left = 20.0
+content_margin_top = 16.0
+content_margin_right = 20.0
+content_margin_bottom = 16.0
+bg_color = Color(0.1, 0.18, 0.1, 0.7)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.4, 0.8, 0.45, 0.6)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_player"]
+content_margin_left = 20.0
+content_margin_top = 16.0
+content_margin_right = 20.0
+content_margin_bottom = 16.0
+bg_color = Color(0.08, 0.12, 0.22, 0.7)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.4, 0.55, 0.9, 0.6)
+
+[node name="MuseumHQUI" type="CanvasLayer" unique_id=1859799408]
+process_mode = 3
+layer = 10
+script = ExtResource("1_hquis")
+
+[node name="Dim" type="ColorRect" parent="." unique_id=1779189536]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0, 0, 0, 0.5)
+
+[node name="Root" type="Control" parent="." unique_id=2108237186]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Panel" type="PanelContainer" parent="Root" unique_id=767691437]
+layout_mode = 0
+anchor_left = 0.05
+anchor_top = 0.05
+anchor_right = 0.95
+anchor_bottom = 0.95
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="Content" type="VBoxContainer" parent="Root/Panel" unique_id=1613051391]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="TitleLabel" type="Label" parent="Root/Panel/Content" unique_id=1134315486]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.3, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 20
+text = "박물관 본관"
+
+[node name="TitleSep" type="HSeparator" parent="Root/Panel/Content" unique_id=1878248529]
+layout_mode = 2
+
+[node name="UpgradeView" type="VBoxContainer" parent="Root/Panel/Content" unique_id=1691232311]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 12
+
+[node name="Cols" type="HBoxContainer" parent="Root/Panel/Content/UpgradeView" unique_id=1692636324]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 40
+
+[node name="MuseumPanel" type="PanelContainer" parent="Root/Panel/Content/UpgradeView/Cols" unique_id=155512651]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_museum")
+
+[node name="MuseumVBox" type="VBoxContainer" parent="Root/Panel/Content/UpgradeView/Cols/MuseumPanel" unique_id=373876582]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="MuseumHeader" type="Label" parent="Root/Panel/Content/UpgradeView/Cols/MuseumPanel/MuseumVBox" unique_id=1815007885]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.45, 1, 0.55, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 14
+text = "▣  박물관 강화"
+
+[node name="MuseumLvLabel" type="Label" parent="Root/Panel/Content/UpgradeView/Cols/MuseumPanel/MuseumVBox" unique_id=505722723]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.72, 0.72, 0.72, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 12
+text = "Lv.1 / 10"
+
+[node name="MuseumSep" type="HSeparator" parent="Root/Panel/Content/UpgradeView/Cols/MuseumPanel/MuseumVBox" unique_id=1376737838]
+layout_mode = 2
+
+[node name="EssenceRow" type="HBoxContainer" parent="Root/Panel/Content/UpgradeView/Cols/MuseumPanel/MuseumVBox" unique_id=2102229109]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="EssenceName" type="Label" parent="Root/Panel/Content/UpgradeView/Cols/MuseumPanel/MuseumVBox/EssenceRow" unique_id=1316932084]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.85, 0.85, 0.85, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 12
+text = "영력 생산"
+
+[node name="EssenceCur" type="Label" parent="Root/Panel/Content/UpgradeView/Cols/MuseumPanel/MuseumVBox/EssenceRow" unique_id=1991030735]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.68, 0.68, 0.68, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 12
+text = "×1.1"
+
+[node name="EssenceArrow" type="Label" parent="Root/Panel/Content/UpgradeView/Cols/MuseumPanel/MuseumVBox/EssenceRow" unique_id=1500938846]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.3, 0.75)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 12
+text = "  →  "
+
+[node name="EssenceNext" type="Label" parent="Root/Panel/Content/UpgradeView/Cols/MuseumPanel/MuseumVBox/EssenceRow" unique_id=621833307]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.45, 1, 0.55, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 12
+text = "×1.2"
+
+[node name="SlotsRow" type="HBoxContainer" parent="Root/Panel/Content/UpgradeView/Cols/MuseumPanel/MuseumVBox" unique_id=1141949287]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="SlotsName" type="Label" parent="Root/Panel/Content/UpgradeView/Cols/MuseumPanel/MuseumVBox/SlotsRow" unique_id=1952919389]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.85, 0.85, 0.85, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 12
+text = "전시대 한도"
+
+[node name="SlotsCur" type="Label" parent="Root/Panel/Content/UpgradeView/Cols/MuseumPanel/MuseumVBox/SlotsRow" unique_id=456393910]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.68, 0.68, 0.68, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 12
+text = "3개"
+
+[node name="SlotsArrow" type="Label" parent="Root/Panel/Content/UpgradeView/Cols/MuseumPanel/MuseumVBox/SlotsRow" unique_id=699731485]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.3, 0.75)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 12
+text = "  →  "
+
+[node name="SlotsNext" type="Label" parent="Root/Panel/Content/UpgradeView/Cols/MuseumPanel/MuseumVBox/SlotsRow" unique_id=1254159373]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.45, 1, 0.55, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 12
+text = "4개"
+
+[node name="MuseumSpacer" type="Control" parent="Root/Panel/Content/UpgradeView/Cols/MuseumPanel/MuseumVBox" unique_id=849791550]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="MuseumCostLabel" type="Label" parent="Root/Panel/Content/UpgradeView/Cols/MuseumPanel/MuseumVBox" unique_id=1458436050]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.3, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 12
+text = "비용: 영력 150"
+
+[node name="MuseumMaxLabel" type="Label" parent="Root/Panel/Content/UpgradeView/Cols/MuseumPanel/MuseumVBox" unique_id=1440714669]
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.9, 0.4, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 13
+text = "★  최대 레벨 달성"
+
+[node name="MuseumUpgradeBtn" type="Button" parent="Root/Panel/Content/UpgradeView/Cols/MuseumPanel/MuseumVBox" unique_id=228728798]
+custom_minimum_size = Vector2(110, 0)
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 12
+text = "Lv.2 업그레이드"
+
+[node name="PlayerPanel" type="PanelContainer" parent="Root/Panel/Content/UpgradeView/Cols" unique_id=722558212]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_player")
+
+[node name="PlayerVBox" type="VBoxContainer" parent="Root/Panel/Content/UpgradeView/Cols/PlayerPanel" unique_id=1145777471]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="PlayerHeader" type="Label" parent="Root/Panel/Content/UpgradeView/Cols/PlayerPanel/PlayerVBox" unique_id=1314244256]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 0.75, 1, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 14
+text = "▣  플레이어 강화"
+
+[node name="PlayerLvLabel" type="Label" parent="Root/Panel/Content/UpgradeView/Cols/PlayerPanel/PlayerVBox" unique_id=1314106896]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.72, 0.72, 0.72, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 12
+text = "Lv.1 / 10"
+
+[node name="PlayerSep" type="HSeparator" parent="Root/Panel/Content/UpgradeView/Cols/PlayerPanel/PlayerVBox" unique_id=330763244]
+layout_mode = 2
+
+[node name="HealthRow" type="HBoxContainer" parent="Root/Panel/Content/UpgradeView/Cols/PlayerPanel/PlayerVBox" unique_id=2004829821]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="HealthName" type="Label" parent="Root/Panel/Content/UpgradeView/Cols/PlayerPanel/PlayerVBox/HealthRow" unique_id=321397589]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.85, 0.85, 0.85, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 12
+text = "최대 체력"
+
+[node name="HealthCur" type="Label" parent="Root/Panel/Content/UpgradeView/Cols/PlayerPanel/PlayerVBox/HealthRow" unique_id=81533872]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.68, 0.68, 0.68, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 12
+text = "+1"
+
+[node name="HealthArrow" type="Label" parent="Root/Panel/Content/UpgradeView/Cols/PlayerPanel/PlayerVBox/HealthRow" unique_id=2115321958]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.3, 0.75)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 12
+text = "  →  "
+
+[node name="HealthNext" type="Label" parent="Root/Panel/Content/UpgradeView/Cols/PlayerPanel/PlayerVBox/HealthRow" unique_id=1244932344]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.45, 1, 0.55, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 12
+text = "+2"
+
+[node name="DamageRow" type="HBoxContainer" parent="Root/Panel/Content/UpgradeView/Cols/PlayerPanel/PlayerVBox" unique_id=1064034695]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="DamageName" type="Label" parent="Root/Panel/Content/UpgradeView/Cols/PlayerPanel/PlayerVBox/DamageRow" unique_id=25945176]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.85, 0.85, 0.85, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 12
+text = "공격력"
+
+[node name="DamageCur" type="Label" parent="Root/Panel/Content/UpgradeView/Cols/PlayerPanel/PlayerVBox/DamageRow" unique_id=788551052]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.68, 0.68, 0.68, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 12
+text = "+0"
+
+[node name="DamageArrow" type="Label" parent="Root/Panel/Content/UpgradeView/Cols/PlayerPanel/PlayerVBox/DamageRow" unique_id=292177044]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.3, 0.75)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 12
+text = "  →  "
+
+[node name="DamageNext" type="Label" parent="Root/Panel/Content/UpgradeView/Cols/PlayerPanel/PlayerVBox/DamageRow" unique_id=1414578180]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.45, 1, 0.55, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 12
+text = "+1"
+
+[node name="SpeedRow" type="HBoxContainer" parent="Root/Panel/Content/UpgradeView/Cols/PlayerPanel/PlayerVBox" unique_id=753967646]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="SpeedName" type="Label" parent="Root/Panel/Content/UpgradeView/Cols/PlayerPanel/PlayerVBox/SpeedRow" unique_id=835168051]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.85, 0.85, 0.85, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 12
+text = "이동속도"
+
+[node name="SpeedCur" type="Label" parent="Root/Panel/Content/UpgradeView/Cols/PlayerPanel/PlayerVBox/SpeedRow" unique_id=913369454]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.68, 0.68, 0.68, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 12
+text = "+0.0"
+
+[node name="SpeedArrow" type="Label" parent="Root/Panel/Content/UpgradeView/Cols/PlayerPanel/PlayerVBox/SpeedRow" unique_id=1449295222]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.3, 0.75)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 12
+text = "  →  "
+
+[node name="SpeedNext" type="Label" parent="Root/Panel/Content/UpgradeView/Cols/PlayerPanel/PlayerVBox/SpeedRow" unique_id=2055316538]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.45, 1, 0.55, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 12
+text = "+0.5"
+
+[node name="PlayerSpacer" type="Control" parent="Root/Panel/Content/UpgradeView/Cols/PlayerPanel/PlayerVBox" unique_id=1514738126]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="PlayerCostLabel" type="Label" parent="Root/Panel/Content/UpgradeView/Cols/PlayerPanel/PlayerVBox" unique_id=321008834]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.3, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 12
+text = "비용: 영력 150"
+
+[node name="PlayerMaxLabel" type="Label" parent="Root/Panel/Content/UpgradeView/Cols/PlayerPanel/PlayerVBox" unique_id=34005032]
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.9, 0.4, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 13
+text = "★  최대 레벨 달성"
+
+[node name="PlayerUpgradeBtn" type="Button" parent="Root/Panel/Content/UpgradeView/Cols/PlayerPanel/PlayerVBox" unique_id=1408895344]
+custom_minimum_size = Vector2(110, 0)
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 12
+text = "Lv.2 업그레이드"
+
+[node name="UpgradeSep" type="HSeparator" parent="Root/Panel/Content/UpgradeView" unique_id=521468479]
+layout_mode = 2
+
+[node name="CloseButtons" type="HBoxContainer" parent="Root/Panel/Content/UpgradeView" unique_id=684279882]
+layout_mode = 2
+theme_override_constants/separation = 16
+alignment = 2
+
+[node name="CloseBtn1" type="Button" parent="Root/Panel/Content/UpgradeView/CloseButtons" unique_id=1235602059]
+custom_minimum_size = Vector2(110, 0)
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 12
+text = "닫기"
+
+[node name="MaxView" type="VBoxContainer" parent="Root/Panel/Content" unique_id=27918003]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="MaxTitleLabel" type="Label" parent="Root/Panel/Content/MaxView" unique_id=2085182807]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.9, 0.4, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 16
+text = "✦  모든 업그레이드 완료"
+
+[node name="MaxSep1" type="HSeparator" parent="Root/Panel/Content/MaxView" unique_id=872374811]
+layout_mode = 2
+
+[node name="MaxEffectLabel" type="Label" parent="Root/Panel/Content/MaxView" unique_id=77034475]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 13
+text = "최종 효과"
+
+[node name="MaxStatsCols" type="HBoxContainer" parent="Root/Panel/Content/MaxView" unique_id=633701842]
+layout_mode = 2
+theme_override_constants/separation = 50
+
+[node name="MaxMuseumVBox" type="VBoxContainer" parent="Root/Panel/Content/MaxView/MaxStatsCols" unique_id=1299306680]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="MaxEssenceRow" type="HBoxContainer" parent="Root/Panel/Content/MaxView/MaxStatsCols/MaxMuseumVBox" unique_id=371406242]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="MaxEssenceName" type="Label" parent="Root/Panel/Content/MaxView/MaxStatsCols/MaxMuseumVBox/MaxEssenceRow" unique_id=178460741]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.85, 0.85, 0.85, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 12
+text = "영력 생산"
+
+[node name="MaxEssenceVal" type="Label" parent="Root/Panel/Content/MaxView/MaxStatsCols/MaxMuseumVBox/MaxEssenceRow" unique_id=751423541]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.92, 0.5, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 12
+text = "×3.0"
+
+[node name="MaxSlotsRow" type="HBoxContainer" parent="Root/Panel/Content/MaxView/MaxStatsCols/MaxMuseumVBox" unique_id=1629293864]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="MaxSlotsName" type="Label" parent="Root/Panel/Content/MaxView/MaxStatsCols/MaxMuseumVBox/MaxSlotsRow" unique_id=661477867]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.85, 0.85, 0.85, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 12
+text = "전시대 한도"
+
+[node name="MaxSlotsVal" type="Label" parent="Root/Panel/Content/MaxView/MaxStatsCols/MaxMuseumVBox/MaxSlotsRow" unique_id=117837144]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.92, 0.5, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 12
+text = "17개"
+
+[node name="MaxPlayerVBox" type="VBoxContainer" parent="Root/Panel/Content/MaxView/MaxStatsCols" unique_id=687845808]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="MaxHealthRow" type="HBoxContainer" parent="Root/Panel/Content/MaxView/MaxStatsCols/MaxPlayerVBox" unique_id=52519665]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="MaxHealthName" type="Label" parent="Root/Panel/Content/MaxView/MaxStatsCols/MaxPlayerVBox/MaxHealthRow" unique_id=1623107980]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.85, 0.85, 0.85, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 12
+text = "최대 체력"
+
+[node name="MaxHealthVal" type="Label" parent="Root/Panel/Content/MaxView/MaxStatsCols/MaxPlayerVBox/MaxHealthRow" unique_id=1886588573]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.92, 0.5, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 12
+text = "+13"
+
+[node name="MaxDamageRow" type="HBoxContainer" parent="Root/Panel/Content/MaxView/MaxStatsCols/MaxPlayerVBox" unique_id=1685356103]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="MaxDamageName" type="Label" parent="Root/Panel/Content/MaxView/MaxStatsCols/MaxPlayerVBox/MaxDamageRow" unique_id=1204243100]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.85, 0.85, 0.85, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 12
+text = "공격력"
+
+[node name="MaxDamageVal" type="Label" parent="Root/Panel/Content/MaxView/MaxStatsCols/MaxPlayerVBox/MaxDamageRow" unique_id=501721348]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.92, 0.5, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 12
+text = "+9"
+
+[node name="MaxSpeedRow" type="HBoxContainer" parent="Root/Panel/Content/MaxView/MaxStatsCols/MaxPlayerVBox" unique_id=1359739942]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="MaxSpeedName" type="Label" parent="Root/Panel/Content/MaxView/MaxStatsCols/MaxPlayerVBox/MaxSpeedRow" unique_id=869167235]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.85, 0.85, 0.85, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 12
+text = "이동속도"
+
+[node name="MaxSpeedVal" type="Label" parent="Root/Panel/Content/MaxView/MaxStatsCols/MaxPlayerVBox/MaxSpeedRow" unique_id=1366101999]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.92, 0.5, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 12
+text = "+4.5"
+
+[node name="MaxSpacer" type="Control" parent="Root/Panel/Content/MaxView" unique_id=633597437]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="MaxSep2" type="HSeparator" parent="Root/Panel/Content/MaxView" unique_id=2044307346]
+layout_mode = 2
+
+[node name="MaxButtons" type="HBoxContainer" parent="Root/Panel/Content/MaxView" unique_id=118509384]
+layout_mode = 2
+theme_override_constants/separation = 16
+alignment = 2
+
+[node name="CloseBtn2" type="Button" parent="Root/Panel/Content/MaxView/MaxButtons" unique_id=561188668]
+custom_minimum_size = Vector2(110, 0)
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 12
+text = "닫기"
