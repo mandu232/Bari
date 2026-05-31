@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="BuildableItem" format=3 uid="uid://bw352k4dvbavn"]
+
+[ext_resource type="Script" uid="uid://rfwfdifnaeyn" path="res://scripts/museum/BuildableItem.gd" id="1_buildable"]
+[ext_resource type="Texture2D" uid="uid://ct20a2rk3t5ol" path="res://AutoLoad/assets/RecordPlayer/recordplayer_icon.png" id="1_s15fx"]
+[ext_resource type="PackedScene" uid="uid://crfyppbfmsn45" path="res://AutoLoad/scenes/RecordPlayer.tscn" id="2_hhj6s"]
+
+[resource]
+script = ExtResource("1_buildable")
+item_name = "기록재생기"
+description = "범위 내 전시대에 깃든 에코의 활성도를 지속적으로 회복시킵니다. 전력 공급이 필요합니다."
+icon = ExtResource("1_s15fx")
+scene = ExtResource("2_hhj6s")
+cost = 80
+power_consumption = 15
+activity_bonus = 11.0
+activity_range = 110.0

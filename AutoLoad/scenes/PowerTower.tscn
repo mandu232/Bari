@@ -116,7 +116,6 @@ sprite_frames = SubResource("SpriteFrames_jf0v6")
 animation = &"off"
 
 [node name="Body" type="AnimatedSprite2D" parent="." unique_id=756631500]
-modulate = Color(0.4, 0.8, 1, 1)
 sprite_frames = SubResource("SpriteFrames_0q0xe")
 animation = &"off"
 offset = Vector2(0, -8)

@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="BuildableItem" format=3 uid="uid://b5t81dskq7kcc"]
+
+[ext_resource type="Script" uid="uid://rfwfdifnaeyn" path="res://scripts/museum/BuildableItem.gd" id="1_buildable"]
+[ext_resource type="Texture2D" uid="uid://bgebqkryv7fsr" path="res://AutoLoad/assets/Charging_station/charging_station_icon.png" id="1_ummhq"]
+[ext_resource type="PackedScene" uid="uid://oeq8rbpq2t70" path="res://AutoLoad/scenes/ChargingStation.tscn" id="2_ikvdu"]
+
+[resource]
+script = ExtResource("1_buildable")
+item_name = "충전소"
+description = "범위 내 전시대에 깃든 에코의 출력을 지속적으로 회복시킵니다. 전력 공급이 필요합니다."
+icon = ExtResource("1_ummhq")
+scene = ExtResource("2_ikvdu")
+cost = 80
+power_consumption = 15
+output_bonus = 3.5
+output_range = 100.0

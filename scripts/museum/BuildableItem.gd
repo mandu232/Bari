@@ -18,5 +18,13 @@ class_name BuildableItem
 @export var chain_range:       float = 0.0   # 수동 배선 최대 거리 (송전탑 전용, 0 = 스크립트 기본값)
 
 @export_group("분수 효과")
-@export var stability_bonus: float = 0.0  # 홀로그램 분수 — 영력 생산량 보너스 배율 (예: 0.5 = +50%)
+@export var stability_bonus: float = 0.0  # 홀로그램 분수 — 안정도 회복량 (초당)
 @export var stability_range: float = 0.0  # 홀로그램 분수 — 효과 반경 (0 = 스크립트 기본값 사용)
+
+@export_group("충전소 효과")
+@export var output_bonus: float = 0.0  # 충전소 — 출력 회복량 (초당)
+@export var output_range: float = 0.0  # 충전소 — 효과 반경 (0 = 스크립트 기본값 사용)
+
+@export_group("기록재생기 효과")
+@export var activity_bonus: float = 0.0  # 기록재생기 — 활성도 회복량 (초당)
+@export var activity_range: float = 0.0  # 기록재생기 — 효과 반경 (0 = 스크립트 기본값 사용)

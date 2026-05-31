@@ -84,6 +84,12 @@ func fulfill(need_id: StringName, amount: float) -> void:
 	if need:
 		need.restore(amount)
 
+## 특정 욕구의 초당 감소량을 변경 — ArtifactData 에서 유물별로 주입
+func set_decay(need_id: StringName, decay_per_sec: float) -> void:
+	var need := _needs.get(need_id) as EchoNeed
+	if need:
+		need.decay_per_sec = maxf(decay_per_sec, 0.0)
+
 ## 특정 수치 조회
 func get_need(id: StringName) -> EchoNeed:
 	return _needs.get(id, null)

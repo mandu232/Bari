@@ -20,6 +20,8 @@ var _player_nearby: bool   = false
 var _essence_accum: float  = 0.0
 var _float_tween: Tween    = null
 var _label_base_y: float   = 0.0
+## 유물 경로 → 직전 욕구 수치 캐시 (탈착 후 재배치 시 욕구 유지)
+var _needs_cache: Dictionary = {}
 
 const FLOAT_AMPLITUDE: float = 2.0    # 위아래 진폭 (픽셀)
 const FLOAT_PERIOD:    float = 2.0    # 한 사이클 시간 (초)
@@ -62,6 +64,8 @@ func _ready() -> void:
 # ───────────────────────────────
 #  PROCESS
 # ───────────────────────────────
+const POWERED_OUTPUT_RESTORE: float = 0.2  # 전력 공급 시 초당 출력 회복량
+
 func _process(delta: float) -> void:
 	# 영력 생성 — 전력이 공급된 경우에만 생성
 	# Echo의 기분(needs.essence_multiplier)이 생산량에 곱해짐
@@ -69,11 +73,15 @@ func _process(delta: float) -> void:
 		var mult := 1.0
 		if is_instance_valid(echo) and echo.needs != null:
 			mult = echo.needs.essence_multiplier
-		_essence_accum += artifact.essence_per_second * mult * delta
+		_essence_accum += artifact.essence_per_second * mult * GameManager.essence_multiplier * delta
 		if _essence_accum >= 1.0:
 			var amount := int(_essence_accum)
 			_essence_accum -= amount
 			essence_generated.emit(amount)
+
+		# 전력 공급 중이면 에코 출력을 소폭 회복
+		if is_instance_valid(echo) and echo.needs != null:
+			echo.needs.fulfill(&"출력", POWERED_OUTPUT_RESTORE * delta)
 
 	# 상호작용 입력 감지 — 전력 없으면 차단
 	if _player_nearby and Input.is_action_just_pressed("interact"):
@@ -119,8 +127,15 @@ func _spawn_echo() -> void:
 	echo = echo_scene.instantiate() as Echo
 	get_parent().add_child(echo)
 	echo.setup(artifact, global_position)
+	# 이전에 같은 유물을 전시했던 욕구 수치가 있으면 복원
+	var key := artifact.resource_path if artifact else ""
+	if key != "" and _needs_cache.has(key):
+		echo.needs.deserialize(_needs_cache[key])
 
 func _despawn_echo() -> void:
+	# 에코를 제거하기 전에 현재 욕구 수치를 캐시에 저장
+	if is_instance_valid(echo) and echo.needs != null and artifact != null:
+		_needs_cache[artifact.resource_path] = echo.needs.serialize()
 	if is_instance_valid(echo):
 		echo.queue_free()
 	echo = null

@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="ArtifactData" format=3 uid="uid://b8rpuv6au170n"]
+
+[ext_resource type="SpriteFrames" uid="uid://b4xy1ndqshsq4" path="res://AutoLoad/assets/Echo/Echo_songi.tres" id="1_8v2m2"]
+[ext_resource type="Script" uid="uid://urkryft166ev" path="res://scripts/artifact/ArtifactData.gd" id="1_gimyq"]
+[ext_resource type="Texture2D" uid="uid://ojrlrmew1tql" path="res://AutoLoad/assets/Artifact/tanged_tool.png" id="3_mekhv"]
+
+[resource]
+script = ExtResource("1_gimyq")
+artifact_name = "주먹찌르개"
+description = "끝을 뾰족하게 다듬어 사냥감을 정확히 타격하던 도구입니다. 겉모습은 작고 소박하나, 표적을 절대 놓치지 않는 예리한 기운을 품고 있습니다."
+texture = ExtResource("3_mekhv")
+echo_name = "송이"
+echo_frames = ExtResource("1_8v2m2")
+echo_power = 2
+wander_radius = 75.0
+essence_per_second = 0.7
+stability_decay = 0.0
+output_decay = 0.2
+activity_decay = 0.0
+metadata/_custom_type_script = "uid://urkryft166ev"

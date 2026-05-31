@@ -1,16 +1,19 @@
 [gd_resource type="Resource" script_class="ArtifactData" format=3 uid="uid://cglfw5g0oly12"]
 
 [ext_resource type="Script" uid="uid://urkryft166ev" path="res://scripts/artifact/ArtifactData.gd" id="1_lex6m"]
-[ext_resource type="SpriteFrames" uid="uid://bjxt1anbuuqeu" path="res://AutoLoad/assets/Echo/Echo_SpriteFrames.tres" id="1_mw10j"]
+[ext_resource type="SpriteFrames" uid="uid://bjxt1anbuuqeu" path="res://AutoLoad/assets/Echo/Echo_cheongryeong.tres" id="1_mw10j"]
 [ext_resource type="Texture2D" uid="uid://cxy3fgnn3xfhr" path="res://AutoLoad/assets/Artifact/artifact_sword.png" id="3_58cc4"]
 
 [resource]
 script = ExtResource("1_lex6m")
 artifact_name = "세형동검"
-description = "전쟁의 혼이 깃든 검"
+description = "제사장과 군장의 권위를 상징하는 청동검입니다. 푸른빛 도신에서 뿜어져 나오는 서슬 퍼런 기운은 감히 범접할 수 없는 신성함을 자아냅니다."
 texture = ExtResource("3_58cc4")
-echo_name = "전쟁의 혼"
+echo_name = "천령"
 echo_frames = ExtResource("1_mw10j")
 echo_power = 3
 wander_radius = 80.0
+stability_decay = 0.0
+output_decay = 0.1
+activity_decay = 0.0
 metadata/_custom_type_script = "uid://urkryft166ev"

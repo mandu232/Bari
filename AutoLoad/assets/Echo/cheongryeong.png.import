@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bl1ar7h2etnp2"
-path="res://.godot/imported/museum_tilemap.png-5cb0d443c8c4892c721642fb61a130df.ctex"
+uid="uid://dtj4dqlq7jjmb"
+path="res://.godot/imported/cheongryeong.png-727701b95c5612b3c2b65bed26ad7049.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://AutoLoad/assets/Museum/museum_tilemap.png"
-dest_files=["res://.godot/imported/museum_tilemap.png-5cb0d443c8c4892c721642fb61a130df.ctex"]
+source_file="res://AutoLoad/assets/Echo/cheongryeong.png"
+dest_files=["res://.godot/imported/cheongryeong.png-727701b95c5612b3c2b65bed26ad7049.ctex"]
 
 [params]
 

@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="BuildableItem" format=3 uid="uid://brgwsso76s5aa"]
+
+[ext_resource type="Script" uid="uid://rfwfdifnaeyn" path="res://scripts/museum/BuildableItem.gd" id="1_buildable"]
+[ext_resource type="PackedScene" uid="uid://emuseumhq0001" path="res://AutoLoad/scenes/MuseumHQ.tscn" id="2_mhq"]
+
+[resource]
+script = ExtResource("1_buildable")
+item_name = "박물관 본관"
+description = "박물관 영력 생산을 강화하고 플레이어 능력치를 향상시킵니다. 전력 공급 후 [E] 키로 업그레이드 가능합니다."
+scene = ExtResource("2_mhq")
+cost = 120
+power_consumption = 25

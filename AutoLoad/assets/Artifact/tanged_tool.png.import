@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bl1ar7h2etnp2"
-path="res://.godot/imported/museum_tilemap.png-5cb0d443c8c4892c721642fb61a130df.ctex"
+uid="uid://ojrlrmew1tql"
+path="res://.godot/imported/tanged_tool.png-f0847f2070248baef9d369db1d47f49c.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://AutoLoad/assets/Museum/museum_tilemap.png"
-dest_files=["res://.godot/imported/museum_tilemap.png-5cb0d443c8c4892c721642fb61a130df.ctex"]
+source_file="res://AutoLoad/assets/Artifact/tanged_tool.png"
+dest_files=["res://.godot/imported/tanged_tool.png-f0847f2070248baef9d369db1d47f49c.ctex"]
 
 [params]
 

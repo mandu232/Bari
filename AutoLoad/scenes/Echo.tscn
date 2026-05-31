@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://dvckv05px5j8w"]
 
 [ext_resource type="Script" uid="uid://n6wg01hddee1" path="res://scripts/Echo/Echo.gd" id="1_jbckr"]
-[ext_resource type="SpriteFrames" uid="uid://bjxt1anbuuqeu" path="res://AutoLoad/assets/Echo/Echo_SpriteFrames.tres" id="2_3hn08"]
+[ext_resource type="SpriteFrames" uid="uid://bjxt1anbuuqeu" path="res://AutoLoad/assets/Echo/Echo_cheongryeong.tres" id="2_3hn08"]
 [ext_resource type="FontFile" uid="uid://c6oayswa1a3mm" path="res://AutoLoad/assets/Font/DungGeunMo.ttf" id="3_3hn08"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_3rm74"]

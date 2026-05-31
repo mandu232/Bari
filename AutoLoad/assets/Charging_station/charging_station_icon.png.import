@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bl1ar7h2etnp2"
-path="res://.godot/imported/museum_tilemap.png-5cb0d443c8c4892c721642fb61a130df.ctex"
+uid="uid://bgebqkryv7fsr"
+path="res://.godot/imported/charging_station_icon.png-ba99f42ede06787ab0007429cd6941d5.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://AutoLoad/assets/Museum/museum_tilemap.png"
-dest_files=["res://.godot/imported/museum_tilemap.png-5cb0d443c8c4892c721642fb61a130df.ctex"]
+source_file="res://AutoLoad/assets/Charging_station/charging_station_icon.png"
+dest_files=["res://.godot/imported/charging_station_icon.png-ba99f42ede06787ab0007429cd6941d5.ctex"]
 
 [params]
 

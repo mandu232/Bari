@@ -51,6 +51,8 @@ func _ready() -> void:
 
 	# 전력 토폴로지가 바뀌면 전력 재할당
 	GameManager.power_changed.connect(_on_power_changed_museum)
+	# 영력 배율이 바뀌면 영력 레이트 재계산
+	GameManager.essence_multiplier_changed.connect(func(_m: float): _recalculate_essence_rate())
 
 	# 씬 트리가 완전히 구성된 뒤 z_index 초기화
 	call_deferred("_refresh_z_sort")
@@ -277,6 +279,18 @@ func _on_wire_requested(node: Node2D) -> void:
 		# 발전소 → 홀로그램 분수 수동 직접 연결 (청록 전선)
 		_toggle_connection(_wire_source, node)
 		_cancel_wire()
+	elif node is ChargingStation \
+			and _wire_source is PowerPlant \
+			and (node as ChargingStation).power_cost > 0:
+		# 발전소 → 충전소 수동 직접 연결 (주황 전선)
+		_toggle_connection(_wire_source, node)
+		_cancel_wire()
+	elif node is RecordPlayer \
+			and _wire_source is PowerPlant \
+			and (node as RecordPlayer).power_cost > 0:
+		# 발전소 → 기록재생기 수동 직접 연결 (보라 전선)
+		_toggle_connection(_wire_source, node)
+		_cancel_wire()
 	else:
 		_cancel_wire()
 
@@ -357,6 +371,15 @@ func _on_item_placed(item: BuildableItem, world_pos: Vector2) -> void:
 	var node := item.scene.instantiate() as Node2D
 	node.global_position = world_pos
 
+	# 동적 전시대 배치 한도 체크
+	if node is ArtifactSlot:
+		var current_slot_count := _dynamic_nodes.filter(
+			func(e: Dictionary) -> bool: return is_instance_valid(e["node"]) and e["node"] is ArtifactSlot
+		).size()
+		if current_slot_count >= GameManager.max_dynamic_artifact_slots:
+			node.queue_free()
+			return
+
 	if node is ArtifactSlot:
 		var slot := node as ArtifactSlot
 		slot.power_cost = item.power_consumption  # _ready() 전에 주입
@@ -388,6 +411,24 @@ func _on_item_placed(item: BuildableItem, world_pos: Vector2) -> void:
 			hf.effect_range = item.stability_range
 		add_child(node)
 		hf.wire_requested.connect(_on_wire_requested)
+	elif node is ChargingStation:
+		var cs := node as ChargingStation
+		cs.power_cost = item.power_consumption   # _ready() 전에 주입
+		if item.output_bonus > 0.0:
+			cs.output_bonus = item.output_bonus
+		if item.output_range > 0.0:
+			cs.effect_range = item.output_range
+		add_child(node)
+		cs.wire_requested.connect(_on_wire_requested)
+	elif node is RecordPlayer:
+		var rp := node as RecordPlayer
+		rp.power_cost = item.power_consumption   # _ready() 전에 주입
+		if item.activity_bonus > 0.0:
+			rp.activity_bonus = item.activity_bonus
+		if item.activity_range > 0.0:
+			rp.effect_range = item.activity_range
+		add_child(node)
+		rp.wire_requested.connect(_on_wire_requested)
 	else:
 		add_child(node)
 
@@ -565,6 +606,10 @@ func _reallocate_power() -> void:
 			node_power_cost = (node as ArtifactSlot).power_cost
 		elif node is HologramFountain:
 			node_power_cost = (node as HologramFountain).power_cost
+		elif node is ChargingStation:
+			node_power_cost = (node as ChargingStation).power_cost
+		elif node is RecordPlayer:
+			node_power_cost = (node as RecordPlayer).power_cost
 		else:
 			continue
 
@@ -672,7 +717,7 @@ func _update_power_lines(connections: Array) -> void:
 		var from := to_local(from_node.global_position)
 		var to   := to_local(to_node.global_position)
 
-		# 탑 연결선(파란색) / 분수 연결선(청록색) / 전시대 연결선(노란색) 구분
+		# 탑(파란) / 분수(청록) / 충전소(주황) / 전시대(노란) 연결선 색상 구분
 		var col_glow: Color
 		var col_core: Color
 		var col_peak: Color
@@ -684,6 +729,14 @@ func _update_power_lines(connections: Array) -> void:
 			col_glow = Color(0.15, 0.9,  0.7,  0.18)
 			col_peak = Color(0.15, 0.9,  0.7,  0.36)
 			col_core = Color(0.3,  1.0,  0.85, 0.9)
+		elif to_node is ChargingStation:
+			col_glow = Color(1.0,  0.55, 0.1,  0.18)
+			col_peak = Color(1.0,  0.55, 0.1,  0.36)
+			col_core = Color(1.0,  0.78, 0.4,  0.9)
+		elif to_node is RecordPlayer:
+			col_glow = Color(0.75, 0.2,  1.0,  0.18)
+			col_peak = Color(0.75, 0.2,  1.0,  0.36)
+			col_core = Color(0.88, 0.55, 1.0,  0.9)
 		else:
 			col_glow = Color(1.0,  0.88, 0.25, 0.18)
 			col_peak = Color(1.0,  0.88, 0.25, 0.36)
@@ -751,7 +804,7 @@ func _recalculate_essence_rate() -> void:
 		var slot := child as ArtifactSlot
 		# 전력이 공급된 슬롯만 영력 생산에 기여
 		if slot and slot.is_occupied and slot.artifact and slot.is_powered:
-			total += slot.artifact.essence_per_second
+			total += slot.artifact.essence_per_second * GameManager.essence_multiplier
 	GameManager.set_essence_rate(total)
 
 ## 발전소 추가/제거 → 전력 재할당 (deferred, 재진입 방지)
@@ -868,6 +921,24 @@ func _restore_pedestals() -> void:
 				hf.effect_range = item.stability_range
 			add_child(node)
 			hf.wire_requested.connect(_on_wire_requested)
+		elif node is ChargingStation:
+			var cs := node as ChargingStation
+			cs.power_cost = item.power_consumption
+			if item.output_bonus > 0.0:
+				cs.output_bonus = item.output_bonus
+			if item.output_range > 0.0:
+				cs.effect_range = item.output_range
+			add_child(node)
+			cs.wire_requested.connect(_on_wire_requested)
+		elif node is RecordPlayer:
+			var rp := node as RecordPlayer
+			rp.power_cost = item.power_consumption
+			if item.activity_bonus > 0.0:
+				rp.activity_bonus = item.activity_bonus
+			if item.activity_range > 0.0:
+				rp.effect_range = item.activity_range
+			add_child(node)
+			rp.wire_requested.connect(_on_wire_requested)
 		else:
 			add_child(node)
 
@@ -940,7 +1011,14 @@ func _restore_manual_connections() -> void:
 		var hf := n as HologramFountain
 		if hf != null and hf.power_cost > 0:
 			candidates.append(hf)
-
+	for n in get_tree().get_nodes_in_group("charging_station"):
+		var cs := n as ChargingStation
+		if cs != null and cs.power_cost > 0:
+			candidates.append(cs)
+	for n in get_tree().get_nodes_in_group("record_player"):
+		var rp := n as RecordPlayer
+		if rp != null and rp.power_cost > 0:
+			candidates.append(rp)
 	var i := 0
 	while cfg.has_section_key("wires", str(i) + "_from"):
 		var from_pos: Vector2 = cfg.get_value("wires", str(i) + "_from")

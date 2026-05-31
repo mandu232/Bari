@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bl1ar7h2etnp2"
-path="res://.godot/imported/museum_tilemap.png-5cb0d443c8c4892c721642fb61a130df.ctex"
+uid="uid://csuarmunm5m4"
+path="res://.godot/imported/moebi.png-c2ae03a63ac5dddd12c16d3997b5ff52.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://AutoLoad/assets/Museum/museum_tilemap.png"
-dest_files=["res://.godot/imported/museum_tilemap.png-5cb0d443c8c4892c721642fb61a130df.ctex"]
+source_file="res://AutoLoad/assets/Echo/moebi.png"
+dest_files=["res://.godot/imported/moebi.png-c2ae03a63ac5dddd12c16d3997b5ff52.ctex"]
 
 [params]
 

@@ -14,8 +14,8 @@ offset_bottom = 720.0
 layout_mode = 0
 offset_left = 46.0
 offset_top = 23.0
-offset_right = 1325.0
-offset_bottom = 47.0
+offset_right = 672.0
+offset_bottom = 55.0
 theme_override_fonts/font = ExtResource("1_w16c3")
 theme_override_font_sizes/font_size = 24
 text = "유물을 선택하세요"
@@ -33,37 +33,103 @@ layout_mode = 2
 theme_override_fonts/font = ExtResource("1_w16c3")
 theme_override_font_sizes/font_size = 24
 
-[node name="DescriptionLabel" type="Label" parent="Panel" unique_id=408335403]
+[node name="Divider" type="VSeparator" parent="Panel" unique_id=1972009863]
 layout_mode = 0
-offset_left = 725.0
-offset_top = 479.0
-offset_right = 966.0
-offset_bottom = 664.0
+offset_left = 700.0
+offset_top = 67.0
+offset_right = 704.0
+offset_bottom = 683.0
+
+[node name="ArtifactImageBox" type="PanelContainer" parent="Panel" unique_id=105930905]
+layout_mode = 0
+offset_left = 720.0
+offset_top = 75.0
+offset_right = 985.0
+offset_bottom = 290.0
+
+[node name="ArtifactTextureRect" type="TextureRect" parent="Panel/ArtifactImageBox" unique_id=894861182]
+custom_minimum_size = Vector2(256, 200)
+layout_mode = 2
+stretch_mode = 5
+
+[node name="EchoImageBox" type="PanelContainer" parent="Panel" unique_id=1668679704]
+layout_mode = 0
+offset_left = 1000.0
+offset_top = 75.0
+offset_right = 1265.0
+offset_bottom = 290.0
+
+[node name="EchoTextureRect" type="TextureRect" parent="Panel/EchoImageBox" unique_id=1437063581]
+custom_minimum_size = Vector2(256, 200)
+layout_mode = 2
+stretch_mode = 5
+
+[node name="ArtifactImageLabel" type="Label" parent="Panel" unique_id=2040217874]
+layout_mode = 0
+offset_left = 720.0
+offset_top = 293.0
+offset_right = 985.0
+offset_bottom = 313.0
 theme_override_fonts/font = ExtResource("1_w16c3")
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 14
+text = "유물"
+horizontal_alignment = 1
+
+[node name="EchoImageLabel" type="Label" parent="Panel" unique_id=1791956646]
+layout_mode = 0
+offset_left = 1000.0
+offset_top = 293.0
+offset_right = 1265.0
+offset_bottom = 313.0
+theme_override_fonts/font = ExtResource("1_w16c3")
+theme_override_font_sizes/font_size = 14
+text = "에코"
+horizontal_alignment = 1
+
+[node name="InfoLabel" type="Label" parent="Panel" unique_id=708861645]
+layout_mode = 0
+offset_left = 720.0
+offset_top = 320.0
+offset_right = 1265.0
+offset_bottom = 490.0
+theme_override_fonts/font = ExtResource("1_w16c3")
+theme_override_font_sizes/font_size = 18
+autowrap_mode = 2
+
+[node name="DecaySeparator" type="HSeparator" parent="Panel" unique_id=1718424648]
+layout_mode = 0
+offset_left = 720.0
+offset_top = 498.0
+offset_right = 1265.0
+offset_bottom = 502.0
+
+[node name="DecayLabel" type="Label" parent="Panel" unique_id=1453123942]
+layout_mode = 0
+offset_left = 720.0
+offset_top = 508.0
+offset_right = 1265.0
+offset_bottom = 678.0
+theme_override_fonts/font = ExtResource("1_w16c3")
+theme_override_font_sizes/font_size = 18
 
 [node name="HBoxContainer" type="HBoxContainer" parent="Panel" unique_id=1189334896]
 layout_mode = 0
-offset_left = 1143.0
+offset_left = 1100.0
 offset_top = 685.0
 offset_right = 1271.0
-offset_bottom = 709.0
+offset_bottom = 712.0
 
 [node name="ConfirmButton" type="Button" parent="Panel/HBoxContainer" unique_id=2031995103]
 layout_mode = 2
 theme_override_fonts/font = ExtResource("1_w16c3")
-text = "배치
-
-"
+text = "배치"
 
 [node name="CancelButton" type="Button" parent="Panel/HBoxContainer" unique_id=1068121703]
 layout_mode = 2
 theme_override_fonts/font = ExtResource("1_w16c3")
-text = "취소
-"
+text = "취소"
 
 [node name="RemoveButton" type="Button" parent="Panel/HBoxContainer" unique_id=-935613494]
 layout_mode = 2
 theme_override_fonts/font = ExtResource("1_w16c3")
-text = "해제
-"
+text = "해제"

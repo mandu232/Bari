@@ -1,20 +1,24 @@
 extends CanvasLayer
 class_name ArtifactSelectUI
 ## 유물 선택 팝업
+## 유물 이미지, 에코 이미지, 욕구 감소율을 함께 표시
 
 signal artifact_selected(data: ArtifactData)
 signal cancelled
 signal remove_requested
 
-var _target_slot: ArtifactSlot       = null
-var _artifacts_cache: Array[ArtifactData] = []
+var _target_slot:      ArtifactSlot           = null
+var _artifacts_cache:  Array[ArtifactData]    = []
 
-@onready var panel:       Control  = $Panel
-@onready var item_list:   ItemList = $Panel/ScrollContainer/ItemList
-@onready var desc_label:  Label    = $Panel/DescriptionLabel
-@onready var confirm_btn: Button   = $Panel/HBoxContainer/ConfirmButton
-@onready var cancel_btn:  Button   = $Panel/HBoxContainer/CancelButton
-@onready var remove_btn:  Button   = $Panel/HBoxContainer/RemoveButton
+@onready var panel:            Control      = $Panel
+@onready var item_list:        ItemList     = $Panel/ScrollContainer/ItemList
+@onready var artifact_texture: TextureRect  = $Panel/ArtifactImageBox/ArtifactTextureRect
+@onready var echo_texture:     TextureRect  = $Panel/EchoImageBox/EchoTextureRect
+@onready var info_label:       Label        = $Panel/InfoLabel
+@onready var decay_label:      Label        = $Panel/DecayLabel
+@onready var confirm_btn:      Button       = $Panel/HBoxContainer/ConfirmButton
+@onready var cancel_btn:       Button       = $Panel/HBoxContainer/CancelButton
+@onready var remove_btn:       Button       = $Panel/HBoxContainer/RemoveButton
 
 func _ready() -> void:
 	# 핵심 — 트리가 paused 여도 이 노드는 계속 동작
@@ -33,21 +37,30 @@ func show_for_slot(slot: ArtifactSlot, show_remove: bool = false) -> void:
 	remove_btn.visible = show_remove
 	_populate_list()
 	show()
-	# pause 는 플레이어 이동 막을 때만 — UI 자체는 ALWAYS 로 동작
 
 func close() -> void:
 	hide()
-	_target_slot       = null
+	_target_slot              = null
+	confirm_btn.disabled      = true
+	remove_btn.visible        = false
+	info_label.text           = ""
+	decay_label.text          = ""
+	artifact_texture.texture  = null
+	echo_texture.texture      = null
 	_artifacts_cache.clear()
-	confirm_btn.disabled = true
-	remove_btn.visible   = false
-	desc_label.text      = ""
 	item_list.clear()
 
+# ───────────────────────────────
+#  목록 채우기
+# ───────────────────────────────
 func _populate_list() -> void:
 	item_list.clear()
 	_artifacts_cache.clear()
 	confirm_btn.disabled = true
+	info_label.text      = ""
+	decay_label.text     = ""
+	artifact_texture.texture = null
+	echo_texture.texture     = null
 
 	if GameManager.artifacts.is_empty():
 		item_list.add_item("보유한 유물이 없습니다")
@@ -62,15 +75,47 @@ func _populate_list() -> void:
 			item_list.add_item(data.artifact_name)
 		_artifacts_cache.append(data)
 
+# ───────────────────────────────
+#  항목 선택 시 오른쪽 패널 갱신
+# ───────────────────────────────
 func _on_item_selected(index: int) -> void:
 	if index < 0 or index >= _artifacts_cache.size():
 		return
 	var data := _artifacts_cache[index]
-	var spirit_info := data.echo_name
-	var passive     := data.passive_description if data.passive_description != "" else data.description
-	desc_label.text  = "%s\n%s\n영력/초: %.1f" % [spirit_info, passive, data.essence_per_second]
+
+	# ── 유물 이미지
+	artifact_texture.texture = data.texture
+
+	# ── 에코 이미지 (SpriteFrames 의 "float" 첫 프레임)
+	echo_texture.texture = null
+	if data.echo_frames != null \
+			and data.echo_frames.has_animation(&"float") \
+			and data.echo_frames.get_frame_count(&"float") > 0:
+		echo_texture.texture = data.echo_frames.get_frame_texture(&"float", 0)
+
+	# ── 기본 정보
+	var passive := data.passive_description if data.passive_description != "" \
+											else data.description
+	info_label.text = "유물: %s\n에코: %s\n영력/초: %.2f\n\n%s" % [
+		data.artifact_name,
+		data.echo_name,
+		data.essence_per_second,
+		passive,
+	]
+
+	# ── 욕구 감소율
+	decay_label.text = (
+		"── 욕구 감소율 ──\n"
+		+ "안정도   -%.2f / 초\n" % data.stability_decay
+		+ "출력     -%.2f / 초\n" % data.output_decay
+		+ "활성도   -%.2f / 초"   % data.activity_decay
+	)
+
 	confirm_btn.disabled = false
 
+# ───────────────────────────────
+#  버튼 콜백
+# ───────────────────────────────
 func _on_confirm() -> void:
 	var selected := item_list.get_selected_items()
 	if selected.is_empty():

@@ -26,6 +26,12 @@ const HOME_THRESHOLD:   float = 4.0
 const BUMP_FORCE:       float = 120.0  # 밀려나는 속도
 const BUMP_FRICTION:    float = 280.0  # 감속 세기
 
+# 표정 애니메이션
+const TALK_RANGE:        float = 80.0  # 대화 가능 거리 (픽셀)
+const TALK_INTERVAL_MIN: float = 8.0   # 대화 쿨다운 최솟값 (초)
+const TALK_INTERVAL_MAX: float = 20.0  # 대화 쿨다운 최댓값 (초)
+const AGGRO_THRESHOLD:   float = 50.0  # 이 수치 미만이면 aggro 발동
+
 # ───────────────────────────────
 #  STATE
 # ───────────────────────────────
@@ -34,6 +40,10 @@ var state: State         = State.IDLE
 var _idle_timer: float  = 0.0
 var _wander_timer: float = 0.0
 var _target: Vector2    = Vector2.ZERO
+
+# 표정 상태
+var _talk_cooldown: float = 0.0   # 다음 대화까지 남은 시간
+var _is_talking:    bool  = false  # talk 애니메이션 재생 중
 
 # ───────────────────────────────
 #  NEEDS
@@ -68,7 +78,8 @@ func _ready() -> void:
 	# 에코는 유령 — 항상 건물(z_index ≈ y좌표) 위에 렌더링
 	z_as_relative = false
 	z_index       = 3000
-	_idle_timer = randf_range(IDLE_TIME_MIN, IDLE_TIME_MAX)
+	_idle_timer    = randf_range(IDLE_TIME_MIN, IDLE_TIME_MAX)
+	_talk_cooldown = randf_range(TALK_INTERVAL_MIN, TALK_INTERVAL_MAX)
 	interact_area.body_entered.connect(_on_interact_area_entered)
 	interact_area.body_exited.connect(_on_interact_area_exited)
 
@@ -77,6 +88,12 @@ func _ready() -> void:
 	add_child(needs)
 	needs.mood_changed.connect(_on_mood_changed)
 	needs.need_critical.connect(_on_need_critical)
+
+	# 표정 애니메이션 종료 감지
+	sprite.animation_finished.connect(_on_animation_finished)
+
+	# 에코 그룹 등록 — 대화 상대 탐색에 사용
+	add_to_group("echo")
 
 	# 상태 확인 근접 감지 + 힌트 레이블
 	_setup_status_area()
@@ -103,6 +120,13 @@ func _apply_data() -> void:
 		sprite.play("float")
 	if name_label:
 		name_label.text = artifact_data.echo_name
+
+	# 유물별 욕구 감소율 적용 (needs 가 초기화된 뒤에만 실행)
+	if needs:
+		needs.set_decay(&"안정도", artifact_data.stability_decay)
+		needs.set_decay(&"출력",   artifact_data.output_decay)
+		needs.set_decay(&"활성도", artifact_data.activity_decay)
+
 	_start_pulse()
 	_start_squeeze()
 
@@ -158,6 +182,9 @@ func _start_squeeze() -> void:
 # ───────────────────────────────
 #  PROCESS
 # ───────────────────────────────
+func _process(delta: float) -> void:
+	_update_expression(delta)
+
 func _physics_process(delta: float) -> void:
 	match state:
 		State.IDLE:     _process_idle(delta)
@@ -232,6 +259,77 @@ func start_interact() -> void:
 func end_interact() -> void:
 	state       = State.IDLE
 	_idle_timer = 1.0
+
+# ───────────────────────────────
+#  표정 애니메이션 시스템
+#  우선순위: tired > aggro > talk > float
+# ───────────────────────────────
+## 매 프레임 욕구 상태를 평가해 적절한 표정 애니메이션 적용
+func _update_expression(delta: float) -> void:
+	if needs == null:
+		return
+
+	# 우선순위 1 — 0%인 욕구 존재 → tired
+	for need: EchoNeed in needs.get_all_needs():
+		if need.value <= 0.0:
+			_is_talking = false
+			_play_expression(&"tired")
+			return
+
+	# 우선순위 2 — 50% 미만 욕구 존재 → aggro
+	for need: EchoNeed in needs.get_all_needs():
+		if need.value < AGGRO_THRESHOLD:
+			_is_talking = false
+			_play_expression(&"aggro")
+			return
+
+	# talk 애니메이션 재생 중이면 완료 대기
+	if _is_talking:
+		return
+
+	# 기본 float 유지
+	_play_expression(&"float")
+
+	# 대화 쿨다운 감소 후 주변 에코 탐색
+	_talk_cooldown -= delta
+	if _talk_cooldown <= 0.0:
+		_try_start_talk()
+
+## 애니메이션 이름이 있고, 아직 재생 중이 아닐 때만 재생
+func _play_expression(anim: StringName) -> void:
+	if not is_instance_valid(sprite) or not sprite.sprite_frames:
+		return
+	if not sprite.sprite_frames.has_animation(anim):
+		return
+	if sprite.animation == anim and sprite.is_playing():
+		return   # 이미 재생 중이면 중단하지 않음
+	sprite.play(anim)
+
+## 반경 내 다른 에코를 탐색해 대화 시도
+func _try_start_talk() -> void:
+	for node in get_tree().get_nodes_in_group("echo"):
+		if node == self:
+			continue
+		var other := node as Echo
+		if other == null or other._is_talking:
+			continue
+		if global_position.distance_to(other.global_position) <= TALK_RANGE:
+			_start_talk()
+			return
+	# 대화 상대 없으면 쿨다운만 리셋
+	_talk_cooldown = randf_range(TALK_INTERVAL_MIN, TALK_INTERVAL_MAX)
+
+func _start_talk() -> void:
+	_is_talking    = true
+	_talk_cooldown = randf_range(TALK_INTERVAL_MIN, TALK_INTERVAL_MAX)
+	_play_expression(&"talk")
+
+## 비루프 애니메이션(talk 등) 종료 시 상태 재평가
+func _on_animation_finished() -> void:
+	if sprite.animation == &"talk":
+		_is_talking = false
+	# 즉시 재평가 — tired·aggro 조건이면 바로 전환, 아니면 float 복귀
+	_update_expression(0.0)
 
 # ───────────────────────────────
 #  NEEDS 콜백 — 기분 변화 시 비주얼 갱신
