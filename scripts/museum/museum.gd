@@ -140,6 +140,14 @@ func _setup_build_manager() -> void:
 	_build_ui.item_selected.connect(_on_build_item_selected)
 	_build_ui.cancelled.connect(_on_build_cancelled)
 
+func _open_build_menu() -> void:
+	var current_count := _dynamic_nodes.filter(
+		func(e: Dictionary) -> bool:
+			return is_instance_valid(e["node"]) and e["node"] is ArtifactSlot
+	).size()
+	_build_ui.update_slot_info(current_count, GameManager.max_dynamic_artifact_slots)
+	_build_ui.show_menu(GameManager.unlocked_blueprints)
+
 func _unhandled_input(event: InputEvent) -> void:
 	# 배선 중 ESC → 취소 (건설 모드 상태와 무관하게 최우선 처리)
 	if _is_wiring and event.is_action_pressed("ui_cancel"):
@@ -153,7 +161,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		elif _build_ui.visible:
 			_build_ui.close()
 		else:
-			_build_ui.show_menu(GameManager.unlocked_blueprints)
+			_open_build_menu()
 		get_viewport().set_input_as_handled()
 		return
 
@@ -166,7 +174,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			elif mb.pressed and mb.button_index == MOUSE_BUTTON_RIGHT:
 				# 우클릭 → 배치 취소 후 건설 메뉴로 복귀
 				_build_manager.deactivate()
-				_build_ui.show_menu(GameManager.unlocked_blueprints)
+				_open_build_menu()
 				get_viewport().set_input_as_handled()
 		elif event.is_action_pressed("ui_cancel"):
 			_build_manager.deactivate()

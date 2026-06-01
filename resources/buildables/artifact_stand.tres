@@ -11,4 +11,5 @@ description = "유물을 전시할 수 있는 시설."
 icon = ExtResource("1_uou1m")
 scene = ExtResource("2_fyg73")
 cost = 50
+is_artifact_stand = true
 power_consumption = 20

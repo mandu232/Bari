@@ -75,6 +75,10 @@ signal essence_collected(amount: int)
 #  READY
 # ───────────────────────────────
 func _ready() -> void:
+	# GameManager에 누적된 보너스 (HQ 업그레이드 + 유물 스탯) 반영
+	max_health    = GameManager.player_max_health
+	attack_damage += GameManager.player_damage_bonus
+	move_speed    += GameManager.player_speed_bonus
 	health = max_health
 	add_to_group("player")
 	_set_attack_box(false)

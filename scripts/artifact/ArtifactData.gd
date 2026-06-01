@@ -16,6 +16,23 @@ class_name ArtifactData
 @export var essence_per_second: float   = 0.5    # 초당 영력 생성량
 @export var passive_description: String = ""     # 패시브 효과 설명 (UI 표시용)
 
+@export_group("플레이어 스탯 보너스 (기본값)")
+## 유물 획득 시 ±2 범위 내에서 랜덤 산출되는 기준값
+@export var base_health_bonus: int   = 0    # 기본 체력 보너스
+@export var base_damage_bonus: int   = 0    # 기본 공격력 보너스
+@export var base_speed_bonus:  float = 0.0  # 기본 이동속도 보너스
+
+## 획득 시 확정된 실제 스탯 (roll_stats() 로 설정됨)
+var rolled_health: int   = 0
+var rolled_damage: int   = 0
+var rolled_speed:  float = 0.0
+
+## 유물 획득 시 한 번 호출 — 기본값 기준 ±2 범위에서 실제 스탯 산출
+func roll_stats() -> void:
+	rolled_health = maxi(0, base_health_bonus + randi_range(-2, 2))
+	rolled_damage = maxi(0, base_damage_bonus + randi_range(-2, 2))
+	rolled_speed  = maxf(0.0, base_speed_bonus + randf_range(-2.0, 2.0))
+
 @export_group("에코 욕구 감소율")
 ## 기본값은 모든 에코 공통 — 유물마다 다르게 설정하면 해당 에코에만 적용됩니다
 @export var stability_decay: float = 1.0   ## 안정도 초당 감소량 (기본 1.0)

@@ -74,6 +74,21 @@ func _ready() -> void:
 	var semilunar_stone_knife = load("res://resources/artifacts/artifact_semilunar_stone_knife.tres")
 	add_artifact(semilunar_stone_knife)
 
+	var artifact_mumun_pottery = load("res://resources/artifacts/artifact_mumun_pottery.tres")
+	add_artifact(artifact_mumun_pottery)
+
+	var artifact_iron_arrow = load("res://resources/artifacts/artifact_iron_arrow.tres")
+	add_artifact(artifact_iron_arrow)
+
+	var artifact_hwandudaedo = load("res://resources/artifacts/artifact_hwandudaedo.tres")
+	add_artifact(artifact_hwandudaedo)
+
+	var monster_mask_roof_tile = load("res://resources/artifacts/monster_mask_roof_tile.tres")
+	add_artifact(monster_mask_roof_tile)
+
+	var white_porcelain_jar_cloud_dragon = load("res://resources/artifacts/white_porcelain_jar_cloud_dragon.tres")
+	add_artifact(white_porcelain_jar_cloud_dragon)
+
 	#테스트용 시작시 박물관 레벨 1레벨로 고정
 	hq_museum_level = 1
 	hq_player_level = 1
@@ -130,6 +145,17 @@ func set_hq_player_bonuses(level: int, health: int, damage: int, speed: float) -
 	player_speed_bonus  += speed
 	hq_player_level = level
 	hq_level_changed.emit(level)
+
+## 유물 전시 보너스 누적 (add_artifact_stat_bonus / remove_artifact_stat_bonus 쌍으로 관리)
+func add_artifact_stat_bonus(health: int, damage: int, speed: float) -> void:
+	player_max_health   += health
+	player_damage_bonus += damage
+	player_speed_bonus  += speed
+
+func remove_artifact_stat_bonus(health: int, damage: int, speed: float) -> void:
+	player_max_health   -= health
+	player_damage_bonus -= damage
+	player_speed_bonus  -= speed
 
 ## 본관이 씬에서 제거될 때 (편집기 등) 보너스 초기화용
 func clear_hq_bonuses() -> void:
@@ -210,8 +236,11 @@ func spend_essence(amount: int) -> bool:
 #  유물
 # ───────────────────────────────
 func add_artifact(artifact: ArtifactData) -> void:
-	artifacts.append(artifact)
-	artifact_added.emit(artifact)
+	# 같은 .tres 라도 인스턴스를 분리해 독립적인 스탯을 갖도록 복제 후 즉시 산출
+	var instance := artifact.duplicate() as ArtifactData
+	instance.roll_stats()
+	artifacts.append(instance)
+	artifact_added.emit(instance)
 
 func remove_artifact(artifact: ArtifactData) -> void:
 	artifacts.erase(artifact)

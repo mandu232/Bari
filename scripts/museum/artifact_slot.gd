@@ -20,7 +20,7 @@ var _player_nearby: bool   = false
 var _essence_accum: float  = 0.0
 var _float_tween: Tween    = null
 var _label_base_y: float   = 0.0
-## 유물 경로 → 직전 욕구 수치 캐시 (탈착 후 재배치 시 욕구 유지)
+## 유물 인스턴스 ID → 직전 욕구 수치 캐시 (탈착 후 재배치 시 욕구 유지)
 var _needs_cache: Dictionary = {}
 
 const FLOAT_AMPLITUDE: float = 2.0    # 위아래 진폭 (픽셀)
@@ -103,10 +103,14 @@ func place_artifact(data: ArtifactData) -> void:
 	# 유물이 배치되면 출력·안정도 즉시 회복
 	_fulfill_echo_needs(&"출력",   35.0)
 	_fulfill_echo_needs(&"안정도", 15.0)
+	# 획득 시 확정된 스탯을 플레이어에 적용
+	GameManager.add_artifact_stat_bonus(data.rolled_health, data.rolled_damage, data.rolled_speed)
 
 func remove_artifact() -> ArtifactData:
 	if not is_occupied:
 		return null
+	# 배치 시 적용했던 스탯 보너스 제거
+	GameManager.remove_artifact_stat_bonus(artifact.rolled_health, artifact.rolled_damage, artifact.rolled_speed)
 	_despawn_echo()
 	_stop_float()
 	var removed   := artifact
@@ -128,14 +132,14 @@ func _spawn_echo() -> void:
 	get_parent().add_child(echo)
 	echo.setup(artifact, global_position)
 	# 이전에 같은 유물을 전시했던 욕구 수치가 있으면 복원
-	var key := artifact.resource_path if artifact else ""
-	if key != "" and _needs_cache.has(key):
+	var key := artifact.get_instance_id() if artifact else 0
+	if key != 0 and _needs_cache.has(key):
 		echo.needs.deserialize(_needs_cache[key])
 
 func _despawn_echo() -> void:
 	# 에코를 제거하기 전에 현재 욕구 수치를 캐시에 저장
 	if is_instance_valid(echo) and echo.needs != null and artifact != null:
-		_needs_cache[artifact.resource_path] = echo.needs.serialize()
+		_needs_cache[artifact.get_instance_id()] = echo.needs.serialize()
 	if is_instance_valid(echo):
 		echo.queue_free()
 	echo = null
@@ -225,6 +229,7 @@ func _update_nearby_ui() -> void:
 func _fulfill_echo_needs(need_id: StringName, amount: float) -> void:
 	if is_instance_valid(echo) and echo.needs != null:
 		echo.needs.fulfill(need_id, amount)
+
 
 # ───────────────────────────────
 #  [F] 키 — 배선 요청

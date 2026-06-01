@@ -17,4 +17,7 @@ essence_per_second = 0.7
 stability_decay = 0.0
 output_decay = 0.2
 activity_decay = 0.0
+base_health_bonus = 0
+base_damage_bonus = 2
+base_speed_bonus = 8.0
 metadata/_custom_type_script = "uid://urkryft166ev"

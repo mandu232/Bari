@@ -13,4 +13,7 @@ echo_name = "달이"
 echo_frames = ExtResource("1_uxg75")
 output_decay = 0.2
 activity_decay = 0.0
+base_health_bonus = 1
+base_damage_bonus = 0
+base_speed_bonus = 12.0
 metadata/_custom_type_script = "uid://urkryft166ev"

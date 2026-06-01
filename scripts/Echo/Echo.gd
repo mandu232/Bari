@@ -219,7 +219,10 @@ func _process_idle(delta: float) -> void:
 	_idle_timer -= delta
 
 	if _idle_timer <= 0.0:
-		_start_wander()
+		if _is_tired():
+			_idle_timer = randf_range(IDLE_TIME_MIN, IDLE_TIME_MAX)
+		else:
+			_start_wander()
 
 # ───────────────────────────────
 #  WANDER — home 주변 랜덤 지점으로 이동
@@ -231,6 +234,13 @@ func _start_wander() -> void:
 	_face_target()
 
 func _process_wander(delta: float) -> void:
+	if _is_tired():
+		velocity    = Vector2.ZERO
+		state       = State.IDLE
+		_idle_timer = randf_range(IDLE_TIME_MIN, IDLE_TIME_MAX)
+		move_and_slide()
+		return
+
 	_wander_timer -= delta
 	var dist := global_position.distance_to(_target)
 
@@ -283,6 +293,8 @@ func end_interact() -> void:
 #  WORK — 건설 현장으로 이동 후 작업
 # ───────────────────────────────
 func start_work(site: Node2D) -> void:
+	if _is_tired() or _is_aggro():
+		return  # 기분이 나쁜 상태에서는 작업 거부
 	_construction_site = site
 	state              = State.WORK
 	velocity           = Vector2.ZERO
@@ -300,6 +312,9 @@ func stop_work() -> void:
 	_nav_agent.target_position = home_position
 
 func _process_work(delta: float) -> void:
+	if _is_tired() or _is_aggro():
+		stop_work()
+		return
 	if not is_instance_valid(_construction_site):
 		stop_work()
 		return
@@ -464,6 +479,24 @@ func _on_need_critical(need: EchoNeed) -> void:
 #  HELPERS
 # ───────────────────────────────
 
+## 하나라도 욕구가 0 이면 true (tired 표정 조건과 동일)
+func _is_tired() -> bool:
+	if needs == null:
+		return false
+	for need: EchoNeed in needs.get_all_needs():
+		if need.value <= 0.0:
+			return true
+	return false
+
+## 하나라도 욕구가 AGGRO_THRESHOLD 미만이면 true (aggro 표정 조건과 동일)
+func _is_aggro() -> bool:
+	if needs == null:
+		return false
+	for need: EchoNeed in needs.get_all_needs():
+		if need.value < AGGRO_THRESHOLD:
+			return true
+	return false
+
 func _is_at_work_site() -> bool:
 	if not is_instance_valid(_construction_site):
 		return false
@@ -482,9 +515,10 @@ func _face_target() -> void:
 
 func _on_interact_area_entered(body: Node2D) -> void:
 	if body.is_in_group("player"):
-		# 건설 중·상호작용 중·패널 열림 상태에선 튕기지 않음
+		# 건설 중·상호작용 중·패널 열림·tired 상태에선 튕기지 않음
 		if state != State.INTERACT and state != State.WORK \
-				and not is_instance_valid(_status_panel):
+				and not is_instance_valid(_status_panel) \
+				and not _is_tired():
 			_bump(body.global_position)
 
 func _on_interact_area_exited(body: Node2D) -> void:

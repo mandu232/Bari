@@ -13,8 +13,13 @@ var _tooltip:              PanelContainer = null
 var _tt_name:              Label          = null
 var _tt_desc:              Label          = null
 var _tt_cost_row:          Label          = null
+var _tt_slot_count_row:    Label          = null   # 전시대 설치 현황
 var _tt_power_consume_row: Label          = null
 var _tt_power_output_row:  Label          = null
+
+# ── 전시대 수량 (Museum이 show_menu 전에 주입)
+var _slot_current: int = 0
+var _slot_max:     int = 0
 
 # ───────────────────────────────
 #  READY
@@ -33,6 +38,11 @@ func show_menu(items: Array[BuildableItem]) -> void:
 	_populate(items)
 	_hide_tooltip()
 	show()
+
+## 건설 메뉴를 열기 직전에 Museum이 호출 — 전시대 툴팁에 표시할 수량 주입
+func update_slot_info(current: int, max_slots: int) -> void:
+	_slot_current = current
+	_slot_max     = max_slots
 
 func close() -> void:
 	_hide_tooltip()
@@ -138,6 +148,12 @@ func _build_tooltip() -> void:
 	_apply_font(_tt_cost_row, 12)
 	vb.add_child(_tt_cost_row)
 
+	# 전시대 설치 현황 (전시대 아이템에만 표시)
+	_tt_slot_count_row          = Label.new()
+	_tt_slot_count_row.modulate = Color(0.6, 1.0, 0.75)
+	_apply_font(_tt_slot_count_row, 12)
+	vb.add_child(_tt_slot_count_row)
+
 	# 소모 전력
 	_tt_power_consume_row          = Label.new()
 	_tt_power_consume_row.modulate = Color(0.55, 0.85, 1.0)
@@ -156,6 +172,12 @@ func _show_tooltip(item: BuildableItem) -> void:
 	_tt_name.text = item.item_name
 	_tt_desc.text = item.description if item.description != "" else "—"
 	_tt_cost_row.text = "건설 비용: %d 영력" % item.cost
+
+	if item.is_artifact_stand:
+		_tt_slot_count_row.text    = "설치 현황: %d / %d" % [_slot_current, _slot_max]
+		_tt_slot_count_row.visible = true
+	else:
+		_tt_slot_count_row.visible = false
 
 	if item.power_consumption > 0:
 		_tt_power_consume_row.text    = "소모 전력: %d" % item.power_consumption

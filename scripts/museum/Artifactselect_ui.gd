@@ -103,9 +103,22 @@ func _on_item_selected(index: int) -> void:
 		passive,
 	]
 
+	# ── 플레이어 스탯 보너스 (획득 시 확정된 값)
+	var stat_parts: Array[String] = []
+	if data.rolled_health > 0:
+		stat_parts.append("체력 +%d" % data.rolled_health)
+	if data.rolled_damage > 0:
+		stat_parts.append("공격력 +%d" % data.rolled_damage)
+	if data.rolled_speed > 0.0:
+		stat_parts.append("속도 +%.1f" % data.rolled_speed)
+	var stat_line := "  |  ".join(stat_parts) if stat_parts.size() > 0 else "없음"
+
 	# ── 욕구 감소율
 	decay_label.text = (
-		"── 욕구 감소율 ──\n"
+		"── 플레이어 스탯 ──\n"
+		+ stat_line + "\n"
+		+ "\n"
+		+ "── 에코 욕구 감소율 ──\n"
 		+ "안정도:   %.2f / 초\n" % data.stability_decay
 		+ "출력:     %.2f / 초\n" % data.output_decay
 		+ "활성도:   %.2f / 초"   % data.activity_decay
