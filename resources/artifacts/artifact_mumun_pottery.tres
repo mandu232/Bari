@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="ArtifactData" format=3 uid="uid://d3dn6464fy624"]
+
+[ext_resource type="Script" uid="uid://urkryft166ev" path="res://scripts/artifact/ArtifactData.gd" id="1_jiesj"]
+[ext_resource type="SpriteFrames" uid="uid://cahrnbfx0q1eq" path="res://AutoLoad/assets/Echo/Echo_sodam.tres" id="1_pve77"]
+[ext_resource type="Texture2D" uid="uid://rsiyndipmep5" path="res://AutoLoad/assets/Artifact/mumun_pottery.png" id="3_r344k"]
+
+[resource]
+script = ExtResource("1_jiesj")
+artifact_name = "민무늬토기"
+description = "화려한 무늬나 장식은 없지만, 인류가 한곳에 정착해 따뜻한 밥을 짓고 곡식을 저장할 수 있게 해 준 청동기 시대의 가장 소중한 그릇입니다."
+texture = ExtResource("3_r344k")
+echo_name = "소담"
+echo_frames = ExtResource("1_pve77")
+base_health_bonus = 3
+metadata/_custom_type_script = "uid://urkryft166ev"

@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ArtifactData" format=3 uid="uid://348qlpmoc4sy"]
+
+[ext_resource type="SpriteFrames" uid="uid://bkry6t8muysy7" path="res://AutoLoad/assets/Echo/Echo_mir.tres" id="1_4g3t2"]
+[ext_resource type="Script" uid="uid://urkryft166ev" path="res://scripts/artifact/ArtifactData.gd" id="1_yqsvr"]
+[ext_resource type="Texture2D" uid="uid://cku0xq22cqk77" path="res://AutoLoad/assets/Artifact/white_porcelain_jar_cloud_dragon.png" id="3_cpckf"]
+
+[resource]
+script = ExtResource("1_yqsvr")
+artifact_name = "백자 청화 구름과 용무늬 항아리"
+description = "조선 왕실의 엄숙한 의례와 연향을 빛내던 고결한 청화백자 항아리입니다. 눈부시게 하얀 바탕 위에 푸른 빛 청화 안료로 그려진 구름과 대룡은 당장이라도 도자기 밖으로 날아오를 듯 생동감이 넘칩니다."
+texture = ExtResource("3_cpckf")
+echo_name = "미르"
+echo_frames = ExtResource("1_4g3t2")
+metadata/_custom_type_script = "uid://urkryft166ev"

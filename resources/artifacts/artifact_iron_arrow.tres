@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ArtifactData" format=3 uid="uid://b062yld4uks3c"]
+
+[ext_resource type="SpriteFrames" uid="uid://dfpqv2o4suvd4" path="res://AutoLoad/assets/Echo/Echo_siwoo.tres" id="1_arcco"]
+[ext_resource type="Script" uid="uid://urkryft166ev" path="res://scripts/artifact/ArtifactData.gd" id="1_xgge7"]
+[ext_resource type="Texture2D" uid="uid://rwistamrkx5h" path="res://AutoLoad/assets/Artifact/iron_arrow.png" id="3_8kubh"]
+
+[resource]
+script = ExtResource("1_xgge7")
+artifact_name = "가야 쇠화살"
+description = "삼국 시대, 바다 건너까지 명성을 떨쳤던 '철의 왕국' 대가야의 정교한 제철 기술로 벼려진 철제 화살촉입니다. 매서운 바람을 가르며 날아가 단숨에 표적을 뚫어버리는 무인의 단단한 기백이 서려 있습니다."
+texture = ExtResource("3_8kubh")
+echo_name = "시우"
+echo_frames = ExtResource("1_arcco")
+metadata/_custom_type_script = "uid://urkryft166ev"
