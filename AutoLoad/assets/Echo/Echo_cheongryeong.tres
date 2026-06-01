@@ -94,6 +94,34 @@ region = Rect2(96, 32, 32, 32)
 atlas = ExtResource("1_mmq0y")
 region = Rect2(128, 32, 32, 32)
 
+[sub_resource type="AtlasTexture" id="AtlasTexture_6ra45"]
+atlas = ExtResource("1_mmq0y")
+region = Rect2(0, 128, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_a15go"]
+atlas = ExtResource("1_mmq0y")
+region = Rect2(32, 128, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_c88mc"]
+atlas = ExtResource("1_mmq0y")
+region = Rect2(64, 128, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_eqiil"]
+atlas = ExtResource("1_mmq0y")
+region = Rect2(96, 128, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_cthw5"]
+atlas = ExtResource("1_mmq0y")
+region = Rect2(128, 128, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_arfhf"]
+atlas = ExtResource("1_mmq0y")
+region = Rect2(160, 128, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_akt0b"]
+atlas = ExtResource("1_mmq0y")
+region = Rect2(192, 128, 32, 32)
+
 [resource]
 animations = [{
 "frames": [{
@@ -114,7 +142,7 @@ animations = [{
 }],
 "loop": true,
 "name": &"aggro",
-"speed": 5.0
+"speed": 7.0
 }, {
 "frames": [{
 "duration": 1.0,
@@ -163,7 +191,7 @@ animations = [{
 }],
 "loop": false,
 "name": &"talk",
-"speed": 5.0
+"speed": 7.0
 }, {
 "frames": [{
 "duration": 1.0,
@@ -183,5 +211,31 @@ animations = [{
 }],
 "loop": true,
 "name": &"tired",
-"speed": 5.0
+"speed": 7.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_6ra45")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_a15go")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_c88mc")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_eqiil")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_cthw5")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_arfhf")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_akt0b")
+}],
+"loop": true,
+"name": &"work",
+"speed": 7.0
 }]

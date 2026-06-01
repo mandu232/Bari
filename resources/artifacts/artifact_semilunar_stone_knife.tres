@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="ArtifactData" format=3 uid="uid://b4uirwwjmwgpu"]
+
+[ext_resource type="Script" uid="uid://urkryft166ev" path="res://scripts/artifact/ArtifactData.gd" id="1_scu6h"]
+[ext_resource type="SpriteFrames" uid="uid://dtoy7ckpyvbo2" path="res://AutoLoad/assets/Echo/Echo_dali.tres" id="1_uxg75"]
+[ext_resource type="Texture2D" uid="uid://bm3st4yajko63" path="res://AutoLoad/assets/Artifact/semilunar_stone_knife.png" id="2_s5wyx"]
+
+[resource]
+script = ExtResource("1_scu6h")
+artifact_name = "반달돌칼"
+description = "청동기 시대, 황금빛으로 물든 들판에서 곡식의 이삭을 수확할 때 사용하던 반달 모양의 돌칼입니다. 날카로운 철제 무기들과 달리, 이 유물에는 피 대신 백성들을 먹여 살리던 '풍요와 결실'의 따뜻한 에너지가 깃들어 있습니다."
+texture = ExtResource("2_s5wyx")
+echo_name = "달이"
+echo_frames = ExtResource("1_uxg75")
+output_decay = 0.2
+activity_decay = 0.0
+metadata/_custom_type_script = "uid://urkryft166ev"

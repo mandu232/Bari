@@ -106,6 +106,7 @@ func _setup_interact_area() -> void:
 # ───────────────────────────────
 func _setup_body_area() -> void:
 	var area  := Area2D.new()
+	area.collision_mask = 16   # 플레이어 레이어(Layer 5 = 16) 감지
 	var shape := CollisionShape2D.new()
 	var rect  := RectangleShape2D.new()
 	rect.size      = Vector2(24, 32)

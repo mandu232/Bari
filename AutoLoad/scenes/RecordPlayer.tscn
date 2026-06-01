@@ -204,6 +204,7 @@ animation = &"on"
 offset = Vector2(0, -8)
 
 [node name="Body_stBody" type="StaticBody2D" parent="." unique_id=1305128621]
+collision_layer = 0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Body_stBody" unique_id=1145817782]
 position = Vector2(0, -13.5)

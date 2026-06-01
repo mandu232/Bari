@@ -70,6 +70,10 @@ func _ready() -> void:
 
 	var tanged_tool = load("res://resources/artifacts/artifact_tanged_tool.tres")
 	add_artifact(tanged_tool)
+
+	var semilunar_stone_knife = load("res://resources/artifacts/artifact_semilunar_stone_knife.tres")
+	add_artifact(semilunar_stone_knife)
+
 	#테스트용 시작시 박물관 레벨 1레벨로 고정
 	hq_museum_level = 1
 	hq_player_level = 1
@@ -101,6 +105,7 @@ func _init_starting_blueprints() -> void:
 	var record_player := load("res://resources/buildables/record_player.tres") as BuildableItem
 	if record_player:
 		unlocked_blueprints.append(record_player)
+
 
 # ───────────────────────────────
 #  본관 보너스

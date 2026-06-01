@@ -4,8 +4,8 @@
 [ext_resource type="SpriteFrames" uid="uid://bjxt1anbuuqeu" path="res://AutoLoad/assets/Echo/Echo_cheongryeong.tres" id="2_3hn08"]
 [ext_resource type="FontFile" uid="uid://c6oayswa1a3mm" path="res://AutoLoad/assets/Font/DungGeunMo.ttf" id="3_3hn08"]
 
-[sub_resource type="CircleShape2D" id="CircleShape2D_3rm74"]
-radius = 8.0
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_227dc"]
+size = Vector2(15.555556, 23.333334)
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_4v23l"]
 radius = 16.0
@@ -21,7 +21,8 @@ animation = &"float"
 frame_progress = 0.1657072
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1007496615]
-shape = SubResource("CircleShape2D_3rm74")
+position = Vector2(-1.9868216e-07, 1.666667)
+shape = SubResource("RectangleShape2D_227dc")
 
 [node name="InteractArea" type="Area2D" parent="." unique_id=2024756131]
 

@@ -106,9 +106,9 @@ func _on_item_selected(index: int) -> void:
 	# ── 욕구 감소율
 	decay_label.text = (
 		"── 욕구 감소율 ──\n"
-		+ "안정도   -%.2f / 초\n" % data.stability_decay
-		+ "출력     -%.2f / 초\n" % data.output_decay
-		+ "활성도   -%.2f / 초"   % data.activity_decay
+		+ "안정도:   %.2f / 초\n" % data.stability_decay
+		+ "출력:     %.2f / 초\n" % data.output_decay
+		+ "활성도:   %.2f / 초"   % data.activity_decay
 	)
 
 	confirm_btn.disabled = false

@@ -35,11 +35,21 @@ const AGGRO_THRESHOLD:   float = 50.0  # 이 수치 미만이면 aggro 발동
 # ───────────────────────────────
 #  STATE
 # ───────────────────────────────
-enum State { IDLE, WANDER, BUMPED, INTERACT }
+enum State { IDLE, WANDER, BUMPED, INTERACT, WORK, RETURN_HOME }
 var state: State         = State.IDLE
 var _idle_timer: float  = 0.0
 var _wander_timer: float = 0.0
 var _target: Vector2    = Vector2.ZERO
+
+# 건설 작업
+var _construction_site: Node2D            = null
+var _nav_agent:         NavigationAgent2D = null
+const WORK_ARRIVE_DIST: float             = 20.0
+const DEFAULT_COLLISION_MASK: int         = 1    # 기본 충돌 마스크 (Layer 1)
+
+# 막힘 감지
+var _stuck_timer:   float   = 0.0
+var _stuck_last_pos: Vector2 = Vector2.ZERO
 
 # 표정 상태
 var _talk_cooldown: float = 0.0   # 다음 대화까지 남은 시간
@@ -82,6 +92,13 @@ func _ready() -> void:
 	_talk_cooldown = randf_range(TALK_INTERVAL_MIN, TALK_INTERVAL_MAX)
 	interact_area.body_entered.connect(_on_interact_area_entered)
 	interact_area.body_exited.connect(_on_interact_area_exited)
+
+	# NavigationAgent2D — TileMapLayer 내비게이션 사용
+	_nav_agent                          = NavigationAgent2D.new()
+	_nav_agent.path_desired_distance    = 4.0
+	_nav_agent.target_desired_distance  = WORK_ARRIVE_DIST
+	_nav_agent.path_max_distance        = 24.0   # 이 거리 이상 이탈 시 경로 재계산
+	add_child(_nav_agent)
 
 	# 욕구 시스템 초기화
 	needs = EchoNeedsManager.new()
@@ -187,10 +204,12 @@ func _process(delta: float) -> void:
 
 func _physics_process(delta: float) -> void:
 	match state:
-		State.IDLE:     _process_idle(delta)
-		State.WANDER:   _process_wander(delta)
-		State.BUMPED:   _process_bumped(delta)
-		State.INTERACT: pass
+		State.IDLE:        _process_idle(delta)
+		State.WANDER:      _process_wander(delta)
+		State.BUMPED:      _process_bumped(delta)
+		State.INTERACT:    pass
+		State.WORK:        _process_work(delta)
+		State.RETURN_HOME: _process_return_home(delta)
 
 # ───────────────────────────────
 #  IDLE — 제자리에서 대기
@@ -261,6 +280,88 @@ func end_interact() -> void:
 	_idle_timer = 1.0
 
 # ───────────────────────────────
+#  WORK — 건설 현장으로 이동 후 작업
+# ───────────────────────────────
+func start_work(site: Node2D) -> void:
+	_construction_site = site
+	state              = State.WORK
+	velocity           = Vector2.ZERO
+	_stuck_timer       = 0.0
+	_stuck_last_pos    = global_position
+	# 에코끼리 물리 충돌 제거 (유령이므로 서로 통과), 벽은 nav agent가 우회
+	collision_mask     = 0
+
+func stop_work() -> void:
+	_construction_site = null
+	# 충돌은 집 도착 후 복원 — 귀환 중에도 에코끼리 통과
+	state              = State.RETURN_HOME
+	_stuck_timer       = 0.0
+	_stuck_last_pos    = global_position
+	_nav_agent.target_position = home_position
+
+func _process_work(delta: float) -> void:
+	if not is_instance_valid(_construction_site):
+		stop_work()
+		return
+
+	var target := _construction_site.global_position
+
+	if global_position.distance_to(target) <= WORK_ARRIVE_DIST:
+		velocity     = Vector2.ZERO
+		_stuck_timer = 0.0
+		move_and_slide()
+		return
+
+	_nav_agent.target_position = target
+
+	# 막힘 감지 — 0.8초 동안 5px 미만 이동 시 경로 강제 재계산
+	_stuck_timer += delta
+	if _stuck_timer >= 0.8:
+		if global_position.distance_to(_stuck_last_pos) < 5.0:
+			_nav_agent.target_position = target  # 경로 재요청
+		_stuck_last_pos = global_position
+		_stuck_timer    = 0.0
+
+	var next_pos := _nav_agent.get_next_path_position()
+	var dir      := (next_pos - global_position).normalized()
+	if dir.length_squared() < 0.01:
+		dir = (target - global_position).normalized()  # 폴백
+	velocity = dir * MOVE_SPEED
+	_target  = global_position + dir
+	_face_target()
+	move_and_slide()
+
+# ───────────────────────────────
+#  RETURN_HOME — 건설 완료 후 집 귀환
+# ───────────────────────────────
+func _process_return_home(delta: float) -> void:
+	var dist := global_position.distance_to(home_position)
+	if dist <= HOME_THRESHOLD * 4.0:
+		velocity       = Vector2.ZERO
+		collision_mask = DEFAULT_COLLISION_MASK  # 집 도착 시 충돌 복원
+		state          = State.IDLE
+		_idle_timer    = randf_range(IDLE_TIME_MIN, IDLE_TIME_MAX)
+		move_and_slide()
+		return
+
+	# 막힘 감지
+	_stuck_timer += delta
+	if _stuck_timer >= 0.8:
+		if global_position.distance_to(_stuck_last_pos) < 5.0:
+			_nav_agent.target_position = home_position
+		_stuck_last_pos = global_position
+		_stuck_timer    = 0.0
+
+	var next_pos := _nav_agent.get_next_path_position()
+	var dir      := (next_pos - global_position).normalized()
+	if dir.length_squared() < 0.01:
+		dir = (home_position - global_position).normalized()
+	velocity = dir * MOVE_SPEED
+	_target  = global_position + dir
+	_face_target()
+	move_and_slide()
+
+# ───────────────────────────────
 #  표정 애니메이션 시스템
 #  우선순위: tired > aggro > talk > float
 # ───────────────────────────────
@@ -285,6 +386,11 @@ func _update_expression(delta: float) -> void:
 
 	# talk 애니메이션 재생 중이면 완료 대기
 	if _is_talking:
+		return
+
+	# 우선순위 3 — 건설 현장에 도착한 경우만 work 애니메이션 (이동 중엔 float)
+	if state == State.WORK and _is_at_work_site():
+		_play_expression(&"work")
 		return
 
 	# 기본 float 유지
@@ -335,16 +441,7 @@ func _on_animation_finished() -> void:
 #  NEEDS 콜백 — 기분 변화 시 비주얼 갱신
 # ───────────────────────────────
 func _on_mood_changed(new_mood: StringName) -> void:
-	# 스프라이트 색조
-	var base_color: Color
-	match new_mood:
-		&"안정":   base_color = Color(0.75, 1.05, 0.85)   # 청록 — 안정적
-		&"불안정": base_color = Color(0.80, 0.85, 0.95)   # 차가운 회청
-		&"붕괴":   base_color = Color(1.00, 0.52, 0.52)   # 붉은 위험
-		_:         base_color = Color.WHITE                # 유지
-	# alpha 는 펄스 트윈이 관리하므로 RGB 만 교체
-	sprite.modulate = Color(base_color.r, base_color.g, base_color.b,
-							sprite.modulate.a)
+	# 색조 변경 없음 — 알파(펄스)만 유지
 
 	# 상태에 따라 배회 반경 조정 — 안정적일수록 멀리, 붕괴 시 구석에만
 	if artifact_data:
@@ -367,6 +464,11 @@ func _on_need_critical(need: EchoNeed) -> void:
 #  HELPERS
 # ───────────────────────────────
 
+func _is_at_work_site() -> bool:
+	if not is_instance_valid(_construction_site):
+		return false
+	return global_position.distance_to(_construction_site.global_position) <= WORK_ARRIVE_DIST
+
 ## home_position 중심, wander_radius 안의 랜덤 점
 func _pick_wander_target() -> Vector2:
 	var angle  := randf_range(0.0, TAU)
@@ -380,8 +482,9 @@ func _face_target() -> void:
 
 func _on_interact_area_entered(body: Node2D) -> void:
 	if body.is_in_group("player"):
-		# 상태 패널이 열려 있거나 대화 중이면 튕기지 않음
-		if state != State.INTERACT and not is_instance_valid(_status_panel):
+		# 건설 중·상호작용 중·패널 열림 상태에선 튕기지 않음
+		if state != State.INTERACT and state != State.WORK \
+				and not is_instance_valid(_status_panel):
 			_bump(body.global_position)
 
 func _on_interact_area_exited(body: Node2D) -> void:

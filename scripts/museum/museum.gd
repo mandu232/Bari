@@ -18,6 +18,7 @@ var _lines_shown:     bool          = false   # 현재 선 표시 상태 (중복
 var _dynamic_nodes:   Array         = []
 
 # ── 수동 배선 상태
+var _construction_sites:  Array   = []      # ConstructionSite 목록
 var _manual_connections:  Array   = []      # [{from: Node2D, to: Node2D}] 수동 전선 목록
 var _is_wiring:           bool    = false   # 현재 전선을 드래그 중인지
 var _wire_source:         Node2D  = null    # 전선의 시작 노드
@@ -366,6 +367,43 @@ func _cancel_wire() -> void:
 	_range_circle = null
 
 func _on_item_placed(item: BuildableItem, world_pos: Vector2) -> void:
+	_start_construction(item, world_pos)
+
+# ───────────────────────────────
+#  건설 시작 — 터를 잡고 주변 에코 모집
+# ───────────────────────────────
+func _start_construction(item: BuildableItem, world_pos: Vector2) -> void:
+	if item.scene == null:
+		return
+	var site := ConstructionSite.new()
+	add_child(site)
+	site.setup(item, world_pos)
+	site.construction_complete.connect(_on_construction_complete)
+	_construction_sites.append(site)
+
+	# 가장 가까운 에코부터 최대 MAX_WORKERS 마리 모집
+	var echoes := get_tree().get_nodes_in_group("echo")
+	echoes.sort_custom(func(a: Node, b: Node) -> bool:
+		return (a as Node2D).global_position.distance_to(world_pos) \
+			 < (b as Node2D).global_position.distance_to(world_pos))
+	for echo_node in echoes:
+		var echo := echo_node as Echo
+		if echo == null:
+			continue
+		if site.try_add_worker(echo):
+			echo.start_work(site)
+		if site._workers.size() >= ConstructionSite.MAX_WORKERS:
+			break
+
+func _on_construction_complete(site: ConstructionSite) -> void:
+	var item      := site.item
+	var world_pos := site.global_position
+	site.release_all_workers()
+	_construction_sites.erase(site)
+	site.queue_free()
+	_spawn_building(item, world_pos)
+
+func _spawn_building(item: BuildableItem, world_pos: Vector2) -> void:
 	if item.scene == null:
 		return
 	var node := item.scene.instantiate() as Node2D
@@ -432,7 +470,7 @@ func _on_item_placed(item: BuildableItem, world_pos: Vector2) -> void:
 	else:
 		add_child(node)
 
-	_play_place_anim(node)   # 뽀잉 설치 애니메이션
+	_play_place_anim(node)   # 설치 애니메이션
 	_dynamic_nodes.append({"node": node, "item_path": item.resource_path})
 	_apply_y_sort(node)      # 배치 위치 기준 z_index 설정
 	_save_pedestal_positions()
@@ -441,7 +479,7 @@ func _on_item_placed(item: BuildableItem, world_pos: Vector2) -> void:
 # ───────────────────────────────
 #  설치 연출
 # ───────────────────────────────
-## 건물 배치 시 납작 → 위로 쭉 → 튀어오름 → 정착하는 뽀잉 효과
+
 func _play_place_anim(node: Node2D) -> void:
 	node.scale = Vector2(1.2, 0.0)          # 납작하게 시작
 	var tw := node.create_tween()
@@ -535,7 +573,7 @@ func remove_artifact_from_slot(slot: ArtifactSlot) -> void:
 # ───────────────────────────────
 #  전력 중앙 할당
 # ───────────────────────────────
-## 발전소 → 송전탑(BFS 체이닝) → 건물 순서로 전력을 그리디 배분
+## 건물 순서대로 그리드 전력 분배
 func _reallocate_power() -> void:
 	_in_reallocate = true
 
@@ -721,22 +759,27 @@ func _update_power_lines(connections: Array) -> void:
 		var col_glow: Color
 		var col_core: Color
 		var col_peak: Color
+		#탑
 		if to_node is PowerTower:
 			col_glow = Color(0.3,  0.75, 1.0,  0.18)
 			col_peak = Color(0.3,  0.75, 1.0,  0.36)
 			col_core = Color(0.6,  0.92, 1.0,  0.9)
+		#분수
 		elif to_node is HologramFountain:
 			col_glow = Color(0.15, 0.9,  0.7,  0.18)
 			col_peak = Color(0.15, 0.9,  0.7,  0.36)
 			col_core = Color(0.3,  1.0,  0.85, 0.9)
+		#충전소
 		elif to_node is ChargingStation:
 			col_glow = Color(1.0,  0.55, 0.1,  0.18)
 			col_peak = Color(1.0,  0.55, 0.1,  0.36)
 			col_core = Color(1.0,  0.78, 0.4,  0.9)
+		#패널
 		elif to_node is RecordPlayer:
 			col_glow = Color(0.75, 0.2,  1.0,  0.18)
 			col_peak = Color(0.75, 0.2,  1.0,  0.36)
 			col_core = Color(0.88, 0.55, 1.0,  0.9)
+		#전시대
 		else:
 			col_glow = Color(1.0,  0.88, 0.25, 0.18)
 			col_peak = Color(1.0,  0.88, 0.25, 0.36)
@@ -828,6 +871,8 @@ func _on_dungeon_trigger_entered(body: Node2D) -> void:
 func _apply_y_sort(node: Node2D) -> void:
 	if not is_instance_valid(node):
 		return
+	if node is Echo:
+		return  # 에코는 z_index = 3000 고정 — 덮어쓰지 않음
 	node.z_as_relative = false
 	node.z_index       = int(node.global_position.y)
 
