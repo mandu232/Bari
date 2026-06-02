@@ -294,11 +294,12 @@ func save_game() -> void:
 		if inst.resource_path == "":
 			continue
 		artifact_list.append({
-			"path": inst.resource_path,
-			"h":    inst.bonus_max_health,
-			"d":    inst.bonus_attack_damage,
-			"s":    inst.bonus_move_speed,
-			"c":    inst.bonus_dash_cooldown,
+			"path":    inst.resource_path,
+			"atk":     inst.bonus_attack,
+			"atk_spd": inst.bonus_attack_speed,
+			"def":     inst.bonus_defense,
+			"spd":     inst.bonus_move_speed,
+			"hp":      inst.bonus_max_health,
 		})
 	cfg.set_value("player", "artifacts", artifact_list)
 	cfg.save(SAVE_PATH)
@@ -322,9 +323,10 @@ func load_game() -> void:
 		if base == null:
 			continue
 		var inst := base.duplicate() as ArtifactData
-		inst.bonus_max_health    = entry.get("h", 0)
-		inst.bonus_attack_damage = entry.get("d", 0)
-		inst.bonus_move_speed    = entry.get("s", 0.0)
-		inst.bonus_dash_cooldown = entry.get("c", 0.0)
+		inst.bonus_attack       = entry.get("atk",     0)
+		inst.bonus_attack_speed = entry.get("atk_spd", 0)
+		inst.bonus_defense      = entry.get("def",     0)
+		inst.bonus_move_speed   = entry.get("spd",     0.0)
+		inst.bonus_max_health   = entry.get("hp",      0)
 		artifacts.append(inst)
 		artifact_added.emit(inst)

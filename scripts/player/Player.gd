@@ -13,6 +13,8 @@ extends CharacterBody2D
 @export var max_health: int      = 6
 @export var attack_damage: int   = 2
 @export var combo_window: float  = 0.45
+var defense:      int   = 0   # 방어력 — 피해 감소
+var attack_speed: int   = 0   # 공격속도 보너스 (%)
 
 # ───────────────────────────────
 #  방향 suffix 를 붙일 애니메이션 목록
@@ -269,7 +271,7 @@ func take_damage(amount: int, source_pos: Vector2 = Vector2.ZERO) -> void:
 	if _attack_active:
 		_cancel_attack()
 
-	health = max(0, health - amount)
+	health = max(0, health - max(1, amount - defense))
 	health_changed.emit(health, max_health)
 
 	if source_pos != Vector2.ZERO:
@@ -323,20 +325,22 @@ func _flash() -> void:
 #  플레이어 → 마우스 커서의 월드 좌표 방향 반환
 # ───────────────────────────────
 func apply_artifact_bonus(data: ArtifactData) -> void:
+	attack_damage += data.bonus_attack
+	attack_speed  += data.bonus_attack_speed
+	defense       += data.bonus_defense
+	move_speed    += data.bonus_move_speed
 	max_health    += data.bonus_max_health
 	health         = min(health + data.bonus_max_health, max_health)
-	attack_damage += data.bonus_attack_damage
-	move_speed    += data.bonus_move_speed
-	dash_cooldown  = maxf(dash_cooldown - data.bonus_dash_cooldown, 0.2)
 	if data.bonus_max_health != 0:
 		health_changed.emit(health, max_health)
 
 func remove_artifact_bonus(data: ArtifactData) -> void:
-	max_health    = maxi(max_health - data.bonus_max_health, 1)
+	attack_damage  = maxi(attack_damage - data.bonus_attack, 1)
+	attack_speed   = maxi(attack_speed  - data.bonus_attack_speed, 0)
+	defense        = maxi(defense       - data.bonus_defense, 0)
+	move_speed     = maxf(move_speed    - data.bonus_move_speed, 40.0)
+	max_health     = maxi(max_health    - data.bonus_max_health, 1)
 	health         = mini(health, max_health)
-	attack_damage  = maxi(attack_damage - data.bonus_attack_damage, 1)
-	move_speed     = maxf(move_speed - data.bonus_move_speed, 40.0)
-	dash_cooldown += data.bonus_dash_cooldown
 	if data.bonus_max_health != 0:
 		health_changed.emit(health, max_health)
 

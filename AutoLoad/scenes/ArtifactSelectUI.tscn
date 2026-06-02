@@ -116,6 +116,14 @@ theme_override_fonts/font = ExtResource("1_w16c3")
 theme_override_font_sizes/font_size = 18
 autowrap_mode = 2
 
+[node name="BonusSeparator" type="HSeparator" parent="Panel/RightScroll/VBox" unique_id=312445010]
+layout_mode = 2
+
+[node name="BonusContainer" type="VBoxContainer" parent="Panel/RightScroll/VBox" unique_id=312445011]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
 [node name="HBoxContainer" type="HBoxContainer" parent="Panel" unique_id=1189334896]
 layout_mode = 0
 offset_left = 1100.0

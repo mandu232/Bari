@@ -17,5 +17,5 @@ wander_radius = 80.0
 stability_decay = 0.0
 output_decay = 0.1
 activity_decay = 0.0
-bonus_damage_max = 3
+bonus_atk_max = 3
 metadata/_custom_type_script = "uid://urkryft166ev"
