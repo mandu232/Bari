@@ -1,0 +1,124 @@
+[gd_scene format=3 uid="uid://cx4nrp7bqm2wd"]
+
+[ext_resource type="FontFile" uid="uid://c6oayswa1a3mm" path="res://AutoLoad/assets/Font/DungGeunMo.ttf" id="1_font"]
+[ext_resource type="Script" uid="uid://c1j648m7e5imq" path="res://scripts/museum/DoggamUI.gd" id="2_script"]
+
+[node name="DoggamUI" type="CanvasLayer" unique_id=421792011]
+layer = 11
+script = ExtResource("2_script")
+
+[node name="Overlay" type="ColorRect" parent="." unique_id=862916845]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.5)
+
+[node name="Panel" type="Panel" parent="." unique_id=599843107]
+offset_left = 155.0
+offset_top = 65.0
+offset_right = 1125.0
+offset_bottom = 655.0
+
+[node name="VBox" type="VBoxContainer" parent="Panel" unique_id=2124626987]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 18.0
+offset_right = -20.0
+offset_bottom = -18.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 8
+
+[node name="TitleHBox" type="HBoxContainer" parent="Panel/VBox" unique_id=101007247]
+layout_mode = 2
+
+[node name="TitleLabel" type="Label" parent="Panel/VBox/TitleHBox" unique_id=212943077]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("1_font")
+theme_override_font_sizes/font_size = 22
+text = "도감"
+
+[node name="TitleSpacer" type="Control" parent="Panel/VBox/TitleHBox" unique_id=531300355]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="CloseButton" type="Button" parent="Panel/VBox/TitleHBox" unique_id=1420244729]
+custom_minimum_size = Vector2(64, 0)
+layout_mode = 2
+theme_override_fonts/font = ExtResource("1_font")
+theme_override_font_sizes/font_size = 16
+text = "닫기"
+
+[node name="TabHBox" type="HBoxContainer" parent="Panel/VBox" unique_id=2144640224]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="ArtifactTabBtn" type="Button" parent="Panel/VBox/TabHBox" unique_id=809348709]
+custom_minimum_size = Vector2(90, 34)
+layout_mode = 2
+theme_override_fonts/font = ExtResource("1_font")
+theme_override_font_sizes/font_size = 17
+text = "유물"
+
+[node name="EchoTabBtn" type="Button" parent="Panel/VBox/TabHBox" unique_id=501208766]
+custom_minimum_size = Vector2(90, 34)
+layout_mode = 2
+theme_override_fonts/font = ExtResource("1_font")
+theme_override_font_sizes/font_size = 17
+text = "에코"
+
+[node name="BuildingTabBtn" type="Button" parent="Panel/VBox/TabHBox" unique_id=875262038]
+custom_minimum_size = Vector2(90, 34)
+layout_mode = 2
+theme_override_fonts/font = ExtResource("1_font")
+theme_override_font_sizes/font_size = 17
+text = "건물"
+
+[node name="TopSeparator" type="HSeparator" parent="Panel/VBox" unique_id=164282770]
+layout_mode = 2
+
+[node name="ContentHBox" type="HBoxContainer" parent="Panel/VBox" unique_id=1874101945]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 6
+
+[node name="LeftVBox" type="VBoxContainer" parent="Panel/VBox/ContentHBox" unique_id=1931019390]
+custom_minimum_size = Vector2(270, 0)
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="ItemScroll" type="ScrollContainer" parent="Panel/VBox/ContentHBox/LeftVBox" unique_id=646659275]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="ItemList" type="ItemList" parent="Panel/VBox/ContentHBox/LeftVBox/ItemScroll" unique_id=1727226433]
+custom_minimum_size = Vector2(260, 420)
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_fonts/font = ExtResource("1_font")
+theme_override_font_sizes/font_size = 16
+
+[node name="ContentSep" type="VSeparator" parent="Panel/VBox/ContentHBox" unique_id=650323111]
+layout_mode = 2
+
+[node name="RightVBox" type="VBoxContainer" parent="Panel/VBox/ContentHBox" unique_id=2044019431]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="DetailScroll" type="ScrollContainer" parent="Panel/VBox/ContentHBox/RightVBox" unique_id=462834100]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="DetailVBox" type="VBoxContainer" parent="Panel/VBox/ContentHBox/RightVBox/DetailScroll" unique_id=75825215]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10

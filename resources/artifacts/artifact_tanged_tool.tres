@@ -11,6 +11,7 @@ era = 1
 description = "끝을 뾰족하게 다듬어 사냥감을 정확히 타격하던 도구입니다. 겉모습은 작고 소박하나, 표적을 절대 놓치지 않는 예리한 기운을 품고 있습니다."
 texture = ExtResource("3_mekhv")
 echo_name = "송이"
+echo_description = "구석기의 들판을 가볍게 뛰어다니던 활달한 에코입니다. 작은 몸집에 어울리지 않는 왕성한 호기심과 재빠른 몸놀림이 특기로, 한시도 가만히 있지를 않습니다."
 echo_frames = ExtResource("1_8v2m2")
 echo_power = 2
 wander_radius = 75.0

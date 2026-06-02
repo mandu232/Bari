@@ -11,6 +11,7 @@ era = 3
 description = "청동기 시대, 황금빛으로 물든 들판에서 곡식의 이삭을 수확할 때 사용하던 반달 모양의 돌칼입니다. 날카로운 철제 무기들과 달리, 이 유물에는 피 대신 백성들을 먹여 살리던 '풍요와 결실'의 따뜻한 에너지가 깃들어 있습니다."
 texture = ExtResource("2_s5wyx")
 echo_name = "달이"
+echo_description = "청동기 시대 황금빛 들녘의 온기를 담은 에코입니다. 반달처럼 고요하고 부드러운 성품을 지녀, 곁에 있으면 마음이 차분하게 가라앉는 느낌이 듭니다."
 echo_frames = ExtResource("1_uxg75")
 output_decay = 0.2
 activity_decay = 0.0

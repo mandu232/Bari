@@ -33,6 +33,7 @@ static func era_label(e: Era) -> String:
 
 @export_group("Echo 정보")
 @export var echo_name: String           = "이름 없는 에코"
+@export var echo_description: String    = ""
 @export var echo_frames: SpriteFrames   = null
 @export var echo_power: int             = 1
 @export var wander_radius: float        = 64.0

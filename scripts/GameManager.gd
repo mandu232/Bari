@@ -14,6 +14,9 @@ var current_run_active: bool         = false
 var unlocked_blueprints: Array[BuildableItem] = []
 var essence_rate: float = 0.0
 
+# 도감: 한 번이라도 획득한 유물의 베이스 리소스 경로
+var discovered_artifact_paths: Array[String] = []
+
 # ───────────────────────────────
 #  박물관 본관 (MuseumHQ)
 # ───────────────────────────────
@@ -101,7 +104,8 @@ func _ready() -> void:
 	_init_starting_blueprints()
 
 func _init_starting_blueprints() -> void:
-	
+	# museum_hq 는 씬에 고정 배치된 건물이므로 건설창에는 표시하지 않음
+	# (도감에서는 DoggamUI 의 ALWAYS_DISCOVERED_BLUEPRINTS 로 항상 공개)
 	var stand := load("res://resources/buildables/artifact_stand.tres") as BuildableItem
 	if stand:
 		unlocked_blueprints.append(stand)
@@ -230,10 +234,14 @@ func spend_essence(amount: int) -> bool:
 #  유물
 # ───────────────────────────────
 func add_artifact(artifact: ArtifactData) -> void:
-	var instance := artifact.duplicate() as ArtifactData
+	var base_path := artifact.resource_path
+	var instance  := artifact.duplicate() as ArtifactData
 	instance.roll_bonuses()
 	artifacts.append(instance)
 	artifact_added.emit(instance)
+	# 도감: 처음 획득한 유물은 발견 목록에 등록
+	if base_path != "" and base_path not in discovered_artifact_paths:
+		discovered_artifact_paths.append(base_path)
 
 func remove_artifact(artifact: ArtifactData) -> void:
 	artifacts.erase(artifact)
@@ -301,7 +309,8 @@ func save_game() -> void:
 			"spd":     inst.bonus_move_speed,
 			"hp":      inst.bonus_max_health,
 		})
-	cfg.set_value("player", "artifacts", artifact_list)
+	cfg.set_value("player", "artifacts",            artifact_list)
+	cfg.set_value("player", "discovered_artifacts", discovered_artifact_paths)
 	cfg.save(SAVE_PATH)
 
 func load_game() -> void:
@@ -316,6 +325,8 @@ func load_game() -> void:
 	player_speed_bonus  = cfg.get_value("player", "speed_bonus",   0.0)
 	hq_museum_level     = cfg.get_value("museum", "hq_museum_level", 0)
 	hq_player_level     = cfg.get_value("museum", "hq_player_level", 0)
+
+	discovered_artifact_paths.assign(cfg.get_value("player", "discovered_artifacts", []))
 
 	var artifact_list = cfg.get_value("player", "artifacts", [])
 	for entry in artifact_list:

@@ -1,0 +1,60 @@
+[gd_scene format=3 uid="uid://dh6xrm4wqafjc"]
+
+[ext_resource type="FontFile" uid="uid://c6oayswa1a3mm" path="res://AutoLoad/assets/Font/DungGeunMo.ttf" id="1_font"]
+[ext_resource type="Script" uid="uid://dy7h4tnj2rqmf" path="res://scripts/museum/PlayerStatsUI.gd" id="2_script"]
+
+[node name="PlayerStatsUI" type="CanvasLayer"]
+layer = 11
+script = ExtResource("2_script")
+
+[node name="Overlay" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.5)
+mouse_filter = 0
+
+[node name="Panel" type="Panel" parent="."]
+layout_mode = 0
+offset_left = 440.0
+offset_top = 175.0
+offset_right = 840.0
+offset_bottom = 545.0
+
+[node name="VBox" type="VBoxContainer" parent="Panel"]
+layout_mode = 1
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 18.0
+offset_top = 18.0
+offset_right = -18.0
+offset_bottom = -18.0
+theme_override_constants/separation = 10
+
+[node name="TitleLabel" type="Label" parent="Panel/VBox"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("1_font")
+theme_override_font_sizes/font_size = 22
+text = "플레이어 스탯"
+horizontal_alignment = 1
+
+[node name="TitleSeparator" type="HSeparator" parent="Panel/VBox"]
+layout_mode = 2
+
+[node name="StatsContainer" type="VBoxContainer" parent="Panel/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 14
+
+[node name="BottomSeparator" type="HSeparator" parent="Panel/VBox"]
+layout_mode = 2
+
+[node name="CloseButton" type="Button" parent="Panel/VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 38)
+theme_override_fonts/font = ExtResource("1_font")
+theme_override_font_sizes/font_size = 16
+text = "닫기"

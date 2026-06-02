@@ -11,6 +11,7 @@ era = 5
 description = "고대 삼국 시대와 통일신라의 지붕 위를 장식하던 신성한 기와입니다. 부릅뜬 큰 눈과 날카로운 이빨, 웅장한 갈기는 궁궐과 사찰 안으로 감히 어떤 악한 기운이나 액운도 침범하지 못하도록 위엄 있게 벽사의 기운을 뿜어냅니다."
 texture = ExtResource("3_3nw7n")
 echo_name = "벽사"
+echo_description = "삼국 시대 지붕 위에서 액을 물리치던 기운이 깃든 에코입니다. 위압감 넘치는 외모와는 달리 수호자 기질이 강하며, 주변의 나쁜 기운을 몰아내는 데서 기쁨을 느낍니다."
 echo_frames = ExtResource("1_q8eiq")
 bonus_hp_max = 4
 bonus_def_max = 2

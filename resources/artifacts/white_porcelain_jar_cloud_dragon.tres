@@ -11,6 +11,7 @@ era = 8
 description = "조선 왕실의 엄숙한 의례와 연향을 빛내던 고결한 청화백자 항아리입니다. 눈부시게 하얀 바탕 위에 푸른 빛 청화 안료로 그려진 구름과 대룡은 당장이라도 도자기 밖으로 날아오를 듯 생동감이 넘칩니다."
 texture = ExtResource("3_cpckf")
 echo_name = "미르"
+echo_description = "조선 왕실 백자의 고결한 기품을 그대로 품은 에코입니다. 우아하고 자존심이 강하지만, 마음을 열면 따뜻한 면이 있으며 구름 위를 노니는 용처럼 자유로운 영혼을 지녔습니다."
 echo_frames = ExtResource("1_4g3t2")
 bonus_hp_max = 3
 bonus_atk_max = 3
