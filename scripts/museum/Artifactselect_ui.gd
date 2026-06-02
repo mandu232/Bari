@@ -14,8 +14,8 @@ var _artifacts_cache:  Array[ArtifactData]    = []
 @onready var item_list:        ItemList     = $Panel/ScrollContainer/ItemList
 @onready var artifact_texture: TextureRect  = $Panel/ArtifactImageBox/ArtifactTextureRect
 @onready var echo_texture:     TextureRect  = $Panel/EchoImageBox/EchoTextureRect
-@onready var info_label:       Label        = $Panel/InfoLabel
-@onready var decay_label:      Label        = $Panel/DecayLabel
+@onready var info_label:       Label        = $Panel/RightScroll/VBox/InfoLabel
+@onready var decay_label:      Label        = $Panel/RightScroll/VBox/DecayLabel
 @onready var confirm_btn:      Button       = $Panel/HBoxContainer/ConfirmButton
 @onready var cancel_btn:       Button       = $Panel/HBoxContainer/CancelButton
 @onready var remove_btn:       Button       = $Panel/HBoxContainer/RemoveButton
@@ -96,9 +96,11 @@ func _on_item_selected(index: int) -> void:
 	# ── 기본 정보
 	var passive := data.passive_description if data.passive_description != "" \
 											else data.description
-	info_label.text = "유물: %s\n에코: %s\n영력/초: %.2f\n\n%s" % [
+	var era_str := ArtifactData.era_label(data.era)
+	info_label.text = "유물: %s\n에코: %s\n시대: %s\n영력/초: %.2f\n\n%s" % [
 		data.artifact_name,
 		data.echo_name,
+		era_str,
 		data.essence_per_second,
 		passive,
 	]
@@ -108,7 +110,9 @@ func _on_item_selected(index: int) -> void:
 		"── 욕구 감소율 ──\n"
 		+ "안정도:   %.2f / 초\n" % data.stability_decay
 		+ "출력:     %.2f / 초\n" % data.output_decay
-		+ "활성도:   %.2f / 초"   % data.activity_decay
+		+ "활성도:   %.2f / 초\n\n" % data.activity_decay
+		+ "── 플레이어 보너스 ──\n"
+		+ _format_bonus_stats(data)
 	)
 
 	confirm_btn.disabled = false
@@ -131,6 +135,18 @@ func _on_cancel() -> void:
 func _on_remove() -> void:
 	remove_requested.emit()
 	close()
+
+func _format_bonus_stats(data: ArtifactData) -> String:
+	var lines: Array[String] = []
+	if data.bonus_max_health > 0:
+		lines.append("최대 체력    +%d  (상한 +%d)" % [data.bonus_max_health,    data.bonus_health_max])
+	if data.bonus_attack_damage > 0:
+		lines.append("공격력       +%d  (상한 +%d)" % [data.bonus_attack_damage, data.bonus_damage_max])
+	if data.bonus_move_speed > 0.01:
+		lines.append("이동 속도    +%.1f  (상한 +%.1f)" % [data.bonus_move_speed,    data.bonus_speed_max])
+	if data.bonus_dash_cooldown > 0.01:
+		lines.append("대시 쿨타임  -%.2f초  (상한 -%.2f초)" % [data.bonus_dash_cooldown, data.bonus_dash_max])
+	return "\n".join(lines) if not lines.is_empty() else "보너스 없음"
 
 func _unhandled_input(event: InputEvent) -> void:
 	if visible and event is InputEventKey:

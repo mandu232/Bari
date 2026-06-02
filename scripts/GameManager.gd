@@ -61,7 +61,10 @@ signal essence_multiplier_changed(mult: float)
 # ───────────────────────────────
 func _ready() -> void:
 	load_game()
+	
 	#테스트용 아티펙트 지급
+	#─────────────────────────────────────────────────────────────────────────────────────────────
+	
 	var artifact = load("res://resources/artifacts/artifact_sword.tres")
 	add_artifact(artifact)
 	
@@ -73,6 +76,23 @@ func _ready() -> void:
 
 	var semilunar_stone_knife = load("res://resources/artifacts/artifact_semilunar_stone_knife.tres")
 	add_artifact(semilunar_stone_knife)
+	
+	var iron_arrow = load("res://resources/artifacts/artifact_iron_arrow.tres")
+	add_artifact(iron_arrow)
+	
+	var hwandudaedo = load("res://resources/artifacts/artifact_hwandudaedo.tres")
+	add_artifact(hwandudaedo)
+	
+	var mumun_pottery = load("res://resources/artifacts/artifact_mumun_pottery.tres")
+	add_artifact(mumun_pottery)
+	
+	var monster_mask_roof_tile = load("res://resources/artifacts/monster_mask_roof_tile.tres")
+	add_artifact(monster_mask_roof_tile)
+	
+	var white_porcelain_jar_cloud_dragon = load("res://resources/artifacts/white_porcelain_jar_cloud_dragon.tres")
+	add_artifact(white_porcelain_jar_cloud_dragon)
+	
+	#─────────────────────────────────────────────────────────────────────────────────────────────
 
 	#테스트용 시작시 박물관 레벨 1레벨로 고정
 	hq_museum_level = 1
@@ -210,11 +230,26 @@ func spend_essence(amount: int) -> bool:
 #  유물
 # ───────────────────────────────
 func add_artifact(artifact: ArtifactData) -> void:
-	artifacts.append(artifact)
-	artifact_added.emit(artifact)
+	var instance := artifact.duplicate() as ArtifactData
+	instance.roll_bonuses()
+	artifacts.append(instance)
+	artifact_added.emit(instance)
 
 func remove_artifact(artifact: ArtifactData) -> void:
 	artifacts.erase(artifact)
+
+func get_era_count(era: ArtifactData.Era) -> int:
+	var count := 0
+	for a: ArtifactData in artifacts:
+		if a.era == era:
+			count += 1
+	return count
+
+func get_era_counts() -> Dictionary:
+	var counts: Dictionary = {}
+	for a: ArtifactData in artifacts:
+		counts[a.era] = counts.get(a.era, 0) + 1
+	return counts
 
 # ───────────────────────────────
 #  혼 (魂)
@@ -248,23 +283,48 @@ func save_game() -> void:
 	cfg.set_value("player", "essence",       echo_essence)
 	cfg.set_value("player", "echoes",        total_echoes)
 	cfg.set_value("player", "dungeon_depth", dungeon_depth)
-	# 본관 보너스를 제외한 기본 스탯을 저장 (본관 복원 시 재적용됨)
 	cfg.set_value("player", "max_health",    player_max_health   - _hq_health_delta)
 	cfg.set_value("player", "damage_bonus",  player_damage_bonus - _hq_damage_delta)
 	cfg.set_value("player", "speed_bonus",   player_speed_bonus  - _hq_speed_delta)
 	cfg.set_value("museum", "hq_museum_level", hq_museum_level)
 	cfg.set_value("museum", "hq_player_level", hq_player_level)
+
+	var artifact_list := []
+	for inst: ArtifactData in artifacts:
+		if inst.resource_path == "":
+			continue
+		artifact_list.append({
+			"path": inst.resource_path,
+			"h":    inst.bonus_max_health,
+			"d":    inst.bonus_attack_damage,
+			"s":    inst.bonus_move_speed,
+			"c":    inst.bonus_dash_cooldown,
+		})
+	cfg.set_value("player", "artifacts", artifact_list)
 	cfg.save(SAVE_PATH)
 
 func load_game() -> void:
 	var cfg := ConfigFile.new()
 	if cfg.load(SAVE_PATH) != OK:
 		return
-	echo_essence      = cfg.get_value("player", "essence",       0)
-	total_echoes       = cfg.get_value("player", "echoes",       0)
+	echo_essence        = cfg.get_value("player", "essence",       0)
+	total_echoes        = cfg.get_value("player", "echoes",        0)
 	dungeon_depth       = cfg.get_value("player", "dungeon_depth", 1)
 	player_max_health   = cfg.get_value("player", "max_health",    6)
 	player_damage_bonus = cfg.get_value("player", "damage_bonus",  0)
 	player_speed_bonus  = cfg.get_value("player", "speed_bonus",   0.0)
-	hq_museum_level = cfg.get_value("museum", "hq_museum_level", 0)
-	hq_player_level = cfg.get_value("museum", "hq_player_level", 0)
+	hq_museum_level     = cfg.get_value("museum", "hq_museum_level", 0)
+	hq_player_level     = cfg.get_value("museum", "hq_player_level", 0)
+
+	var artifact_list = cfg.get_value("player", "artifacts", [])
+	for entry in artifact_list:
+		var base := ResourceLoader.load(entry["path"]) as ArtifactData
+		if base == null:
+			continue
+		var inst := base.duplicate() as ArtifactData
+		inst.bonus_max_health    = entry.get("h", 0)
+		inst.bonus_attack_damage = entry.get("d", 0)
+		inst.bonus_move_speed    = entry.get("s", 0.0)
+		inst.bonus_dash_cooldown = entry.get("c", 0.0)
+		artifacts.append(inst)
+		artifact_added.emit(inst)

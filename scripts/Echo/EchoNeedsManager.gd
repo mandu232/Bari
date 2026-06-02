@@ -38,10 +38,10 @@ var _needs: Dictionary = {}   # StringName → EchoNeed
 var essence_multiplier: float:
 	get:
 		match mood:
-			&"안정": return 1.5   # 행복하면 영력 50% 보너스
-			&"유지": return 1.0
-			&"불안정": return 0.5   # 불만이면 절반
-			&"붕괴": return 0.0   # 고통 상태면 영력 없음
+			&"평온": return 1.5   # 행복하면 영력 50% 보너스
+			&"보통": return 1.0
+			&"우울": return 0.5   # 불만이면 절반
+			&"한계": return 0.0   # 고통 상태면 영력 없음
 		return 1.0
 
 # ───────────────────────────────
@@ -49,22 +49,22 @@ var essence_multiplier: float:
 # ───────────────────────────────
 func _ready() -> void:
 	_register(&"안정도", "안정도", 1.0,
-		[{threshold = 70.0, tier = &"안정"},
-		 {threshold = 40.0, tier = &"유지"},
-		 {threshold = 15.0, tier = &"불안정"},
-		 {threshold =  0.0, tier = &"붕괴"}])
+		[{threshold = 70.0, tier = &"평온"},
+		 {threshold = 40.0, tier = &"보통"},
+		 {threshold = 15.0, tier = &"우울"},
+		 {threshold =  0.0, tier = &"한계"}])
 
 	_register(&"출력", "출력", 0.7,
-		[{threshold = 65.0, tier = &"과출력"},
-		 {threshold = 35.0, tier = &"안정"},
-		 {threshold = 10.0, tier = &"저출력"},
-		 {threshold =  0.0, tier = &"정지"}])
+		[{threshold = 65.0, tier = &"넘침"},
+		 {threshold = 35.0, tier = &"평온"},
+		 {threshold = 10.0, tier = &"부족"},
+		 {threshold =  0.0, tier = &"멈춤"}])
 
 	_register(&"활성도", "활성도", 2.2,
-		[{threshold = 60.0, tier = &"활성"},
-		 {threshold = 30.0, tier = &"반응"},
-		 {threshold = 10.0, tier = &"둔화"},
-		 {threshold =  0.0, tier = &"침묵"}])
+		[{threshold = 60.0, tier = &"활발"},
+		 {threshold = 30.0, tier = &"느긋"},
+		 {threshold = 10.0, tier = &"처짐"},
+		 {threshold =  0.0, tier = &"고요"}])
 
 # ───────────────────────────────
 #  PROCESS — 매 프레임 감소
@@ -133,10 +133,10 @@ func _update_mood() -> void:
 	for need: EchoNeed in _needs.values():
 		min_ratio = minf(min_ratio, need.get_ratio())
 
-	if   min_ratio >= 0.65: mood = &"안정"
-	elif min_ratio >= 0.40: mood = &"유지"
-	elif min_ratio >= 0.20: mood = &"불안정"
-	else:                   mood = &"붕괴"
+	if   min_ratio >= 0.65: mood = &"평온"
+	elif min_ratio >= 0.40: mood = &"보통"
+	elif min_ratio >= 0.20: mood = &"우울"
+	else:                   mood = &"한계"
 
 func _on_value_changed(_need: EchoNeed, _old: float, _new_val: float) -> void:
 	pass   # 필요 시 HUD 실시간 갱신 훅으로 확장 가능
@@ -144,5 +144,5 @@ func _on_value_changed(_need: EchoNeed, _old: float, _new_val: float) -> void:
 func _on_threshold_crossed(need: EchoNeed,
 							tier: StringName, going_down: bool) -> void:
 	# 수치가 내려가며 위험 구간 진입 시 외부에 알림
-	if going_down and tier in [&"붕괴", &"정지", &"침묵"]:
+	if going_down and tier in [&"한계", &"멈춤", &"고요"]:
 		need_critical.emit(need)

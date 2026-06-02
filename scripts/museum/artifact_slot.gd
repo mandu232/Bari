@@ -100,13 +100,14 @@ func place_artifact(data: ArtifactData) -> void:
 	_start_float()
 	_spawn_echo()
 	artifact_placed.emit(self, data)
-	# 유물이 배치되면 출력·안정도 즉시 회복
 	_fulfill_echo_needs(&"출력",   35.0)
 	_fulfill_echo_needs(&"안정도", 15.0)
+	_apply_player_bonus(data)
 
 func remove_artifact() -> ArtifactData:
 	if not is_occupied:
 		return null
+	_remove_player_bonus(artifact)
 	_despawn_echo()
 	_stop_float()
 	var removed   := artifact
@@ -236,6 +237,18 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("sub_interact"):
 		wire_requested.emit(self)
 		get_viewport().set_input_as_handled()
+
+func _apply_player_bonus(data: ArtifactData) -> void:
+	var player := get_tree().get_first_node_in_group("player")
+	if is_instance_valid(player) and player.has_method("apply_artifact_bonus"):
+		player.apply_artifact_bonus(data)
+
+func _remove_player_bonus(data: ArtifactData) -> void:
+	if data == null:
+		return
+	var player := get_tree().get_first_node_in_group("player")
+	if is_instance_valid(player) and player.has_method("remove_artifact_bonus"):
+		player.remove_artifact_bonus(data)
 
 func _notification(what: int) -> void:
 	pass  # 범위 기반 전력: 해제 시 별도 반환 불필요

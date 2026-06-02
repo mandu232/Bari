@@ -7,6 +7,7 @@
 [resource]
 script = ExtResource("1_lex6m")
 artifact_name = "세형동검"
+era = 3
 description = "제사장과 군장의 권위를 상징하는 청동검입니다. 푸른빛 도신에서 뿜어져 나오는 서슬 퍼런 기운은 감히 범접할 수 없는 신성함을 자아냅니다."
 texture = ExtResource("3_58cc4")
 echo_name = "천령"
@@ -16,4 +17,5 @@ wander_radius = 80.0
 stability_decay = 0.0
 output_decay = 0.1
 activity_decay = 0.0
+bonus_damage_max = 3
 metadata/_custom_type_script = "uid://urkryft166ev"

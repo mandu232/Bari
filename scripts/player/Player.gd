@@ -322,6 +322,24 @@ func _flash() -> void:
 #  마우스 방향 계산
 #  플레이어 → 마우스 커서의 월드 좌표 방향 반환
 # ───────────────────────────────
+func apply_artifact_bonus(data: ArtifactData) -> void:
+	max_health    += data.bonus_max_health
+	health         = min(health + data.bonus_max_health, max_health)
+	attack_damage += data.bonus_attack_damage
+	move_speed    += data.bonus_move_speed
+	dash_cooldown  = maxf(dash_cooldown - data.bonus_dash_cooldown, 0.2)
+	if data.bonus_max_health != 0:
+		health_changed.emit(health, max_health)
+
+func remove_artifact_bonus(data: ArtifactData) -> void:
+	max_health    = maxi(max_health - data.bonus_max_health, 1)
+	health         = mini(health, max_health)
+	attack_damage  = maxi(attack_damage - data.bonus_attack_damage, 1)
+	move_speed     = maxf(move_speed - data.bonus_move_speed, 40.0)
+	dash_cooldown += data.bonus_dash_cooldown
+	if data.bonus_max_health != 0:
+		health_changed.emit(health, max_health)
+
 func _get_mouse_facing() -> Vector2:
 	var mouse_world := get_global_mouse_position()
 	var dir := mouse_world - global_position

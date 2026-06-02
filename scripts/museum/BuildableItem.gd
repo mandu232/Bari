@@ -7,8 +7,9 @@ class_name BuildableItem
 @export var icon:        Texture2D   = null
 
 @export_group("건설")
-@export var scene:       PackedScene = null
-@export var cost:        int         = 20
+@export var scene:             PackedScene = null
+@export var cost:              int         = 20
+@export var is_artifact_stand: bool        = false
 
 @export_group("전력")
 @export var power_consumption: int   = 0     # 이 구조물이 소비하는 전력

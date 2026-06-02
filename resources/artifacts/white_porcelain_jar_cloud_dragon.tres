@@ -7,8 +7,12 @@
 [resource]
 script = ExtResource("1_yqsvr")
 artifact_name = "백자 청화 구름과 용무늬 항아리"
+era = 8
 description = "조선 왕실의 엄숙한 의례와 연향을 빛내던 고결한 청화백자 항아리입니다. 눈부시게 하얀 바탕 위에 푸른 빛 청화 안료로 그려진 구름과 대룡은 당장이라도 도자기 밖으로 날아오를 듯 생동감이 넘칩니다."
 texture = ExtResource("3_cpckf")
 echo_name = "미르"
 echo_frames = ExtResource("1_4g3t2")
+bonus_health_max = 3
+bonus_damage_max = 3
+bonus_speed_max = 10.0
 metadata/_custom_type_script = "uid://urkryft166ev"

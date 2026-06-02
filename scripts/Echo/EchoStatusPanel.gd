@@ -140,33 +140,29 @@ func _draw_need_row(need: EchoNeed, x: float, y: float) -> void:
 # ─── 색상·텍스트 헬퍼 ────────────────────────────────────
 func _mood_symbol(mood: StringName) -> String:
 	match mood:
-		&"안정":   return "◆"
-		&"불안정": return "▼"
-		&"붕괴":   return "✕"
-		_:         return "●"   # 유지
+		&"평온": return "◆"
+		&"우울": return "▼"
+		&"한계": return "✕"
+		_:       return "●"   # 보통
 
 func _mood_label(mood: StringName) -> String:
 	match mood:
-		&"안정":   return "안정"
-		&"불안정": return "불안정"
-		&"붕괴":   return "붕괴"
-		_:         return "유지"
+		&"평온": return "평온"
+		&"우울": return "우울"
+		&"한계": return "한계"
+		_:       return "보통"
 
 func _mood_color(mood: StringName) -> Color:
 	match mood:
-		&"안정":   return Color(0.35, 0.92, 0.55)   # 초록
-		&"불안정": return Color(0.96, 0.66, 0.20)   # 주황
-		&"붕괴":   return Color(0.96, 0.30, 0.30)   # 빨강
-		_:         return Color(0.60, 0.82, 0.96)   # 파랑 (유지)
+		&"평온": return Color(0.35, 0.92, 0.55)   # 초록
+		&"우울": return Color(0.96, 0.66, 0.20)   # 주황
+		&"한계": return Color(0.96, 0.30, 0.30)   # 빨강
+		_:       return Color(0.60, 0.82, 0.96)   # 파랑 (보통)
 
 func _tier_color(tier: StringName) -> Color:
 	match tier:
-		# 안정도 good / 출력 peak / 활성도 good
-		&"안정", &"과출력", &"활성": return Color(0.28, 0.85, 0.48)   # 초록
-		# 안정도 mid / 활성도 mid
-		&"유지", &"반응":            return Color(0.48, 0.72, 0.96)   # 파랑
-		# 안정도 bad / 출력 low / 활성도 slow
-		&"불안정", &"저출력", &"둔화": return Color(0.96, 0.65, 0.18) # 주황
-		# 안정도 crit / 출력 stop / 활성도 silent
-		&"붕괴", &"정지", &"침묵":   return Color(0.96, 0.28, 0.28)   # 빨강
-		_:                           return Color(0.48, 0.72, 0.96)
+		&"평온", &"넘침", &"활발": return Color(0.28, 0.85, 0.48)   # 초록
+		&"보통", &"느긋":          return Color(0.48, 0.72, 0.96)   # 파랑
+		&"우울", &"부족", &"처짐": return Color(0.96, 0.65, 0.18)   # 주황
+		&"한계", &"멈춤", &"고요": return Color(0.96, 0.28, 0.28)   # 빨강
+		_:                         return Color(0.48, 0.72, 0.96)

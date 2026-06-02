@@ -15,6 +15,7 @@ var _tt_desc:              Label          = null
 var _tt_cost_row:          Label          = null
 var _tt_power_consume_row: Label          = null
 var _tt_power_output_row:  Label          = null
+var _tt_slot_row:          Label          = null
 
 # ───────────────────────────────
 #  READY
@@ -150,6 +151,12 @@ func _build_tooltip() -> void:
 	_apply_font(_tt_power_output_row, 12)
 	vb.add_child(_tt_power_output_row)
 
+	# 전시대 슬롯 수
+	_tt_slot_row          = Label.new()
+	_tt_slot_row.modulate = Color(0.55, 0.97, 0.80)
+	_apply_font(_tt_slot_row, 12)
+	vb.add_child(_tt_slot_row)
+
 	_tooltip.hide()
 
 func _show_tooltip(item: BuildableItem) -> void:
@@ -168,6 +175,15 @@ func _show_tooltip(item: BuildableItem) -> void:
 		_tt_power_output_row.visible = true
 	else:
 		_tt_power_output_row.visible = false
+
+	if item.is_artifact_stand:
+		var placed := get_tree().get_nodes_in_group("placed_structure") \
+			.filter(func(n: Node) -> bool: return n is ArtifactSlot).size()
+		var max_slots := GameManager.max_dynamic_artifact_slots
+		_tt_slot_row.text    = "전시대: %d / %d" % [placed, max_slots]
+		_tt_slot_row.visible = true
+	else:
+		_tt_slot_row.visible = false
 
 	_tooltip.show()
 

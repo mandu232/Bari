@@ -12,3 +12,4 @@ icon = ExtResource("1_uou1m")
 scene = ExtResource("2_fyg73")
 cost = 50
 power_consumption = 20
+is_artifact_stand = true

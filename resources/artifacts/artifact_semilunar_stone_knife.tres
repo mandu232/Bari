@@ -7,10 +7,13 @@
 [resource]
 script = ExtResource("1_scu6h")
 artifact_name = "반달돌칼"
+era = 3
 description = "청동기 시대, 황금빛으로 물든 들판에서 곡식의 이삭을 수확할 때 사용하던 반달 모양의 돌칼입니다. 날카로운 철제 무기들과 달리, 이 유물에는 피 대신 백성들을 먹여 살리던 '풍요와 결실'의 따뜻한 에너지가 깃들어 있습니다."
 texture = ExtResource("2_s5wyx")
 echo_name = "달이"
 echo_frames = ExtResource("1_uxg75")
 output_decay = 0.2
 activity_decay = 0.0
+bonus_health_max = 3
+bonus_speed_max = 10.0
 metadata/_custom_type_script = "uid://urkryft166ev"

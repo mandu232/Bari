@@ -160,17 +160,17 @@ func _start_pulse() -> void:
 	var speed:    float
 	var alpha_lo: float
 	var alpha_hi: float
-	var cur_mood := needs.mood if needs else &"유지"
+	var cur_mood := needs.mood if needs else &"보통"
 	match cur_mood:
-		&"안정":
+		&"평온":
 			speed    = 0.9    # 빠른 활기찬 펄스
 			alpha_lo = 0.6
 			alpha_hi = 1.0
-		&"불안정":
+		&"우울":
 			speed    = 2.8    # 느린 불안정 펄스
 			alpha_lo = 0.3
 			alpha_hi = 0.65
-		&"붕괴":
+		&"한계":
 			speed    = 4.0    # 매우 느리고 희미한 펄스
 			alpha_lo = 0.15
 			alpha_hi = 0.45
@@ -446,10 +446,10 @@ func _on_mood_changed(new_mood: StringName) -> void:
 	# 상태에 따라 배회 반경 조정 — 안정적일수록 멀리, 붕괴 시 구석에만
 	if artifact_data:
 		match new_mood:
-			&"안정":   wander_radius = artifact_data.wander_radius * 1.4
-			&"불안정": wander_radius = artifact_data.wander_radius * 0.5
-			&"붕괴":   wander_radius = artifact_data.wander_radius * 0.15
-			_:         wander_radius = artifact_data.wander_radius
+			&"평온": wander_radius = artifact_data.wander_radius * 1.4
+			&"우울": wander_radius = artifact_data.wander_radius * 0.5
+			&"한계": wander_radius = artifact_data.wander_radius * 0.15
+			_:       wander_radius = artifact_data.wander_radius
 
 	# 펄스 속도·밝기 재시작
 	_start_pulse()

@@ -7,8 +7,11 @@
 [resource]
 script = ExtResource("1_cu2ck")
 artifact_name = "고리자루칼"
+era = 5
 description = "대가, 전장을 호령하던 대장군과 왕족들만이 소지할 수 있었던 최고 권력과 명예의 상징입니다. 칼자루 끝에 정교하게 새겨진 황금빛 고리 장식 속에는 나라를 수호하고 백성을 지키겠다던 무인들의 거대한 맹세가 서려 있습니다."
 texture = ExtResource("3_5nw4u")
 echo_name = "가온"
 echo_frames = ExtResource("1_dx7vb")
+bonus_damage_max = 4
+bonus_speed_max = 8.0
 metadata/_custom_type_script = "uid://urkryft166ev"
