@@ -7,9 +7,9 @@
 [resource]
 script = ExtResource("1_2wb43")
 artifact_name = "주먹도끼"
-era = 1
 description = "인류가 처음으로 돌에 생명을 불어넣은 순간입니다. 거칠고 투박하지만, 수십만 년의 세월 동안 대지의 무게를 견뎌낸 묵직한 힘이 깃들어 있습니다."
 texture = ExtResource("3_528fe")
+era = 1
 echo_name = "뫼비"
 echo_description = "먼 구석기 시대의 대지에서 깨어난 에코입니다. 순박하고 우직한 성격으로 어떤 상황에서도 꿋꿋이 버텨내는 강인한 생명력을 지니고 있습니다."
 echo_frames = ExtResource("1_xjl2a")
@@ -18,6 +18,8 @@ wander_radius = 70.0
 stability_decay = 0.0
 output_decay = 0.1
 activity_decay = 0.0
-bonus_hp_max = 4
 bonus_atk_max = 2
+bonus_hp_max = 4
+equip_bonus_atk = 3
+equip_bonus_atk_spd = 2
 metadata/_custom_type_script = "uid://urkryft166ev"

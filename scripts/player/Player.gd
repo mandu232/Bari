@@ -16,6 +16,11 @@ extends CharacterBody2D
 var defense:      int   = 0   # 방어력 — 피해 감소
 var attack_speed: int   = 0   # 공격속도 보너스 (%)
 
+@export_group("Mana")
+@export var max_mana:   int   = 100   # 최대 마나
+@export var mana_regen: float = 5.0   # 초당 마나 회복량
+var mana: float = 100.0               # 현재 마나 (float으로 누적)
+
 # ───────────────────────────────
 #  방향 suffix 를 붙일 애니메이션 목록
 #  여기 없는 이름(death, hit 등)은 suffix 없이 그대로 재생
@@ -76,10 +81,18 @@ var _synergy_def:     int   = 0
 var _synergy_spd:     float = 0.0
 var _synergy_hp:      int   = 0
 
+# ── 유물 장착 보너스 (apply_equip_bonus / remove_equip_bonus 로 관리)
+var _equip_atk:     int   = 0
+var _equip_atk_spd: int   = 0
+var _equip_def:     int   = 0
+var _equip_spd:     float = 0.0
+var _equip_hp:      int   = 0
+
 # ───────────────────────────────
 #  SIGNALS
 # ───────────────────────────────
 signal health_changed(current: int, maximum: int)
+signal mana_changed(current: float, maximum: int)
 signal player_died
 signal essence_collected(amount: int)
 
@@ -107,11 +120,18 @@ func _ready() -> void:
 	sprite.frame_changed.connect(_on_frame_changed)
 	sprite.animation_finished.connect(_on_sprite_animation_finished)
 
-	# 저장된 스킬이 있으면 자동 장착
+	# 저장된 스킬 + 장착 보너스 복원
 	if GameManager.equipped_skill_path != "":
 		var script := load(GameManager.equipped_skill_path) as GDScript
 		if script:
 			equip_skill(script.new() as Skill)
+		for a in GameManager.artifacts:
+			var art := a as ArtifactData
+			if art != null and art.skill_script != null \
+					and art.skill_script.resource_path == GameManager.equipped_skill_path:
+				GameManager.equipped_artifact = art
+				apply_equip_bonus(art)
+				break
 
 # ───────────────────────────────
 #  PROCESS
@@ -401,6 +421,11 @@ func _tick_timers(delta: float) -> void:
 		_dash_cd_timer -= delta
 	if _combo_timer > 0.0:
 		_combo_timer -= delta
+	if mana < float(max_mana):
+		var prev := mana
+		mana = minf(mana + mana_regen * delta, float(max_mana))
+		if int(mana) != int(prev):
+			mana_changed.emit(mana, max_mana)
 
 func _on_inv_timer_timeout() -> void:
 	is_invincible     = false
@@ -435,6 +460,59 @@ func remove_artifact_bonus(data: ArtifactData) -> void:
 	health         = mini(health, max_health)
 	if data.total_max_health() != 0:
 		health_changed.emit(health, max_health)
+
+## 마나 소모 — 성공하면 true, 부족하면 false
+func spend_mana(amount: int) -> bool:
+	if mana < float(amount):
+		return false
+	mana -= float(amount)
+	mana_changed.emit(mana, max_mana)
+	return true
+
+## 지속 마나 소모 — 소모 후 마나가 남아 있으면 true, 0이 되면 false
+func drain_mana(amount: float) -> bool:
+	mana = maxf(mana - amount, 0.0)
+	mana_changed.emit(mana, max_mana)
+	return mana > 0.0
+
+## 유물 장착 보너스 적용 — 기존 장착 보너스를 교체한 뒤 새 값 적용
+func apply_equip_bonus(data: ArtifactData) -> void:
+	# 이전 장착 보너스 제거
+	attack_damage  = maxi(attack_damage - _equip_atk,     1)
+	attack_speed   = maxi(attack_speed  - _equip_atk_spd, 0)
+	defense        = maxi(defense       - _equip_def,      0)
+	move_speed     = maxf(move_speed    - _equip_spd,      40.0)
+	max_health     = maxi(max_health    - _equip_hp,       1)
+	health         = mini(health, max_health)
+	# 새 장착 보너스 저장 + 적용 (강화 레벨 포함)
+	_equip_atk     = data.total_equip_atk()
+	_equip_atk_spd = data.total_equip_atk_spd()
+	_equip_def     = data.total_equip_def()
+	_equip_spd     = data.total_equip_move_spd()
+	_equip_hp      = data.total_equip_hp()
+	attack_damage  += _equip_atk
+	attack_speed   += _equip_atk_spd
+	defense        += _equip_def
+	move_speed     += _equip_spd
+	max_health     += _equip_hp
+	if _equip_hp > 0:
+		health = min(health + _equip_hp, max_health)
+	health_changed.emit(health, max_health)
+
+## 유물 장착 보너스 제거
+func remove_equip_bonus() -> void:
+	attack_damage  = maxi(attack_damage - _equip_atk,     1)
+	attack_speed   = maxi(attack_speed  - _equip_atk_spd, 0)
+	defense        = maxi(defense       - _equip_def,      0)
+	move_speed     = maxf(move_speed    - _equip_spd,      40.0)
+	max_health     = maxi(max_health    - _equip_hp,       1)
+	health         = mini(health, max_health)
+	_equip_atk     = 0
+	_equip_atk_spd = 0
+	_equip_def     = 0
+	_equip_spd     = 0.0
+	_equip_hp      = 0
+	health_changed.emit(health, max_health)
 
 ## 시너지 보너스 일괄 교체 — GameManager.update_synergies() 에서 호출
 func set_synergy_bonus(atk: int, atk_spd: int, def_val: int, spd: float, hp: int) -> void:

@@ -14,12 +14,18 @@ class_name SkillSwordSpin
 @export var spin_action: String = "skill"
 
 func _init() -> void:
-	skill_name = "원형 공격"
-	cooldown   = 8.0
+	skill_name  = "청동풍옥"
+	description = "가늘고 날카로운 청동의 칼날이 푸른 잔영이 되어 사방을 베어 넘깁니다.\n스킬 지속시 검을 빠르게 회전시켜 주변 적 전체를 지속적으로 공격합니다.\n회전 중에는 0.22초마다 기본 공격력의 65%에 해당하는 피해를 주며, 초당 25의 마나를 지속적으로 소모합니다."
+	cooldown    = 8.0
+	mana_cost   = 20
+	mana_drain  = 25.0
 
 func execute(player: CharacterBody2D) -> void:
 	if not can_use():
 		return
+	if mana_cost > 0 and player.has_method("spend_mana"):
+		if not player.call("spend_mana", mana_cost):
+			return   # 마나 부족
 	_start_cooldown()
 	# fire-and-forget: await 없이 호출 → 코루틴으로 독립 실행
 	_run_spin(player)
@@ -60,6 +66,10 @@ func _run_spin(player: CharacterBody2D) -> void:
 		if dmg_tick <= 0.0:
 			dmg_tick = damage_interval
 			_apply_damage(player, atk_box)
+		# 마나 드레인 — 마나가 0이 되면 스핀 강제 종료
+		if mana_drain > 0.0 and player.has_method("drain_mana"):
+			if not player.call("drain_mana", mana_drain * delta):
+				break
 		await player.get_tree().physics_frame
 
 	# ── 히트박스 원위치 복원

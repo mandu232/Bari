@@ -38,6 +38,9 @@ static func era_label(e: Era) -> String:
 @export var echo_power: int             = 1
 @export var wander_radius: float        = 64.0
 
+@export_group("스킬")
+@export var skill_script: Script = null   ## 이 유물 장착 시 발동되는 스킬 스크립트
+
 @export_group("효과")
 @export var essence_per_second: float   = 0.5
 @export var passive_description: String = ""
@@ -47,25 +50,32 @@ static func era_label(e: Era) -> String:
 @export var output_decay:    float = 0.7
 @export var activity_decay:  float = 2.2
 
-@export_group("플레이어 스탯 보너스 범위")
-@export var bonus_atk_max:      int   = 0    ## 공격력 보너스 상한
+@export_group("전시 스탯 보너스 범위")
+@export var bonus_atk_max:      int   = 0    ## 공격력 보너스 상한 (전시 시 랜덤 결정)
 @export var bonus_atk_spd_max:  int   = 0    ## 공격속도 보너스 상한 (%)
 @export var bonus_def_max:      int   = 0    ## 방어력 보너스 상한
 @export var bonus_move_spd_max: float = 0.0  ## 이동속도 보너스 상한
 @export var bonus_hp_max:       int   = 0    ## 체력 보너스 상한
 
-## 획득 시 roll_bonuses()로 결정되는 실제 수치 — 저장/로드 대상
+## 획득 시 roll_bonuses()로 결정되는 실제 수치 — 저장/로드 대상 (전시대에 올릴 때 적용)
 var bonus_attack:       int   = 0
 var bonus_attack_speed: int   = 0
 var bonus_defense:      int   = 0
 var bonus_move_speed:   float = 0.0
 var bonus_max_health:   int   = 0
 
+@export_group("장착 스탯 보너스")
+@export var equip_bonus_atk:      int   = 0    ## 유물 장착 시 고정 공격력 보너스
+@export var equip_bonus_atk_spd:  int   = 0    ## 유물 장착 시 고정 공격속도 보너스 (%)
+@export var equip_bonus_def:      int   = 0    ## 유물 장착 시 고정 방어력 보너스
+@export var equip_bonus_move_spd: float = 0.0  ## 유물 장착 시 고정 이동속도 보너스
+@export var equip_bonus_hp:       int   = 0    ## 유물 장착 시 고정 체력 보너스
+
 ## 합성 강화 레벨 (최대 MAX_ENHANCE_LEVEL)
 const MAX_ENHANCE_LEVEL: int = 5
 var enhance_level: int = 0
 
-# ── 강화 레벨 포함 실제 보너스 (플레이어 적용 시 사용)
+# ── 강화 레벨 포함 전시 보너스 (전시대에 올릴 때 사용)
 func total_attack() -> int:
 	return bonus_attack + (enhance_level if bonus_attack > 0 else 0)
 
@@ -80,6 +90,22 @@ func total_move_speed() -> float:
 
 func total_max_health() -> int:
 	return bonus_max_health + (enhance_level if bonus_max_health > 0 else 0)
+
+# ── 강화 레벨 포함 장착 보너스 (유물 장착 시 사용)
+func total_equip_atk() -> int:
+	return equip_bonus_atk + (enhance_level if equip_bonus_atk > 0 else 0)
+
+func total_equip_atk_spd() -> int:
+	return equip_bonus_atk_spd + (enhance_level if equip_bonus_atk_spd > 0 else 0)
+
+func total_equip_def() -> int:
+	return equip_bonus_def + (enhance_level if equip_bonus_def > 0 else 0)
+
+func total_equip_move_spd() -> float:
+	return equip_bonus_move_spd + (float(enhance_level) * 2.0 if equip_bonus_move_spd > 0.0 else 0.0)
+
+func total_equip_hp() -> int:
+	return equip_bonus_hp + (enhance_level if equip_bonus_hp > 0 else 0)
 
 func roll_bonuses() -> void:
 	bonus_attack       = 0

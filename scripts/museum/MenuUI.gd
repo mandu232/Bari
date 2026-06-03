@@ -76,6 +76,13 @@ var _enh_picker_cell_btns:   Array         = []     # 피커 그리드 셀 버�
 var _enh_picker_detail_vbox: VBoxContainer = null   # 피커 우측 상세 패널
 var _enh_picker_select_btn:  Button        = null   # 피커 선택 확정 버튼
 
+# ── 스킬 탭 상태
+var _skill_picking:           bool         = false  # false=메인, true=유물 선택 피커
+var _skill_picker_selected:   ArtifactData = null   # 피커에서 하이라이트된 유물
+var _skill_picker_cards:      Array        = []     # 피커 카드 버튼 목록
+var _skill_picker_detail_vbox: VBoxContainer = null # 피커 우측 상세 패널
+var _skill_picker_equip_btn:  Button       = null   # 피커 하단 장착 버튼
+
 # ── 스탯 탭 — 시너지 선택 상태
 var _syn_detail_vbox:  VBoxContainer = null
 var _syn_era_btns:     Array         = []   # [{btn, era_int}]
@@ -223,6 +230,11 @@ func _switch_tab(tab: Tab) -> void:
 	_syn_detail_vbox  = null
 	_syn_era_btns.clear()
 	_syn_selected_era = -1
+	_skill_picking            = false
+	_skill_picker_selected    = null
+	_skill_picker_cards.clear()
+	_skill_picker_detail_vbox = null
+	_skill_picker_equip_btn   = null
 
 	match tab:
 		Tab.STATS:     _build_stats_content()
@@ -248,14 +260,16 @@ func _build_stats_content() -> void:
 		"def":     "res://AutoLoad/assets/Stats/icon_def.png",
 		"spd":     "res://AutoLoad/assets/Stats/icon_move_spd.png",
 		"hp":      "res://AutoLoad/assets/Stats/icon_hp.png",
+		"mana":    "res://AutoLoad/assets/Stats/icon_mana.png",
 	}
 
 	var rows := [
-		["atk",     "공격력",   "%d"       % player.get("attack_damage")],
-		["atk_spd", "공격속도", "%d%%"     % player.get("attack_speed")],
-		["hp",      "체력",     "%d / %d"  % [player.get("health"), player.get("max_health")]],
-		["def",     "방어력",   "%d"       % player.get("defense")],
-		["spd",     "이동속도", "%.1f"     % player.get("move_speed")],
+		["atk",     "공격력",   "%d"          % player.get("attack_damage")],
+		["atk_spd", "공격속도", "%d%%"        % player.get("attack_speed")],
+		["hp",      "체력",     "%d / %d"     % [player.get("health"), player.get("max_health")]],
+		["mana",    "마나",     "%.0f / %d"   % [player.get("mana"), player.get("max_mana")]],
+		["def",     "방어력",   "%d"          % player.get("defense")],
+		["spd",     "이동속도", "%.1f"        % player.get("move_speed")],
 	]
 
 	for row in rows:
@@ -911,31 +925,42 @@ func _rebuild_enh_picker_detail(data: ArtifactData) -> void:
 
 	_enh_picker_detail_vbox.add_child(HSeparator.new())
 
-	# 스탯 보너스
-	_add_to(_enh_picker_detail_vbox, "── 스탯 보너스 ──", 13, Color(1.0, 0.85, 0.5))
-	var any_stat := false
+	# ── 전시 스탯 보너스
+	var any_exhibit := (data.bonus_max_health > 0 or data.bonus_attack > 0 or
+			data.bonus_attack_speed > 0 or data.bonus_defense > 0 or data.bonus_move_speed > 0.0)
+	_add_to(_enh_picker_detail_vbox, "── 전시 보너스 ──", 13, Color(1.0, 0.72, 0.45))
 	if data.bonus_max_health > 0:
-		_add_to(_enh_picker_detail_vbox,
-			"체력       +%d" % data.total_max_health(), 13, Color(1.0, 0.72, 0.45))
-		any_stat = true
+		_add_to(_enh_picker_detail_vbox, "체력       +%d"   % data.total_max_health(),  13, Color(1.0, 0.72, 0.45))
 	if data.bonus_attack > 0:
-		_add_to(_enh_picker_detail_vbox,
-			"공격력     +%d" % data.total_attack(), 13, Color(1.0, 0.72, 0.45))
-		any_stat = true
+		_add_to(_enh_picker_detail_vbox, "공격력     +%d"   % data.total_attack(),       13, Color(1.0, 0.72, 0.45))
 	if data.bonus_attack_speed > 0:
-		_add_to(_enh_picker_detail_vbox,
-			"공격속도  +%d%%" % data.total_attack_speed(), 13, Color(1.0, 0.72, 0.45))
-		any_stat = true
+		_add_to(_enh_picker_detail_vbox, "공격속도  +%d%%"  % data.total_attack_speed(), 13, Color(1.0, 0.72, 0.45))
 	if data.bonus_defense > 0:
-		_add_to(_enh_picker_detail_vbox,
-			"방어력     +%d" % data.total_defense(), 13, Color(1.0, 0.72, 0.45))
-		any_stat = true
+		_add_to(_enh_picker_detail_vbox, "방어력     +%d"   % data.total_defense(),      13, Color(1.0, 0.72, 0.45))
 	if data.bonus_move_speed > 0.0:
-		_add_to(_enh_picker_detail_vbox,
-			"이동속도  +%.1f" % data.total_move_speed(), 13, Color(1.0, 0.72, 0.45))
-		any_stat = true
-	if not any_stat:
+		_add_to(_enh_picker_detail_vbox, "이동속도  +%.1f"  % data.total_move_speed(),   13, Color(1.0, 0.72, 0.45))
+	if not any_exhibit:
 		_add_to(_enh_picker_detail_vbox, "없음", 13, Color(0.55, 0.55, 0.55))
+
+	# ── 장착 스탯 보너스
+	var any_equip := (data.equip_bonus_hp > 0 or data.equip_bonus_atk > 0 or
+			data.equip_bonus_atk_spd > 0 or data.equip_bonus_def > 0 or
+			data.equip_bonus_move_spd > 0.0)
+	if any_equip or data.skill_script != null:
+		_enh_picker_detail_vbox.add_child(HSeparator.new())
+		_add_to(_enh_picker_detail_vbox, "── 장착 보너스 ──", 13, Color(1.0, 0.9, 0.4))
+		if data.skill_script != null:
+			_add_to(_enh_picker_detail_vbox, "스킬:      %s" % _resolve_skill_name(data.skill_script), 13, Color(0.6, 0.9, 1.0))
+		if data.equip_bonus_hp > 0:
+			_add_to(_enh_picker_detail_vbox, "체력       +%d"   % data.total_equip_hp(),       13, Color(1.0, 0.85, 0.3))
+		if data.equip_bonus_atk > 0:
+			_add_to(_enh_picker_detail_vbox, "공격력     +%d"   % data.total_equip_atk(),      13, Color(1.0, 0.85, 0.3))
+		if data.equip_bonus_atk_spd > 0:
+			_add_to(_enh_picker_detail_vbox, "공격속도  +%d%%"  % data.total_equip_atk_spd(),  13, Color(1.0, 0.85, 0.3))
+		if data.equip_bonus_def > 0:
+			_add_to(_enh_picker_detail_vbox, "방어력     +%d"   % data.total_equip_def(),      13, Color(1.0, 0.85, 0.3))
+		if data.equip_bonus_move_spd > 0.0:
+			_add_to(_enh_picker_detail_vbox, "이동속도  +%.1f"  % data.total_equip_move_spd(), 13, Color(1.0, 0.85, 0.3))
 
 	# 패시브/설명
 	var desc := data.passive_description if data.passive_description != "" else data.description
@@ -1010,27 +1035,62 @@ func _enh_refresh_stats_view() -> void:
 
 	_enh_preview_vbox.add_child(HSeparator.new())
 
-	# 스탯 비교 행들
-	if _enh_target.bonus_max_health > 0:
-		_add_stat_row("체력",
-			"+%d" % _enh_target.total_max_health(),
-			"+%d" % (_enh_target.total_max_health() + 1))
-	if _enh_target.bonus_attack > 0:
-		_add_stat_row("공격력",
-			"+%d" % _enh_target.total_attack(),
-			"+%d" % (_enh_target.total_attack() + 1))
-	if _enh_target.bonus_attack_speed > 0:
-		_add_stat_row("공격속도",
-			"+%d%%" % _enh_target.total_attack_speed(),
-			"+%d%%" % (_enh_target.total_attack_speed() + 1))
-	if _enh_target.bonus_defense > 0:
-		_add_stat_row("방어력",
-			"+%d" % _enh_target.total_defense(),
-			"+%d" % (_enh_target.total_defense() + 1))
-	if _enh_target.bonus_move_speed > 0.0:
-		_add_stat_row("이동속도",
-			"+%.1f" % _enh_target.total_move_speed(),
-			"+%.1f" % (_enh_target.total_move_speed() + 2.0))
+	# ── 전시 보너스 행들
+	var has_exhibit_stat := (_enh_target.bonus_max_health > 0 or _enh_target.bonus_attack > 0 or
+			_enh_target.bonus_attack_speed > 0 or _enh_target.bonus_defense > 0 or
+			_enh_target.bonus_move_speed > 0.0)
+	if has_exhibit_stat:
+		_add_section_label_to(_enh_preview_vbox, "전시 보너스", Color(1.0, 0.72, 0.45))
+		if _enh_target.bonus_max_health > 0:
+			_add_stat_row("  체력",
+				"+%d" % _enh_target.total_max_health(),
+				"+%d" % (_enh_target.total_max_health() + 1))
+		if _enh_target.bonus_attack > 0:
+			_add_stat_row("  공격력",
+				"+%d" % _enh_target.total_attack(),
+				"+%d" % (_enh_target.total_attack() + 1))
+		if _enh_target.bonus_attack_speed > 0:
+			_add_stat_row("  공격속도",
+				"+%d%%" % _enh_target.total_attack_speed(),
+				"+%d%%" % (_enh_target.total_attack_speed() + 1))
+		if _enh_target.bonus_defense > 0:
+			_add_stat_row("  방어력",
+				"+%d" % _enh_target.total_defense(),
+				"+%d" % (_enh_target.total_defense() + 1))
+		if _enh_target.bonus_move_speed > 0.0:
+			_add_stat_row("  이동속도",
+				"+%.1f" % _enh_target.total_move_speed(),
+				"+%.1f" % (_enh_target.total_move_speed() + 2.0))
+
+	# ── 장착 보너스 행들
+	var has_equip_stat := (_enh_target.equip_bonus_hp > 0 or _enh_target.equip_bonus_atk > 0 or
+			_enh_target.equip_bonus_atk_spd > 0 or _enh_target.equip_bonus_def > 0 or
+			_enh_target.equip_bonus_move_spd > 0.0)
+	if has_equip_stat:
+		_add_section_label_to(_enh_preview_vbox, "장착 보너스", Color(1.0, 0.9, 0.4))
+		if _enh_target.equip_bonus_hp > 0:
+			_add_stat_row("  체력",
+				"+%d" % _enh_target.total_equip_hp(),
+				"+%d" % (_enh_target.total_equip_hp() + 1))
+		if _enh_target.equip_bonus_atk > 0:
+			_add_stat_row("  공격력",
+				"+%d" % _enh_target.total_equip_atk(),
+				"+%d" % (_enh_target.total_equip_atk() + 1))
+		if _enh_target.equip_bonus_atk_spd > 0:
+			_add_stat_row("  공격속도",
+				"+%d%%" % _enh_target.total_equip_atk_spd(),
+				"+%d%%" % (_enh_target.total_equip_atk_spd() + 1))
+		if _enh_target.equip_bonus_def > 0:
+			_add_stat_row("  방어력",
+				"+%d" % _enh_target.total_equip_def(),
+				"+%d" % (_enh_target.total_equip_def() + 1))
+		if _enh_target.equip_bonus_move_spd > 0.0:
+			_add_stat_row("  이동속도",
+				"+%.1f" % _enh_target.total_equip_move_spd(),
+				"+%.1f" % (_enh_target.total_equip_move_spd() + 2.0))
+
+	if not has_exhibit_stat and not has_equip_stat:
+		_add_to(_enh_preview_vbox, "스탯 보너스 없음", 13, Color(0.5, 0.5, 0.5))
 
 	_enh_preview_vbox.add_child(HSeparator.new())
 
@@ -1148,10 +1208,28 @@ func _build_inv_detail(data: ArtifactData) -> void:
 	_add_to(_inv_detail_vbox, data.artifact_name,                        18, Color.WHITE)
 	_add_to(_inv_detail_vbox, "에코:    %s"    % data.echo_name,         14, Color(0.75, 0.9, 1.0))
 	_add_to(_inv_detail_vbox, "영력/초: %.2f"  % data.essence_per_second, 13, Color(0.9, 1.0, 0.55))
-	_inv_detail_vbox.add_child(HSeparator.new())
 
-	# ── 스탯 보너스 (강화 레벨 포함)
-	_add_to(_inv_detail_vbox, "── 스탯 보너스 ──", 13, Color(1.0, 0.85, 0.5))
+	# ── 1. 스킬
+	if data.skill_script != null:
+		_inv_detail_vbox.add_child(HSeparator.new())
+		_add_to(_inv_detail_vbox, "── 스킬 ──", 13, Color(0.6, 0.9, 1.0))
+		_add_to(_inv_detail_vbox, _resolve_skill_name(data.skill_script), 13, Color(0.6, 0.9, 1.0))
+
+	# ── 2. 장착 보너스
+	var has_equip := data.equip_bonus_atk > 0 or data.equip_bonus_atk_spd > 0 \
+		or data.equip_bonus_def > 0 or data.equip_bonus_move_spd > 0 or data.equip_bonus_hp > 0
+	if has_equip:
+		_inv_detail_vbox.add_child(HSeparator.new())
+		_add_to(_inv_detail_vbox, "── 장착 보너스 ──", 13, Color(1.0, 0.9, 0.4))
+		if data.equip_bonus_atk      > 0: _add_to(_inv_detail_vbox, "공격력     +%d"   % data.total_equip_atk(),      13, Color(1.0, 0.85, 0.3))
+		if data.equip_bonus_atk_spd  > 0: _add_to(_inv_detail_vbox, "공격속도  +%d%%"  % data.total_equip_atk_spd(),  13, Color(1.0, 0.85, 0.3))
+		if data.equip_bonus_hp       > 0: _add_to(_inv_detail_vbox, "체력       +%d"   % data.total_equip_hp(),       13, Color(1.0, 0.85, 0.3))
+		if data.equip_bonus_def      > 0: _add_to(_inv_detail_vbox, "방어력     +%d"   % data.total_equip_def(),      13, Color(1.0, 0.85, 0.3))
+		if data.equip_bonus_move_spd > 0: _add_to(_inv_detail_vbox, "이동속도  +%.1f"  % data.total_equip_move_spd(), 13, Color(1.0, 0.85, 0.3))
+
+	# ── 2. 전시 보너스
+	_inv_detail_vbox.add_child(HSeparator.new())
+	_add_to(_inv_detail_vbox, "── 전시 보너스 ──", 13, Color(1.0, 0.85, 0.5))
 	var any := false
 	if data.bonus_max_health  > 0:
 		var txt := "체력       +%d" % data.total_max_health()
@@ -1175,6 +1253,7 @@ func _build_inv_detail(data: ArtifactData) -> void:
 		_add_to(_inv_detail_vbox, txt, 13, Color(1.0, 0.72, 0.45)); any = true
 	if not any: _add_to(_inv_detail_vbox, "없음", 13, Color(0.55, 0.55, 0.55))
 
+	# ── 3. 유물 설명
 	var desc := data.passive_description if data.passive_description != "" else data.description
 	if desc != "":
 		_inv_detail_vbox.add_child(HSeparator.new())
@@ -1320,50 +1399,76 @@ func _build_dog_artifact(data: ArtifactData) -> void:
 	if data.texture:
 		var img := TextureRect.new()
 		img.texture               = data.texture
-		img.custom_minimum_size   = Vector2(88, 88)
+		img.custom_minimum_size   = Vector2(96, 96)
 		img.stretch_mode          = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		img.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 		_dog_detail_vbox.add_child(img)
 
-	_add_to(_dog_detail_vbox, data.artifact_name, 18, Color.WHITE)
-	_add_to(_dog_detail_vbox, "시대: %s" % ArtifactData.era_label(data.era), 13, Color(0.70, 0.85, 1.0))
-	_dog_detail_vbox.add_child(HSeparator.new())
+	_add_to(_dog_detail_vbox, data.artifact_name, 21, Color.WHITE)
+	_add_to(_dog_detail_vbox, "시대: %s" % ArtifactData.era_label(data.era), 14, Color(0.70, 0.85, 1.0))
+
+	# ── 1. 스킬
+	if data.skill_script != null:
+		_add_padded_sep(_dog_detail_vbox)
+		_add_to(_dog_detail_vbox, "── 스킬 ──", 13, Color(0.6, 0.9, 1.0))
+		_add_to(_dog_detail_vbox, _resolve_skill_name(data.skill_script), 15, Color(0.6, 0.9, 1.0))
+
+	# ── 2. 장착 보너스
+	var has_equip := (data.equip_bonus_atk > 0 or data.equip_bonus_atk_spd > 0 or
+			data.equip_bonus_def > 0 or data.equip_bonus_move_spd > 0.0 or data.equip_bonus_hp > 0)
+	if has_equip:
+		_add_padded_sep(_dog_detail_vbox)
+		_add_to(_dog_detail_vbox, "── 장착 보너스 ──", 13, Color(1.0, 0.9, 0.4))
+		if data.equip_bonus_atk      > 0:   _add_to(_dog_detail_vbox, "공격력     +%d"  % data.equip_bonus_atk,      14, Color(1.0, 0.85, 0.3))
+		if data.equip_bonus_atk_spd  > 0:   _add_to(_dog_detail_vbox, "공격속도  +%d%%" % data.equip_bonus_atk_spd,  14, Color(1.0, 0.85, 0.3))
+		if data.equip_bonus_hp       > 0:   _add_to(_dog_detail_vbox, "체력       +%d"  % data.equip_bonus_hp,       14, Color(1.0, 0.85, 0.3))
+		if data.equip_bonus_def      > 0:   _add_to(_dog_detail_vbox, "방어력     +%d"  % data.equip_bonus_def,      14, Color(1.0, 0.85, 0.3))
+		if data.equip_bonus_move_spd > 0.0: _add_to(_dog_detail_vbox, "이동속도  +%.1f" % data.equip_bonus_move_spd, 14, Color(1.0, 0.85, 0.3))
+
+	# ── 2. 전시 보너스 (랜덤 범위)
+	var has_exhibit := (data.bonus_atk_max > 0 or data.bonus_atk_spd_max > 0 or
+			data.bonus_def_max > 0 or data.bonus_move_spd_max > 0.01 or data.bonus_hp_max > 0)
+	if has_exhibit:
+		_add_padded_sep(_dog_detail_vbox)
+		_add_to(_dog_detail_vbox, "── 전시 보너스 (최대) ──", 13, Color(1.0, 0.85, 0.5))
+		if data.bonus_atk_max      > 0:    _add_to(_dog_detail_vbox, "공격력     최대 +%d"   % data.bonus_atk_max,      14, Color(1.0, 0.72, 0.45))
+		if data.bonus_atk_spd_max  > 0:    _add_to(_dog_detail_vbox, "공격속도   최대 +%d%%" % data.bonus_atk_spd_max,  14, Color(1.0, 0.72, 0.45))
+		if data.bonus_hp_max       > 0:    _add_to(_dog_detail_vbox, "체력       최대 +%d"   % data.bonus_hp_max,       14, Color(1.0, 0.72, 0.45))
+		if data.bonus_def_max      > 0:    _add_to(_dog_detail_vbox, "방어력     최대 +%d"   % data.bonus_def_max,      14, Color(1.0, 0.72, 0.45))
+		if data.bonus_move_spd_max > 0.01: _add_to(_dog_detail_vbox, "이동속도   최대 +%.1f" % data.bonus_move_spd_max, 14, Color(1.0, 0.72, 0.45))
+
+	# ── 3. 유물 설명
+	_add_padded_sep(_dog_detail_vbox)
 	var desc := data.passive_description if data.passive_description != "" else data.description
-	_add_to(_dog_detail_vbox, desc, 12, Color(0.82, 0.82, 0.82))
-	_dog_detail_vbox.add_child(HSeparator.new())
-	_add_to(_dog_detail_vbox, "영력/초:  %.2f"       % data.essence_per_second, 13, Color(0.9,  1.0, 0.55))
-	_add_to(_dog_detail_vbox, "안정도  -%.2f/초" % data.stability_decay,    12, Color(0.72, 0.72, 0.72))
-	_add_to(_dog_detail_vbox, "출력    -%.2f/초" % data.output_decay,       12, Color(0.72, 0.72, 0.72))
-	_add_to(_dog_detail_vbox, "활성도  -%.2f/초" % data.activity_decay,     12, Color(0.72, 0.72, 0.72))
-	var hb := (data.bonus_atk_max > 0 or data.bonus_atk_spd_max > 0 or
-			   data.bonus_def_max > 0 or data.bonus_move_spd_max > 0.01 or data.bonus_hp_max > 0)
-	if hb:
-		_dog_detail_vbox.add_child(HSeparator.new())
-		_add_to(_dog_detail_vbox, "── 보너스 (최대) ──", 12, Color(1.0, 0.85, 0.5))
-		if data.bonus_atk_max      > 0:    _add_to(_dog_detail_vbox, "공격력     최대 +%d"    % data.bonus_atk_max,      13, Color(1.0, 0.72, 0.45))
-		if data.bonus_atk_spd_max  > 0:    _add_to(_dog_detail_vbox, "공격속도   최대 +%d%%"  % data.bonus_atk_spd_max,   13, Color(1.0, 0.72, 0.45))
-		if data.bonus_hp_max       > 0:    _add_to(_dog_detail_vbox, "체력       최대 +%d"    % data.bonus_hp_max,        13, Color(1.0, 0.72, 0.45))
-		if data.bonus_def_max      > 0:    _add_to(_dog_detail_vbox, "방어력     최대 +%d"    % data.bonus_def_max,       13, Color(1.0, 0.72, 0.45))
-		if data.bonus_move_spd_max > 0.01: _add_to(_dog_detail_vbox, "이동속도   최대 +%.1f"  % data.bonus_move_spd_max,  13, Color(1.0, 0.72, 0.45))
+	if desc != "":
+		_add_to(_dog_detail_vbox, desc, 13, Color(0.82, 0.82, 0.82))
 
 func _build_dog_echo(data: ArtifactData) -> void:
 	if data.echo_frames != null and data.echo_frames.has_animation(&"float") \
 			and data.echo_frames.get_frame_count(&"float") > 0:
 		var img := TextureRect.new()
 		img.texture               = data.echo_frames.get_frame_texture(&"float", 0)
-		img.custom_minimum_size   = Vector2(88, 88)
+		img.custom_minimum_size   = Vector2(96, 96)
 		img.stretch_mode          = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		img.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 		_dog_detail_vbox.add_child(img)
 
-	_add_to(_dog_detail_vbox, data.echo_name,                             20, Color.WHITE)
+	_add_to(_dog_detail_vbox, data.echo_name, 22, Color.WHITE)
 	if data.echo_description != "":
-		_add_to(_dog_detail_vbox, data.echo_description,                  12, Color(0.82, 0.82, 0.82))
-	_dog_detail_vbox.add_child(HSeparator.new())
-	_add_to(_dog_detail_vbox, "깃든 유물: %s" % data.artifact_name,       13, Color(0.70, 0.85, 1.0))
-	_add_to(_dog_detail_vbox, "시대:      %s" % ArtifactData.era_label(data.era), 13, Color(0.70, 0.85, 1.0))
-	_add_to(_dog_detail_vbox, "에코 등급: %d" % data.echo_power,           13, Color(0.9,  1.0, 0.55))
-	_add_to(_dog_detail_vbox, "배회 반경: %.0fpx" % data.wander_radius,    13, Color(0.75, 0.75, 0.75))
+		_add_to(_dog_detail_vbox, data.echo_description, 13, Color(0.82, 0.82, 0.82))
+
+	_add_padded_sep(_dog_detail_vbox)
+	_add_to(_dog_detail_vbox, "깃든 유물: %s" % data.artifact_name,              14, Color(0.70, 0.85, 1.0))
+	_add_to(_dog_detail_vbox, "시대:      %s" % ArtifactData.era_label(data.era), 14, Color(0.70, 0.85, 1.0))
+	_add_to(_dog_detail_vbox, "에코 등급: %d" % data.echo_power,                  14, Color(0.9,  1.0, 0.55))
+	_add_to(_dog_detail_vbox, "배회 반경: %.0fpx" % data.wander_radius,           14, Color(0.75, 0.75, 0.75))
+
+	_add_padded_sep(_dog_detail_vbox)
+	_add_to(_dog_detail_vbox, "── 에코 정보 ──",                                  13, Color(0.9,  1.0, 0.55))
+	_add_to(_dog_detail_vbox, "영력/초:  %.2f"    % data.essence_per_second,      14, Color(0.9,  1.0, 0.55))
+	_add_to(_dog_detail_vbox, "안정도  -%.2f/초"  % data.stability_decay,         13, Color(0.72, 0.72, 0.72))
+	_add_to(_dog_detail_vbox, "출력    -%.2f/초"  % data.output_decay,            13, Color(0.72, 0.72, 0.72))
+	_add_to(_dog_detail_vbox, "활성도  -%.2f/초"  % data.activity_decay,          13, Color(0.72, 0.72, 0.72))
 
 func _build_dog_building(item: BuildableItem) -> void:
 	if item.icon:
@@ -1388,45 +1493,392 @@ func _build_dog_building(item: BuildableItem) -> void:
 # ═══════════════════════════════
 #  ⑤ 스킬 콘텐츠
 # ═══════════════════════════════
-const AVAILABLE_SKILL_PATHS: Array[String] = [
-	"res://scripts/skills/SkillDashAttack.gd",
-	"res://scripts/skills/SkillProjectile.gd",
-	"res://scripts/skills/SkillSwordSpin.gd",
-]
-
 func _build_skill_content() -> void:
 	_add_section_title(_content_vbox, "스킬 장착")
-
-	# 현재 장착 스킬 표시
-	var equipped := GameManager.equipped_skill_path
-	var cur_lbl  := Label.new()
-	if equipped == "":
-		cur_lbl.text    = "현재 장착: 없음"
-		cur_lbl.modulate = Color(0.55, 0.55, 0.55)
+	if _skill_picking:
+		_skill_show_picker()
 	else:
-		var info := _get_skill_info(equipped)
-		cur_lbl.text    = "현재 장착: %s" % info.get("name", "???")
-		cur_lbl.modulate = Color(0.45, 1.0, 0.6)
-	_set_font(cur_lbl, 15)
-	_content_vbox.add_child(cur_lbl)
+		_skill_show_main()
+
+## 스킬 탭 내용 재빌드 (_switch_tab 없이 현재 모드 유지)
+func _rebuild_skill() -> void:
+	for child in _content_vbox.get_children():
+		_content_vbox.remove_child(child)
+		child.queue_free()
+	_build_skill_content()
+
+# ── 메인 화면: 중앙 큰 박스 + 해제 버튼
+func _skill_show_main() -> void:
+	var equipped_path := GameManager.equipped_skill_path
+	var equipped_art  := GameManager.equipped_artifact
+
+	# 중앙 배치 래퍼
+	var center := CenterContainer.new()
+	center.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	center.size_flags_vertical   = Control.SIZE_EXPAND_FILL
+	_content_vbox.add_child(center)
+
+	# 큰 슬롯 버튼
+	var slot := Button.new()
+	slot.custom_minimum_size = Vector2(280, 220)
+	slot.focus_mode          = Control.FOCUS_NONE
+	slot.pressed.connect(func():
+		_skill_picking = true
+		_rebuild_skill())
+	if equipped_art != null:
+		slot.modulate = Color(0.45, 1.0, 0.6)
+	center.add_child(slot)
+
+	var vbox := VBoxContainer.new()
+	vbox.alignment   = BoxContainer.ALIGNMENT_CENTER
+	vbox.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	vbox.add_theme_constant_override("separation", 6)
+	vbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	slot.add_child(vbox)
+
+	if equipped_art != null and equipped_path != "":
+		# ── 장착 중인 유물 표시
+		if equipped_art.texture:
+			var img := TextureRect.new()
+			img.texture               = equipped_art.texture
+			img.custom_minimum_size   = Vector2(76, 76)
+			img.stretch_mode          = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			img.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+			img.mouse_filter          = Control.MOUSE_FILTER_IGNORE
+			vbox.add_child(img)
+
+		var art_lbl := Label.new()
+		art_lbl.text                = equipped_art.artifact_name
+		art_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		art_lbl.modulate             = Color(0.78, 0.78, 0.78)
+		art_lbl.mouse_filter         = Control.MOUSE_FILTER_IGNORE
+		_set_font(art_lbl, 13)
+		vbox.add_child(art_lbl)
+
+		var info := _get_skill_info(equipped_path)
+		var skill_lbl := Label.new()
+		skill_lbl.text                = info.get("name", "???")
+		skill_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		skill_lbl.mouse_filter         = Control.MOUSE_FILTER_IGNORE
+		_set_font(skill_lbl, 21)
+		vbox.add_child(skill_lbl)
+
+		var cd_lbl := Label.new()
+		cd_lbl.text                = "쿨타임  %.1f초" % float(info.get("cooldown", 0.0))
+		cd_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		cd_lbl.modulate             = Color(0.65, 0.65, 0.65)
+		cd_lbl.mouse_filter         = Control.MOUSE_FILTER_IGNORE
+		_set_font(cd_lbl, 13)
+		vbox.add_child(cd_lbl)
+
+		var mc2: int   = info.get("mana_cost",  0)
+		var md2: float = info.get("mana_drain", 0.0)
+		if mc2 > 0 or md2 > 0.0:
+			var mt := ""
+			if mc2 > 0:   mt += "소모 %d" % mc2
+			if md2 > 0.0: mt += ("  유지 %.0f/초" % md2) if mc2 > 0 else "유지 %.0f/초" % md2
+			var mana_lbl := Label.new()
+			mana_lbl.text                = "마나  %s" % mt
+			mana_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			mana_lbl.modulate             = Color(0.5, 0.7, 1.0)
+			mana_lbl.mouse_filter         = Control.MOUSE_FILTER_IGNORE
+			_set_font(mana_lbl, 12)
+			vbox.add_child(mana_lbl)
+
+		var bonus_parts: Array[String] = []
+		if equipped_art.equip_bonus_atk      > 0: bonus_parts.append("공격 +%d"       % equipped_art.total_equip_atk())
+		if equipped_art.equip_bonus_atk_spd  > 0: bonus_parts.append("공격속도 +%d%%" % equipped_art.total_equip_atk_spd())
+		if equipped_art.equip_bonus_def      > 0: bonus_parts.append("방어 +%d"       % equipped_art.total_equip_def())
+		if equipped_art.equip_bonus_move_spd > 0: bonus_parts.append("이동 +%.1f"     % equipped_art.total_equip_move_spd())
+		if equipped_art.equip_bonus_hp       > 0: bonus_parts.append("체력 +%d"       % equipped_art.total_equip_hp())
+		if not bonus_parts.is_empty():
+			var bonus_lbl := Label.new()
+			bonus_lbl.text                = "  ".join(bonus_parts)
+			bonus_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			bonus_lbl.modulate             = Color(1.0, 0.85, 0.3)
+			bonus_lbl.mouse_filter         = Control.MOUSE_FILTER_IGNORE
+			_set_font(bonus_lbl, 12)
+			vbox.add_child(bonus_lbl)
+
+		var hint := Label.new()
+		hint.text                = "클릭하여 변경"
+		hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		hint.modulate             = Color(0.45, 0.45, 0.45)
+		hint.mouse_filter         = Control.MOUSE_FILTER_IGNORE
+		_set_font(hint, 12)
+		vbox.add_child(hint)
+	else:
+		# ── 빈 슬롯
+		var icon_ph := Label.new()
+		icon_ph.text                = "?"
+		icon_ph.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		icon_ph.modulate             = Color(0.35, 0.35, 0.35)
+		icon_ph.mouse_filter         = Control.MOUSE_FILTER_IGNORE
+		_set_font(icon_ph, 48)
+		vbox.add_child(icon_ph)
+
+		var ph := Label.new()
+		ph.text                = "유물을 선택하세요"
+		ph.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		ph.modulate             = Color(0.55, 0.55, 0.55)
+		ph.mouse_filter         = Control.MOUSE_FILTER_IGNORE
+		_set_font(ph, 16)
+		vbox.add_child(ph)
+
+		var hint := Label.new()
+		hint.text                = "클릭하여 선택"
+		hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		hint.modulate             = Color(0.38, 0.38, 0.38)
+		hint.mouse_filter         = Control.MOUSE_FILTER_IGNORE
+		_set_font(hint, 13)
+		vbox.add_child(hint)
+
+	# 해제 버튼 (장착 중일 때만)
+	if equipped_art != null:
+		var btn_row := HBoxContainer.new()
+		btn_row.alignment = BoxContainer.ALIGNMENT_CENTER
+		_content_vbox.add_child(btn_row)
+
+		var unequip_btn := Button.new()
+		unequip_btn.text             = "해제"
+		unequip_btn.custom_minimum_size = Vector2(120, 38)
+		unequip_btn.focus_mode       = Control.FOCUS_NONE
+		unequip_btn.modulate         = Color(1.0, 0.5, 0.5)
+		unequip_btn.pressed.connect(func(): _on_skill_card_pressed(equipped_art, equipped_path))
+		_set_font(unequip_btn, 15)
+		btn_row.add_child(unequip_btn)
+
+# ── 피커 화면: 뒤로가기 | 왼쪽 카드 리스트 | 오른쪽 상세 + 장착 버튼
+func _skill_show_picker() -> void:
+	_skill_picker_selected = null
+	_skill_picker_cards.clear()
+
+	# 상단: 뒤로가기 + 타이틀
+	var top := HBoxContainer.new()
+	top.add_theme_constant_override("separation", 8)
+	_content_vbox.add_child(top)
+
+	var back_btn := Button.new()
+	back_btn.text       = "← 뒤로"
+	back_btn.focus_mode = Control.FOCUS_NONE
+	back_btn.pressed.connect(func():
+		_skill_picking = false
+		_rebuild_skill())
+	_set_font(back_btn, 14)
+	top.add_child(back_btn)
+
+	var title_lbl := Label.new()
+	title_lbl.text                  = "유물 선택"
+	title_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	title_lbl.modulate              = Color(0.88, 0.88, 0.88)
+	_set_font(title_lbl, 16)
+	top.add_child(title_lbl)
+
 	_content_vbox.add_child(HSeparator.new())
 
-	# 스킬 카드 목록
-	var scroll := ScrollContainer.new()
-	scroll.size_flags_vertical    = Control.SIZE_EXPAND_FILL
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	_content_vbox.add_child(scroll)
+	# 본문: 왼쪽 카드 목록 | 구분선 | 오른쪽 상세+버튼
+	var body := HBoxContainer.new()
+	body.add_theme_constant_override("separation", 8)
+	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_content_vbox.add_child(body)
+
+	# ── 왼쪽: 카드 스크롤
+	var left_scroll := ScrollContainer.new()
+	left_scroll.custom_minimum_size    = Vector2(260, 0)
+	left_scroll.size_flags_vertical    = Control.SIZE_EXPAND_FILL
+	left_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	body.add_child(left_scroll)
 
 	var list := VBoxContainer.new()
 	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	list.add_theme_constant_override("separation", 10)
-	scroll.add_child(list)
+	list.add_theme_constant_override("separation", 6)
+	left_scroll.add_child(list)
 
-	for path in AVAILABLE_SKILL_PATHS:
-		var info := _get_skill_info(path)
-		if info.is_empty():
+	var equipped_path := GameManager.equipped_skill_path
+	var found_any := false
+	for a in GameManager.artifacts:
+		var art := a as ArtifactData
+		if art == null or art.skill_script == null:
 			continue
-		list.add_child(_make_skill_card(info, path, path == equipped))
+		found_any = true
+		var card := _make_skill_picker_card(art, art.skill_script.resource_path == equipped_path)
+		list.add_child(card)
+		_skill_picker_cards.append(card)
+
+	if not found_any:
+		_add_to(list, "스킬이 있는 유물이 없습니다.", 14, Color(0.5, 0.5, 0.5))
+
+	body.add_child(VSeparator.new())
+
+	# ── 오른쪽: 상세 패널 + 장착 버튼
+	var right_vbox := VBoxContainer.new()
+	right_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	right_vbox.size_flags_vertical   = Control.SIZE_EXPAND_FILL
+	right_vbox.add_theme_constant_override("separation", 6)
+	body.add_child(right_vbox)
+
+	var detail_scroll := ScrollContainer.new()
+	detail_scroll.size_flags_horizontal  = Control.SIZE_EXPAND_FILL
+	detail_scroll.size_flags_vertical    = Control.SIZE_EXPAND_FILL
+	detail_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	right_vbox.add_child(detail_scroll)
+
+	_skill_picker_detail_vbox = VBoxContainer.new()
+	_skill_picker_detail_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_skill_picker_detail_vbox.add_theme_constant_override("separation", 6)
+	detail_scroll.add_child(_skill_picker_detail_vbox)
+	_add_to(_skill_picker_detail_vbox, "유물을 클릭하면\n정보가 표시됩니다", 14, Color(0.5, 0.5, 0.5))
+
+	# 하단 장착 버튼
+	right_vbox.add_child(HSeparator.new())
+	var btn_row := HBoxContainer.new()
+	btn_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	right_vbox.add_child(btn_row)
+
+	_skill_picker_equip_btn = Button.new()
+	_skill_picker_equip_btn.text             = "장착"
+	_skill_picker_equip_btn.custom_minimum_size = Vector2(160, 44)
+	_skill_picker_equip_btn.focus_mode       = Control.FOCUS_NONE
+	_skill_picker_equip_btn.disabled         = true
+	_skill_picker_equip_btn.modulate         = Color(0.55, 0.55, 0.55)
+	_set_font(_skill_picker_equip_btn, 17)
+	_skill_picker_equip_btn.pressed.connect(func():
+		if _skill_picker_selected != null:
+			_on_skill_card_pressed(_skill_picker_selected,
+				_skill_picker_selected.skill_script.resource_path))
+	btn_row.add_child(_skill_picker_equip_btn)
+
+## 피커 카드 — 클릭 시 하이라이트 + 우측 상세 갱신 (장착은 버튼으로)
+func _make_skill_picker_card(art: ArtifactData, is_equipped: bool) -> Control:
+	var info := _get_skill_info(art.skill_script.resource_path)
+
+	var btn := Button.new()
+	btn.custom_minimum_size = Vector2(0, 68)
+	btn.focus_mode          = Control.FOCUS_NONE
+	if is_equipped:
+		btn.modulate = Color(0.45, 1.0, 0.6)
+
+	var hbox := HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 10)
+	hbox.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	hbox.add_theme_constant_override("margin_left",  8)
+	hbox.add_theme_constant_override("margin_right", 8)
+	hbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	btn.add_child(hbox)
+
+	var icon_rect := TextureRect.new()
+	icon_rect.custom_minimum_size = Vector2(48, 48)
+	icon_rect.stretch_mode        = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon_rect.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	icon_rect.mouse_filter        = Control.MOUSE_FILTER_IGNORE
+	if art.texture:
+		icon_rect.texture = art.texture
+	hbox.add_child(icon_rect)
+
+	var info_vbox := VBoxContainer.new()
+	info_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	info_vbox.size_flags_vertical   = Control.SIZE_SHRINK_CENTER
+	info_vbox.mouse_filter          = Control.MOUSE_FILTER_IGNORE
+	hbox.add_child(info_vbox)
+
+	var art_lbl := Label.new()
+	art_lbl.text        = art.artifact_name
+	art_lbl.modulate    = Color(0.72, 0.72, 0.72)
+	art_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_set_font(art_lbl, 12)
+	info_vbox.add_child(art_lbl)
+
+	var skill_lbl := Label.new()
+	skill_lbl.text        = info.get("name", "???")
+	skill_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_set_font(skill_lbl, 16)
+	info_vbox.add_child(skill_lbl)
+
+	if is_equipped:
+		var eq_lbl := Label.new()
+		eq_lbl.text        = "장착 중"
+		eq_lbl.modulate    = Color(0.45, 1.0, 0.6)
+		eq_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_set_font(eq_lbl, 12)
+		info_vbox.add_child(eq_lbl)
+
+	btn.pressed.connect(func(): _on_skill_picker_card_pressed(btn, art))
+	return btn
+
+## 피커 카드 클릭 — 하이라이트 + 우측 상세 갱신 + 장착 버튼 활성화
+func _on_skill_picker_card_pressed(pressed_btn: Button, art: ArtifactData) -> void:
+	# 모든 카드 흰색으로 초기화
+	for c in _skill_picker_cards:
+		(c as Button).modulate = Color.WHITE
+	# 선택 카드만 하늘색 하이라이트
+	pressed_btn.modulate   = Color(0.3, 0.75, 1.0)
+	_skill_picker_selected = art
+
+	_rebuild_skill_picker_detail(art)
+
+	if _skill_picker_equip_btn != null:
+		_skill_picker_equip_btn.disabled = false
+		_skill_picker_equip_btn.modulate = Color(0.45, 1.0, 0.6)
+
+## 우측 상세 패널 갱신
+func _rebuild_skill_picker_detail(art: ArtifactData) -> void:
+	if _skill_picker_detail_vbox == null: return
+	for c in _skill_picker_detail_vbox.get_children():
+		_skill_picker_detail_vbox.remove_child(c)
+		c.queue_free()
+
+	var skill_path := art.skill_script.resource_path
+	var info       := _get_skill_info(skill_path)
+
+	# 유물 아이콘
+	if art.texture:
+		var img := TextureRect.new()
+		img.texture               = art.texture
+		img.custom_minimum_size   = Vector2(80, 80)
+		img.stretch_mode          = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		img.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		_skill_picker_detail_vbox.add_child(img)
+
+	# 유물명 + 강화 레벨
+	_add_to(_skill_picker_detail_vbox, art.artifact_name, 16, Color.WHITE)
+	if art.enhance_level > 0:
+		_add_to(_skill_picker_detail_vbox, "강화 Lv.%d" % art.enhance_level, 12, Color(1.0, 0.85, 0.3))
+
+	_skill_picker_detail_vbox.add_child(HSeparator.new())
+
+	# 스킬 정보
+	_add_to(_skill_picker_detail_vbox, "── 스킬 ──", 12, Color(0.6, 0.9, 1.0))
+	_add_to(_skill_picker_detail_vbox, info.get("name", "???"), 20, Color(0.6, 0.9, 1.0))
+	_add_to(_skill_picker_detail_vbox, "쿨타임:  %.1f초" % float(info.get("cooldown", 0.0)),
+		13, Color(0.65, 0.65, 0.65))
+	var mc: int   = info.get("mana_cost",  0)
+	var md: float = info.get("mana_drain", 0.0)
+	if mc > 0 or md > 0.0:
+		var mana_txt := ""
+		if mc > 0:   mana_txt += "소모  %d" % mc
+		if md > 0.0: mana_txt += ("  /  유지 %.0f/초" % md) if mc > 0 else "유지  %.0f/초" % md
+		_add_to(_skill_picker_detail_vbox, "마나:  %s" % mana_txt, 13, Color(0.5, 0.7, 1.0))
+	var desc: String = info.get("description", "")
+	if desc != "":
+		_add_to(_skill_picker_detail_vbox, desc, 12, Color(0.80, 0.80, 0.80))
+
+	# 장착 보너스
+	var has_equip := (art.equip_bonus_atk > 0 or art.equip_bonus_atk_spd > 0 or
+		art.equip_bonus_def > 0 or art.equip_bonus_move_spd > 0 or art.equip_bonus_hp > 0)
+	if has_equip:
+		_skill_picker_detail_vbox.add_child(HSeparator.new())
+		_add_to(_skill_picker_detail_vbox, "── 장착 보너스 ──", 12, Color(1.0, 0.9, 0.4))
+		if art.equip_bonus_atk      > 0: _add_to(_skill_picker_detail_vbox, "공격력     +%d"   % art.total_equip_atk(),      13, Color(1.0, 0.85, 0.3))
+		if art.equip_bonus_atk_spd  > 0: _add_to(_skill_picker_detail_vbox, "공격속도  +%d%%"  % art.total_equip_atk_spd(),  13, Color(1.0, 0.85, 0.3))
+		if art.equip_bonus_hp       > 0: _add_to(_skill_picker_detail_vbox, "체력       +%d"   % art.total_equip_hp(),       13, Color(1.0, 0.85, 0.3))
+		if art.equip_bonus_def      > 0: _add_to(_skill_picker_detail_vbox, "방어력     +%d"   % art.total_equip_def(),      13, Color(1.0, 0.85, 0.3))
+		if art.equip_bonus_move_spd > 0: _add_to(_skill_picker_detail_vbox, "이동속도  +%.1f"  % art.total_equip_move_spd(), 13, Color(1.0, 0.85, 0.3))
+
+	# 이미 장착 중 표시
+	if skill_path == GameManager.equipped_skill_path:
+		_skill_picker_detail_vbox.add_child(HSeparator.new())
+		_add_to(_skill_picker_detail_vbox, "현재 장착 중", 13, Color(0.45, 1.0, 0.6))
+
 
 ## 스킬 스크립트를 임시 인스턴스로 메타데이터 읽기
 func _get_skill_info(path: String) -> Dictionary:
@@ -1435,93 +1887,44 @@ func _get_skill_info(path: String) -> Dictionary:
 		return {}
 	var inst: Node = script.new()
 	var info := {
-		"name":     str(inst.get("skill_name")) if inst.get("skill_name") != null else "???",
-		"cooldown": float(inst.get("cooldown"))  if inst.get("cooldown")  != null else 0.0,
-		"icon":     inst.get("icon"),
-		"path":     path,
+		"name":        str(inst.get("skill_name"))    if inst.get("skill_name")    != null else "???",
+		"description": str(inst.get("description"))   if inst.get("description")   != null else "",
+		"cooldown":    float(inst.get("cooldown"))    if inst.get("cooldown")      != null else 0.0,
+		"mana_cost":   int(inst.get("mana_cost"))     if inst.get("mana_cost")     != null else 0,
+		"mana_drain":  float(inst.get("mana_drain"))  if inst.get("mana_drain")    != null else 0.0,
+		"icon":        inst.get("icon"),
+		"path":        path,
 	}
 	inst.free()
 	return info
 
-## 스킬 한 장의 카드 버튼 생성
-func _make_skill_card(info: Dictionary, path: String, is_equipped: bool) -> Control:
-	var btn := Button.new()
-	btn.custom_minimum_size = Vector2(0, 80)
-	btn.focus_mode          = Control.FOCUS_NONE
-	if is_equipped:
-		btn.modulate = Color(0.45, 1.0, 0.6)
+## 스킬 카드 클릭 → 장착/해제 처리 (스킬 + 장착 보너스 함께 관리)
+func _on_skill_card_pressed(art: ArtifactData, skill_path: String) -> void:
+	var player := get_tree().get_first_node_in_group("player")
 
-	var hbox := HBoxContainer.new()
-	hbox.add_theme_constant_override("separation", 12)
-	hbox.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	hbox.add_theme_constant_override("margin_left",  10)
-	hbox.add_theme_constant_override("margin_right", 10)
-	hbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	btn.add_child(hbox)
-
-	# 아이콘
-	var icon_tex: Texture2D = info.get("icon")
-	var icon_rect := TextureRect.new()
-	icon_rect.custom_minimum_size = Vector2(56, 56)
-	icon_rect.stretch_mode        = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	icon_rect.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	icon_rect.mouse_filter        = Control.MOUSE_FILTER_IGNORE
-	if icon_tex:
-		icon_rect.texture = icon_tex
-	hbox.add_child(icon_rect)
-
-	# 이름 + 쿨다운
-	var info_vbox := VBoxContainer.new()
-	info_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	info_vbox.size_flags_vertical   = Control.SIZE_SHRINK_CENTER
-	info_vbox.mouse_filter          = Control.MOUSE_FILTER_IGNORE
-	hbox.add_child(info_vbox)
-
-	var name_lbl := Label.new()
-	name_lbl.text        = info.get("name", "???")
-	name_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_set_font(name_lbl, 17)
-	info_vbox.add_child(name_lbl)
-
-	var cd_lbl := Label.new()
-	cd_lbl.text        = "쿨다운: %.1f초" % float(info.get("cooldown", 0.0))
-	cd_lbl.modulate    = Color(0.72, 0.72, 0.72)
-	cd_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_set_font(cd_lbl, 13)
-	info_vbox.add_child(cd_lbl)
-
-	# 장착 상태 라벨
-	var eq_lbl := Label.new()
-	eq_lbl.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	eq_lbl.mouse_filter        = Control.MOUSE_FILTER_IGNORE
-	if is_equipped:
-		eq_lbl.text    = "장착 중"
-		eq_lbl.modulate = Color(0.45, 1.0, 0.6)
-	else:
-		eq_lbl.text    = "장착"
-		eq_lbl.modulate = Color(0.75, 0.75, 0.75)
-	_set_font(eq_lbl, 14)
-	hbox.add_child(eq_lbl)
-
-	btn.pressed.connect(func(): _on_skill_card_pressed(path))
-	return btn
-
-## 스킬 카드 클릭 → 장착 처리
-func _on_skill_card_pressed(path: String) -> void:
-	if GameManager.equipped_skill_path == path:
-		# 이미 장착된 스킬 클릭 → 해제
+	if GameManager.equipped_skill_path == skill_path:
+		# 이미 장착 중 → 해제
+		if is_instance_valid(player):
+			if player.has_method("remove_equip_bonus"):
+				player.call("remove_equip_bonus")
+			if player.has_method("unequip_skill"):
+				player.call("unequip_skill")
 		GameManager.equipped_skill_path = ""
-		var player := get_tree().get_first_node_in_group("player")
-		if is_instance_valid(player) and player.has_method("unequip_skill"):
-			player.call("unequip_skill")
+		GameManager.equipped_artifact   = null
 	else:
-		GameManager.equipped_skill_path = path
-		var script := load(path) as GDScript
-		if script:
-			var player := get_tree().get_first_node_in_group("player")
-			if is_instance_valid(player) and player.has_method("equip_skill"):
+		# 이전 장착 보너스 먼저 제거
+		if GameManager.equipped_artifact != null and is_instance_valid(player) \
+				and player.has_method("remove_equip_bonus"):
+			player.call("remove_equip_bonus")
+		# 새 유물 장착
+		GameManager.equipped_skill_path = skill_path
+		GameManager.equipped_artifact   = art
+		var script := load(skill_path) as GDScript
+		if script and is_instance_valid(player):
+			if player.has_method("equip_skill"):
 				player.call("equip_skill", script.new())
-	# UI 갱신
+			if player.has_method("apply_equip_bonus"):
+				player.call("apply_equip_bonus", art)
 	_switch_tab(Tab.SKILL)
 
 # ───────────────────────────────
@@ -1554,6 +1957,31 @@ func _add_img_col(parent: HBoxContainer, tex: Texture2D, caption: String) -> voi
 	cap.modulate             = Color(0.6, 0.6, 0.6)
 	_set_font(cap, 12)
 	vb.add_child(cap)
+
+## 구분선 위아래에 여백을 추가한 HSeparator 삽입
+func _add_padded_sep(container: VBoxContainer) -> void:
+	var mc := MarginContainer.new()
+	mc.add_theme_constant_override("margin_top",    5)
+	mc.add_theme_constant_override("margin_bottom", 5)
+	mc.add_child(HSeparator.new())
+	container.add_child(mc)
+
+## 스킬 스크립트에서 skill_name 읽기 (임시 인스턴스 생성 후 즉시 해제)
+func _resolve_skill_name(script: Script) -> String:
+	if script == null:
+		return "???"
+	var inst: Node = script.new()
+	var name_val := str(inst.get("skill_name")) if inst.get("skill_name") != null else "???"
+	inst.free()
+	return name_val
+
+## 비교 뷰에 구분 섹션 라벨 추가
+func _add_section_label_to(container: VBoxContainer, text: String, color: Color) -> void:
+	var lbl := Label.new()
+	lbl.text    = text
+	lbl.modulate = color
+	_set_font(lbl, 12)
+	container.add_child(lbl)
 
 func _add_to(container: VBoxContainer, text: String,
 			 font_size: int, color: Color = Color.WHITE) -> void:

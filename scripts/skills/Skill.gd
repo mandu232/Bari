@@ -4,7 +4,10 @@ class_name Skill
 ## 새 스킬은 이 클래스를 상속하고 execute(player) 만 오버라이드하면 됩니다.
 
 @export var skill_name:     String    = "스킬"
+@export var description:    String    = ""
 @export var cooldown:       float     = 3.0
+@export var mana_cost:      int       = 0     ## 사용 시 소모 마나
+@export var mana_drain:     float     = 0.0   ## 유지 중 초당 마나 소모 (지속형 스킬)
 @export var icon:           Texture2D = null
 ## true 이면 Player._handle_skill_input() 를 우회하고 스킬 자신이 직접 입력을 감지합니다.
 ## (SkillSwordSpin 처럼 특정 키를 누르는 동안 유지해야 하는 스킬에 사용)

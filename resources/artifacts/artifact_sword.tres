@@ -3,18 +3,20 @@
 [ext_resource type="Script" uid="uid://urkryft166ev" path="res://scripts/artifact/ArtifactData.gd" id="1_lex6m"]
 [ext_resource type="SpriteFrames" uid="uid://bjxt1anbuuqeu" path="res://AutoLoad/assets/Echo/Echo_cheongryeong.tres" id="1_mw10j"]
 [ext_resource type="Texture2D" uid="uid://cxy3fgnn3xfhr" path="res://AutoLoad/assets/Artifact/artifact_sword.png" id="3_58cc4"]
+[ext_resource type="Script" uid="uid://b4s4e1lv03lmp" path="res://scripts/skills/SkillSwordSpin.gd" id="3_ihjgd"]
 
 [resource]
 script = ExtResource("1_lex6m")
 artifact_name = "세형동검"
-era = 3
 description = "제사장과 군장의 권위를 상징하는 청동검입니다. 푸른빛 도신에서 뿜어져 나오는 서슬 퍼런 기운은 감히 범접할 수 없는 신성함을 자아냅니다."
 texture = ExtResource("3_58cc4")
+era = 3
 echo_name = "천령"
 echo_description = "청동기 시대의 신성한 기운을 품은 에코입니다. 차갑고 예리한 눈빛을 지녔지만, 무너지지 않는 의지와 확고한 신념으로 곁에 있는 이를 묵묵히 지킵니다."
 echo_frames = ExtResource("1_mw10j")
 echo_power = 3
 wander_radius = 80.0
+skill_script = ExtResource("3_ihjgd")
 stability_decay = 0.0
 output_decay = 0.1
 activity_decay = 0.0

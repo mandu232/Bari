@@ -102,6 +102,8 @@ var exhibited_era_counts:  Dictionary = {}
 
 ## 장착된 스킬 스크립트 경로 ("" = 없음)
 var equipped_skill_path: String = ""
+## 현재 스킬을 제공하는 장착 유물 인스턴스 (런타임 전용 — 저장 안 함)
+var equipped_artifact: ArtifactData = null
 
 # ───────────────────────────────
 #  READY

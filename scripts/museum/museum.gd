@@ -56,6 +56,9 @@ func _ready() -> void:
 	_essence_ui = EssenceUI.new()
 	add_child(_essence_ui)
 
+	var player_hud := PlayerHUD.new()
+	add_child(player_hud)
+
 	_setup_book_button()
 
 	# 전력 토폴로지가 바뀌면 전력 재할당

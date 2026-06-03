@@ -80,11 +80,16 @@ func _populate_list() -> void:
 	for data: ArtifactData in GameManager.artifacts:
 		if data == null:
 			continue
+		if data == GameManager.equipped_artifact:
+			continue   # 장착 중인 유물은 전시 불가
 		if data.texture:
 			item_list.add_item(data.artifact_name, data.texture)
 		else:
 			item_list.add_item(data.artifact_name)
 		_artifacts_cache.append(data)
+
+	if _artifacts_cache.is_empty():
+		item_list.add_item("전시 가능한 유물이 없습니다")
 
 # ───────────────────────────────
 #  항목 선택 시 오른쪽 패널 갱신

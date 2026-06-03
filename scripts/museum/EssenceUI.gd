@@ -26,9 +26,13 @@ func _ready() -> void:
 # ───────────────────────────────
 func _build_layout() -> void:
 	var panel := PanelContainer.new()
-	panel.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	panel.offset_left   = 12
-	panel.offset_top    = 12
+	panel.anchor_left     = 1.0
+	panel.anchor_right    = 1.0
+	panel.anchor_top      = 0.0
+	panel.anchor_bottom   = 0.0
+	panel.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	panel.offset_right    = -12
+	panel.offset_top      = 12
 	add_child(panel)
 
 	var margin := MarginContainer.new()
