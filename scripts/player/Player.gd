@@ -61,6 +61,13 @@ var _sheathing: bool     = false  # 검 집어넣기 재생 중
 # ── 막기 (우클릭 — 프로젝트 입력 설정에서 "block" 액션을 MOUSE_BUTTON_RIGHT 에 매핑)
 var _block_release_pending: bool = false  # unsheathe 도중 우클릭을 떼면 true
 
+# ── 시너지 보너스 (set_synergy_bonus 로 일괄 교체됨)
+var _synergy_atk:     int   = 0
+var _synergy_atk_spd: int   = 0
+var _synergy_def:     int   = 0
+var _synergy_spd:     float = 0.0
+var _synergy_hp:      int   = 0
+
 # ───────────────────────────────
 #  SIGNALS
 # ───────────────────────────────
@@ -406,6 +413,30 @@ func remove_artifact_bonus(data: ArtifactData) -> void:
 	health         = mini(health, max_health)
 	if data.total_max_health() != 0:
 		health_changed.emit(health, max_health)
+
+## 시너지 보너스 일괄 교체 — GameManager.update_synergies() 에서 호출
+func set_synergy_bonus(atk: int, atk_spd: int, def_val: int, spd: float, hp: int) -> void:
+	# 이전 시너지 제거
+	attack_damage  = maxi(attack_damage - _synergy_atk,     1)
+	attack_speed   = maxi(attack_speed  - _synergy_atk_spd, 0)
+	defense        = maxi(defense       - _synergy_def,      0)
+	move_speed     = maxf(move_speed    - _synergy_spd,      40.0)
+	max_health     = maxi(max_health    - _synergy_hp,       1)
+	health         = mini(health, max_health)
+	# 새 시너지 저장 + 적용
+	_synergy_atk     = atk
+	_synergy_atk_spd = atk_spd
+	_synergy_def     = def_val
+	_synergy_spd     = spd
+	_synergy_hp      = hp
+	attack_damage  += _synergy_atk
+	attack_speed   += _synergy_atk_spd
+	defense        += _synergy_def
+	move_speed     += _synergy_spd
+	max_health     += _synergy_hp
+	if _synergy_hp > 0:
+		health = min(health + _synergy_hp, max_health)
+	health_changed.emit(health, max_health)
 
 func _get_mouse_facing() -> Vector2:
 	var mouse_world := get_global_mouse_position()

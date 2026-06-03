@@ -58,6 +58,47 @@ signal run_started(depth: int)
 signal run_ended(success: bool)
 signal hq_level_changed(level: int)
 signal essence_multiplier_changed(mult: float)
+signal synergy_changed
+
+# ───────────────────────────────
+#  시대 시너지 (롤토체스 방식)
+#  전시대에 올린 유물 수를 기준으로 단계별 보너스 — 높은 단계가 낮은 단계를 대체
+#  키: Era 정수값  /  값: 단계 배열 (count 오름차순 필수)
+#  각 tier 필드: count, name, desc, atk, atk_spd, def, spd, hp
+# ───────────────────────────────
+const ERA_SYNERGY_TIERS: Dictionary = {
+	1: [  # 구석기
+		{"count": 2, "name": "원시의 질주",
+		 "desc": "이동속도 +25",
+		 "atk": 0, "atk_spd": 0, "def": 0, "spd": 25.0, "hp": 0},
+	],
+	3: [  # 청동기
+		{"count": 2, "name": "청동의 기운",
+		 "desc": "공격력 +10",
+		 "atk": 10, "atk_spd": 0, "def": 0, "spd": 0.0, "hp": 0},
+		{"count": 3, "name": "청동기 전사",
+		 "desc": "공격력 +20,  공격속도 +10%",
+		 "atk": 20, "atk_spd": 10, "def": 0, "spd": 0.0, "hp": 0},
+	],
+	5: [  # 삼국
+		{"count": 2, "name": "삼국의 기상",
+		 "desc": "방어력 +12",
+		 "atk": 0, "atk_spd": 0, "def": 12, "spd": 0.0, "hp": 0},
+		{"count": 3, "name": "삼국의 영웅",
+		 "desc": "방어력 +25,  공격속도 +15%",
+		 "atk": 0, "atk_spd": 15, "def": 25, "spd": 0.0, "hp": 0},
+	],
+	8: [  # 조선
+		{"count": 2, "name": "조선의 품격",
+		 "desc": "최대 체력 +35",
+		 "atk": 0, "atk_spd": 0, "def": 0, "spd": 0.0, "hp": 35},
+	],
+}
+
+## 현재 활성 시너지 (era_int → active tier dict / 비활성이면 {})
+var active_synergies:      Dictionary = {}
+## 전시 중인 유물의 시대별 카운트 (era_int → count)
+var exhibited_era_counts:  Dictionary = {}
 
 # ───────────────────────────────
 #  READY
@@ -248,6 +289,56 @@ func add_artifact(artifact: ArtifactData) -> void:
 
 func remove_artifact(artifact: ArtifactData) -> void:
 	artifacts.erase(artifact)
+
+# ───────────────────────────────
+#  시너지 계산
+# ───────────────────────────────
+## 전시 유물 배열을 받아 시너지 재계산 → 플레이어에 보너스 적용
+func update_synergies(exhibited: Array) -> void:
+	# 시대별 카운트 갱신
+	exhibited_era_counts.clear()
+	for a in exhibited:
+		var data := a as ArtifactData
+		if data == null: continue
+		var e := int(data.era)
+		exhibited_era_counts[e] = exhibited_era_counts.get(e, 0) + 1
+
+	# 활성 티어 및 총 보너스 계산
+	var new_active: Dictionary = {}
+	var total_atk:     int   = 0
+	var total_atk_spd: int   = 0
+	var total_def:     int   = 0
+	var total_spd:     float = 0.0
+	var total_hp:      int   = 0
+
+	for era_int in ERA_SYNERGY_TIERS.keys():
+		var count: int   = exhibited_era_counts.get(era_int, 0)
+		var tiers: Array = ERA_SYNERGY_TIERS[era_int]
+		var best:  Dictionary = {}
+		for tier in tiers:
+			if count >= int(tier["count"]):
+				best = tier
+		new_active[era_int] = best
+		if not best.is_empty():
+			total_atk     += int(best.get("atk",     0))
+			total_atk_spd += int(best.get("atk_spd", 0))
+			total_def     += int(best.get("def",      0))
+			total_spd     += float(best.get("spd",    0.0))
+			total_hp      += int(best.get("hp",       0))
+
+	active_synergies = new_active
+
+	# 플레이어에 시너지 보너스 일괄 적용
+	var player := get_tree().get_first_node_in_group("player")
+	if is_instance_valid(player) and player.has_method("set_synergy_bonus"):
+		player.call("set_synergy_bonus",
+			total_atk, total_atk_spd, total_def, total_spd, total_hp)
+
+	synergy_changed.emit()
+
+## 특정 시대의 현재 전시 수 반환
+func get_exhibited_era_count(era_int: int) -> int:
+	return exhibited_era_counts.get(era_int, 0)
 
 func get_era_count(era: ArtifactData.Era) -> int:
 	var count := 0

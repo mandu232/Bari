@@ -63,9 +63,10 @@ func _ready() -> void:
 	# 영력 배율이 바뀌면 영력 레이트 재계산
 	GameManager.essence_multiplier_changed.connect(func(_m: float): _recalculate_essence_rate())
 
-	# 씬 트리가 완전히 구성된 뒤 z_index 초기화
+	# 씬 트리가 완전히 구성된 뒤 z_index 초기화 + 초기 시너지 계산
 	call_deferred("_refresh_z_sort")
 	call_deferred("_fix_tilemap_sort")
+	call_deferred("_recalculate_synergies")
 
 # ───────────────────────────────
 #  건설 모드 공통 업데이트
@@ -326,6 +327,7 @@ func _demolish_node(entry: Dictionary) -> void:
 	_save_pedestal_positions()
 	_save_manual_connections()
 	_reallocate_power()
+	_recalculate_synergies()
 
 # ───────────────────────────────
 #  수동 배선 — F키 + 플레이어 이동 방식
@@ -602,6 +604,7 @@ func _on_select_cancelled() -> void:
 			GameManager.artifacts.erase(_swap_artifact)
 			slot.place_artifact(_swap_artifact)
 		_swap_artifact = null
+	_recalculate_synergies()
 	_set_hud_visible(true)
 	_resume_player()
 
@@ -619,6 +622,7 @@ func _on_artifact_remove_requested() -> void:
 	_swap_artifact = null
 	_save_slot_state()
 	_recalculate_essence_rate()
+	_recalculate_synergies()
 	_set_hud_visible(true)
 	_resume_player()
 
@@ -657,6 +661,7 @@ func place_artifact_on_slot(slot: ArtifactSlot, data: ArtifactData) -> void:
 	slot.place_artifact(data)
 	_save_slot_state()
 	_recalculate_essence_rate()
+	_recalculate_synergies()
 
 func remove_artifact_from_slot(slot: ArtifactSlot) -> void:
 	var data := slot.remove_artifact()
@@ -664,6 +669,7 @@ func remove_artifact_from_slot(slot: ArtifactSlot) -> void:
 		GameManager.artifacts.append(data)
 		_save_slot_state()
 		_recalculate_essence_rate()
+		_recalculate_synergies()
 
 # ───────────────────────────────
 #  전력 중앙 할당
@@ -944,6 +950,19 @@ func _recalculate_essence_rate() -> void:
 		if slot and slot.is_occupied and slot.artifact and slot.is_powered:
 			total += slot.artifact.essence_per_second * GameManager.essence_multiplier
 	GameManager.set_essence_rate(total)
+
+## 현재 전시 중인 유물 배열 반환 (slots 자식 중 is_occupied 인 것)
+func _get_exhibited_artifacts() -> Array:
+	var result: Array = []
+	for child in slots.get_children():
+		var slot := child as ArtifactSlot
+		if slot != null and slot.is_occupied and slot.artifact != null:
+			result.append(slot.artifact)
+	return result
+
+## 시너지 재계산 — 전시 변경 시마다 호출
+func _recalculate_synergies() -> void:
+	GameManager.update_synergies(_get_exhibited_artifacts())
 
 ## 발전소 추가/제거 → 전력 재할당 (deferred, 재진입 방지)
 func _on_power_changed_museum(_used: int, _total: int) -> void:

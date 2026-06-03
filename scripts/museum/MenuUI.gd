@@ -39,7 +39,7 @@ const ALWAYS_DISCOVERED_BLUEPRINTS: Array[String] = [
 # ───────────────────────────────
 #  STATE
 # ───────────────────────────────
-enum Tab       { STATS, INVENTORY, DOGGAM, ENHANCE }
+enum Tab       { STATS, INVENTORY, ENHANCE, DOGGAM }
 enum DoggamTab { ARTIFACT, ECHO, BUILDING }
 
 var _font: Font = null
@@ -69,6 +69,17 @@ var _enh_mat_btns:     Array         = []
 var _enh_mat_vbox:     VBoxContainer = null   # 재료 목록 컨테이너
 var _enh_preview_vbox: VBoxContainer = null   # 미리보기 컨테이너
 var _enh_mode:         int           = 0      # 0=메인, 1=대상선택, 2=재료선택
+
+# ── 강화 피커 선택 상태 (피커 화면에서만 사용)
+var _enh_picker_selected:    ArtifactData  = null   # 피커에서 하이라이트된 유물
+var _enh_picker_cell_btns:   Array         = []     # 피커 그리드 셀 버튼 목록
+var _enh_picker_detail_vbox: VBoxContainer = null   # 피커 우측 상세 패널
+var _enh_picker_select_btn:  Button        = null   # 피커 선택 확정 버튼
+
+# ── 스탯 탭 — 시너지 선택 상태
+var _syn_detail_vbox:  VBoxContainer = null
+var _syn_era_btns:     Array         = []   # [{btn, era_int}]
+var _syn_selected_era: int           = -1
 
 # ── 도감 상태
 var _dog_index_to_path: Array[String] = []
@@ -144,7 +155,7 @@ func _build_layout() -> void:
 	left_vbox.add_child(HSeparator.new())
 
 	# 탭 버튼
-	var tab_labels := ["스탯", "인벤토리", "도감", "강화"]
+	var tab_labels := ["스탯", "인벤토리", "강화", "도감"]
 	_tab_btns.clear()
 	for i in tab_labels.size():
 		var btn := Button.new()
@@ -205,6 +216,13 @@ func _switch_tab(tab: Tab) -> void:
 	_enh_mat_vbox       = null
 	_enh_preview_vbox   = null
 	_enh_mode           = 0
+	_enh_picker_selected    = null
+	_enh_picker_cell_btns.clear()
+	_enh_picker_detail_vbox = null
+	_enh_picker_select_btn  = null
+	_syn_detail_vbox  = null
+	_syn_era_btns.clear()
+	_syn_selected_era = -1
 
 	match tab:
 		Tab.STATS:     _build_stats_content()
@@ -264,6 +282,184 @@ func _build_stats_content() -> void:
 		val_lbl.modulate = Color(0.85, 1.0, 0.65)
 		_set_font(val_lbl, 18)
 		hbox.add_child(val_lbl)
+
+	# ── 시대 시너지 섹션 (버튼 + 우측 상세)
+	_content_vbox.add_child(HSeparator.new())
+	_add_section_title(_content_vbox, "시대 시너지")
+	_build_synergy_section()
+
+## 시너지 섹션: 왼쪽 버튼 목록 | 오른쪽 상세 패널
+func _build_synergy_section() -> void:
+	const ERA_ORDER: Array[int] = [1, 3, 5, 8]
+
+	var syn_hbox := HBoxContainer.new()
+	syn_hbox.add_theme_constant_override("separation", 0)
+	syn_hbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_content_vbox.add_child(syn_hbox)
+
+	# ── 왼쪽: 시너지 버튼 목록
+	var left_vbox := VBoxContainer.new()
+	left_vbox.custom_minimum_size = Vector2(128, 0)
+	left_vbox.add_theme_constant_override("separation", 5)
+	syn_hbox.add_child(left_vbox)
+
+	syn_hbox.add_child(VSeparator.new())
+
+	# ── 오른쪽: 상세 패널 (스크롤)
+	var right_scroll := ScrollContainer.new()
+	right_scroll.size_flags_horizontal  = Control.SIZE_EXPAND_FILL
+	right_scroll.size_flags_vertical    = Control.SIZE_EXPAND_FILL
+	right_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	syn_hbox.add_child(right_scroll)
+
+	var right_margin := MarginContainer.new()
+	right_margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	right_margin.add_theme_constant_override("margin_left",  12)
+	right_margin.add_theme_constant_override("margin_right",  8)
+	right_margin.add_theme_constant_override("margin_top",    4)
+	right_scroll.add_child(right_margin)
+
+	_syn_detail_vbox = VBoxContainer.new()
+	_syn_detail_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_syn_detail_vbox.add_theme_constant_override("separation", 8)
+	right_margin.add_child(_syn_detail_vbox)
+	_add_to(_syn_detail_vbox, "좌측 시너지를 눌러\n효과를 확인하세요", 13, Color(0.38, 0.38, 0.38))
+
+	# ── 버튼 생성
+	_syn_era_btns.clear()
+	for era_int in ERA_ORDER:
+		var tiers: Array = GameManager.ERA_SYNERGY_TIERS.get(era_int, [])
+		if tiers.is_empty(): continue
+
+		var current_count := GameManager.get_exhibited_era_count(era_int)
+		var is_active: bool = not (GameManager.active_synergies.get(era_int, {}) as Dictionary).is_empty()
+
+		# 분모: 다음 미달성 티어 임계값, 이미 최대면 최대
+		var show_denom: int = (tiers[-1] as Dictionary)["count"] as int
+		for tier in tiers:
+			if current_count < (tier["count"] as int):
+				show_denom = tier["count"] as int
+				break
+
+		var btn := Button.new()
+		btn.custom_minimum_size = Vector2(0, 52)
+		btn.focus_mode          = Control.FOCUS_NONE
+		# 활성 → 금빛, 비활성 → 어두운 회색
+		btn.modulate = Color(0.95, 0.82, 0.32) if is_active else Color(0.40, 0.40, 0.40)
+
+		var bv := VBoxContainer.new()
+		bv.alignment  = BoxContainer.ALIGNMENT_CENTER
+		bv.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		bv.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		btn.add_child(bv)
+
+		var nl := Label.new()
+		nl.text                = ArtifactData.era_label(era_int as ArtifactData.Era)
+		nl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		nl.mouse_filter        = Control.MOUSE_FILTER_IGNORE
+		_set_font(nl, 15)
+		bv.add_child(nl)
+
+		var cl := Label.new()
+		cl.text                = "%d / %d" % [current_count, show_denom]
+		cl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		cl.mouse_filter        = Control.MOUSE_FILTER_IGNORE
+		cl.modulate = Color(1.0, 0.95, 0.6) if is_active else Color(0.48, 0.48, 0.48)
+		_set_font(cl, 13)
+		bv.add_child(cl)
+
+		var era_capture := era_int
+		btn.pressed.connect(func(): _on_syn_btn_pressed(era_capture))
+		left_vbox.add_child(btn)
+		_syn_era_btns.append({"btn": btn, "era": era_int})
+
+## 시너지 버튼 클릭 처리
+func _on_syn_btn_pressed(era_int: int) -> void:
+	_syn_selected_era = era_int
+	# 버튼 하이라이트 갱신
+	for entry in _syn_era_btns:
+		var b   := entry["btn"] as Button
+		var e   := entry["era"] as int
+		var act: bool = not (GameManager.active_synergies.get(e, {}) as Dictionary).is_empty()
+		if e == era_int:
+			b.modulate = Color(1.0, 1.0, 1.0)          # 선택됨 — 흰색
+		elif act:
+			b.modulate = Color(0.95, 0.82, 0.32)        # 활성 미선택
+		else:
+			b.modulate = Color(0.40, 0.40, 0.40)        # 비활성 미선택
+	_rebuild_syn_detail(era_int)
+
+## 우측 상세 패널 갱신
+func _rebuild_syn_detail(era_int: int) -> void:
+	if _syn_detail_vbox == null: return
+	for c in _syn_detail_vbox.get_children():
+		_syn_detail_vbox.remove_child(c)
+		c.queue_free()
+
+	var tiers:         Array  = GameManager.ERA_SYNERGY_TIERS.get(era_int, [])
+	var current_count: int    = GameManager.get_exhibited_era_count(era_int)
+	var era_name:      String = ArtifactData.era_label(era_int as ArtifactData.Era)
+
+	# 헤더
+	var hdr := Label.new()
+	hdr.text    = "%s 시대   (%d개 전시 중)" % [era_name, current_count]
+	hdr.modulate = Color(0.85, 0.85, 0.85)
+	_set_font(hdr, 15)
+	_syn_detail_vbox.add_child(hdr)
+	_syn_detail_vbox.add_child(HSeparator.new())
+
+	# 각 티어 표시
+	for i in tiers.size():
+		var tier      := tiers[i] as Dictionary
+		var tc        := tier["count"] as int
+		var tier_act  := current_count >= tc
+		var is_last   := i == tiers.size() - 1
+
+		# 티어 제목 행
+		var title_hbox := HBoxContainer.new()
+		title_hbox.add_theme_constant_override("separation", 8)
+		_syn_detail_vbox.add_child(title_hbox)
+
+		var icon_lbl := Label.new()
+		icon_lbl.text    = "✦" if tier_act else "○"
+		icon_lbl.modulate = Color(1.0, 0.85, 0.3) if tier_act else Color(0.35, 0.35, 0.35)
+		_set_font(icon_lbl, 16)
+		title_hbox.add_child(icon_lbl)
+
+		var name_lbl := Label.new()
+		name_lbl.text                = "%s" % tier["name"]
+		name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		name_lbl.modulate            = Color(1.0, 0.92, 0.45) if tier_act else Color(0.38, 0.38, 0.38)
+		_set_font(name_lbl, 15)
+		title_hbox.add_child(name_lbl)
+
+		var req_lbl := Label.new()
+		req_lbl.text    = "%d개" % tc
+		req_lbl.modulate = Color(0.7, 0.7, 0.7) if tier_act else Color(0.35, 0.35, 0.35)
+		_set_font(req_lbl, 13)
+		title_hbox.add_child(req_lbl)
+
+		# 효과 설명
+		var desc_lbl := Label.new()
+		desc_lbl.text          = "    " + tier["desc"]
+		desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		desc_lbl.modulate      = Color(1.0, 0.72, 0.45) if tier_act else Color(0.30, 0.30, 0.30)
+		_set_font(desc_lbl, 13)
+		_syn_detail_vbox.add_child(desc_lbl)
+
+		# 달성 상태 메시지
+		var status_lbl := Label.new()
+		if tier_act:
+			status_lbl.text    = "    ✓ 달성"
+			status_lbl.modulate = Color(0.45, 1.0, 0.6)
+		else:
+			status_lbl.text    = "    전시 %d개 더 필요" % (tc - current_count)
+			status_lbl.modulate = Color(0.42, 0.42, 0.42)
+		_set_font(status_lbl, 12)
+		_syn_detail_vbox.add_child(status_lbl)
+
+		if not is_last:
+			_syn_detail_vbox.add_child(HSeparator.new())
 
 # ═══════════════════════════════
 #  ② 인벤토리 콘텐츠
@@ -528,9 +724,12 @@ func _make_mouse_ignore_sep() -> Control:
 	sep.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return sep
 
-# ── 유물 선택 피커 화면 (뒤로가기 + 그리드)
+# ── 유물 선택 피커 화면 (뒤로가기 | 왼쪽 그리드 | 오른쪽 상세+선택버튼)
 func _enh_show_picker() -> void:
-	# 뒤로가기 버튼 + 안내 라벨
+	_enh_picker_selected = null
+	_enh_picker_cell_btns.clear()
+
+	# ── 상단: 뒤로가기 + 제목
 	var top_hbox := HBoxContainer.new()
 	top_hbox.add_theme_constant_override("separation", 8)
 	_content_vbox.add_child(top_hbox)
@@ -545,7 +744,7 @@ func _enh_show_picker() -> void:
 	top_hbox.add_child(back_btn)
 
 	var picker_title := Label.new()
-	picker_title.text    = "강화할 유물 선택" if _enh_mode == 1 else "재료 유물 선택"
+	picker_title.text = "강화할 유물 선택" if _enh_mode == 1 else "재료 유물 선택"
 	picker_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	picker_title.modulate = Color(0.9, 0.9, 0.9)
 	_set_font(picker_title, 16)
@@ -553,7 +752,7 @@ func _enh_show_picker() -> void:
 
 	_content_vbox.add_child(HSeparator.new())
 
-	# 선택 가능한 유물 필터링
+	# ── 선택 가능 후보 필터링
 	var candidates: Array = []
 	for i in _enh_artifacts.size():
 		var a := _enh_artifacts[i] as ArtifactData
@@ -561,7 +760,6 @@ func _enh_show_picker() -> void:
 		if _enh_mode == 1:
 			candidates.append({"data": a, "index": i})
 		elif _enh_mode == 2 and _enh_target != null:
-			# 재료: 대상과 동일 이름, 다른 인스턴스
 			if a != _enh_target and a.artifact_name == _enh_target.artifact_name:
 				candidates.append({"data": a, "index": i})
 
@@ -571,11 +769,19 @@ func _enh_show_picker() -> void:
 		_add_to(_content_vbox, empty_msg, 14, Color(0.55, 0.55, 0.55))
 		return
 
-	# 그리드 (4열)
+	# ── 본문: 그리드(왼쪽) | 구분선 | 상세+선택버튼(오른쪽)
+	var body := HBoxContainer.new()
+	body.add_theme_constant_override("separation", 8)
+	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_content_vbox.add_child(body)
+
+	# 왼쪽: 그리드 스크롤
 	var grid_scroll := ScrollContainer.new()
+	var grid_w := INV_COLS * INV_CELL_SIZE + (INV_COLS - 1) * INV_CELL_GAP + 8
+	grid_scroll.custom_minimum_size    = Vector2(grid_w, 0)
 	grid_scroll.size_flags_vertical    = Control.SIZE_EXPAND_FILL
 	grid_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	_content_vbox.add_child(grid_scroll)
+	body.add_child(grid_scroll)
 
 	var gm := MarginContainer.new()
 	gm.add_theme_constant_override("margin_left", 4)
@@ -594,8 +800,49 @@ func _enh_show_picker() -> void:
 		var idx  := c["index"] as int
 		var cell := _make_picker_cell(data, idx, mode_capture)
 		grid.add_child(cell)
+		_enh_picker_cell_btns.append(cell)
 
-## 피커 그리드 셀 생성
+	body.add_child(VSeparator.new())
+
+	# 오른쪽: 상세 패널 + 선택 버튼
+	var right_vbox := VBoxContainer.new()
+	right_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	right_vbox.size_flags_vertical   = Control.SIZE_EXPAND_FILL
+	right_vbox.add_theme_constant_override("separation", 6)
+	body.add_child(right_vbox)
+
+	# 상세 영역 (스크롤)
+	var detail_scroll := ScrollContainer.new()
+	detail_scroll.size_flags_horizontal  = Control.SIZE_EXPAND_FILL
+	detail_scroll.size_flags_vertical    = Control.SIZE_EXPAND_FILL
+	detail_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	right_vbox.add_child(detail_scroll)
+
+	_enh_picker_detail_vbox = VBoxContainer.new()
+	_enh_picker_detail_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_enh_picker_detail_vbox.add_theme_constant_override("separation", 6)
+	detail_scroll.add_child(_enh_picker_detail_vbox)
+	_add_to(_enh_picker_detail_vbox, "유물을 클릭하면\n능력치가 표시됩니다", 14, Color(0.5, 0.5, 0.5))
+
+	# 하단 선택 버튼 (패널 고정)
+	right_vbox.add_child(HSeparator.new())
+	var btn_row := HBoxContainer.new()
+	btn_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	right_vbox.add_child(btn_row)
+
+	_enh_picker_select_btn = Button.new()
+	_enh_picker_select_btn.text             = "선택"
+	_enh_picker_select_btn.custom_minimum_size = Vector2(160, 44)
+	_enh_picker_select_btn.focus_mode       = Control.FOCUS_NONE
+	_enh_picker_select_btn.disabled         = true
+	_enh_picker_select_btn.modulate         = Color(0.55, 0.55, 0.55)
+	_set_font(_enh_picker_select_btn, 17)
+	_enh_picker_select_btn.pressed.connect(func():
+		if _enh_picker_selected != null:
+			_enh_pick(_enh_picker_selected, mode_capture))
+	btn_row.add_child(_enh_picker_select_btn)
+
+## 피커 그리드 셀 생성 — 클릭 시 상세 표시만, 확정은 "선택" 버튼으로
 func _make_picker_cell(data: ArtifactData, index: int, mode: int) -> Control:
 	var btn := Button.new()
 	btn.custom_minimum_size = Vector2(INV_CELL_SIZE, INV_CELL_SIZE)
@@ -603,7 +850,8 @@ func _make_picker_cell(data: ArtifactData, index: int, mode: int) -> Control:
 	btn.text                = ""
 	btn.expand_icon         = true
 	btn.icon                = data.texture
-	btn.pressed.connect(func(): _enh_pick(data, mode))
+	# btn 을 클로저로 캡처해서 하이라이트 처리에 사용
+	btn.pressed.connect(func(): _on_enh_picker_cell_pressed(btn, data))
 
 	if data.enhance_level > 0:
 		var lbl := Label.new()
@@ -619,6 +867,80 @@ func _make_picker_cell(data: ArtifactData, index: int, mode: int) -> Control:
 		btn.add_child(lbl)
 
 	return btn
+
+## 피커 셀 클릭 — 강조 + 상세 갱신 (확정은 "선택" 버튼)
+func _on_enh_picker_cell_pressed(pressed_btn: Button, data: ArtifactData) -> void:
+	# 이전 강조 해제
+	for b in _enh_picker_cell_btns:
+		(b as Button).modulate = Color.WHITE
+	# 새 강조
+	pressed_btn.modulate = Color(0.45, 1.0, 0.6)
+	_enh_picker_selected = data
+
+	# 우측 상세 패널 갱신
+	_rebuild_enh_picker_detail(data)
+
+	# 선택 버튼 활성화
+	if _enh_picker_select_btn != null:
+		_enh_picker_select_btn.disabled = false
+		_enh_picker_select_btn.modulate = Color(0.45, 1.0, 0.6)
+
+## 피커 우측 상세 패널 갱신
+func _rebuild_enh_picker_detail(data: ArtifactData) -> void:
+	if _enh_picker_detail_vbox == null: return
+	for c in _enh_picker_detail_vbox.get_children():
+		_enh_picker_detail_vbox.remove_child(c)
+		c.queue_free()
+
+	# 아이콘 (중앙)
+	if data.texture:
+		var img := TextureRect.new()
+		img.texture               = data.texture
+		img.custom_minimum_size   = Vector2(80, 80)
+		img.stretch_mode          = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		img.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		_enh_picker_detail_vbox.add_child(img)
+
+	# 이름 + 강화 레벨
+	_add_to(_enh_picker_detail_vbox, data.artifact_name, 17, Color.WHITE)
+	if data.enhance_level > 0:
+		_add_to(_enh_picker_detail_vbox, "강화 Lv.%d" % data.enhance_level, 13, Color(1.0, 0.85, 0.3))
+	else:
+		_add_to(_enh_picker_detail_vbox, "미강화", 13, Color(0.6, 0.6, 0.6))
+
+	_enh_picker_detail_vbox.add_child(HSeparator.new())
+
+	# 스탯 보너스
+	_add_to(_enh_picker_detail_vbox, "── 스탯 보너스 ──", 13, Color(1.0, 0.85, 0.5))
+	var any_stat := false
+	if data.bonus_max_health > 0:
+		_add_to(_enh_picker_detail_vbox,
+			"체력       +%d" % data.total_max_health(), 13, Color(1.0, 0.72, 0.45))
+		any_stat = true
+	if data.bonus_attack > 0:
+		_add_to(_enh_picker_detail_vbox,
+			"공격력     +%d" % data.total_attack(), 13, Color(1.0, 0.72, 0.45))
+		any_stat = true
+	if data.bonus_attack_speed > 0:
+		_add_to(_enh_picker_detail_vbox,
+			"공격속도  +%d%%" % data.total_attack_speed(), 13, Color(1.0, 0.72, 0.45))
+		any_stat = true
+	if data.bonus_defense > 0:
+		_add_to(_enh_picker_detail_vbox,
+			"방어력     +%d" % data.total_defense(), 13, Color(1.0, 0.72, 0.45))
+		any_stat = true
+	if data.bonus_move_speed > 0.0:
+		_add_to(_enh_picker_detail_vbox,
+			"이동속도  +%.1f" % data.total_move_speed(), 13, Color(1.0, 0.72, 0.45))
+		any_stat = true
+	if not any_stat:
+		_add_to(_enh_picker_detail_vbox, "없음", 13, Color(0.55, 0.55, 0.55))
+
+	# 패시브/설명
+	var desc := data.passive_description if data.passive_description != "" else data.description
+	if desc != "":
+		_enh_picker_detail_vbox.add_child(HSeparator.new())
+		_add_to(_enh_picker_detail_vbox, desc, 12, Color(0.8, 0.8, 0.8))
 
 ## 유물 선택 완료 처리
 func _enh_pick(data: ArtifactData, mode: int) -> void:
