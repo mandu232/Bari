@@ -3,9 +3,12 @@ class_name Skill
 ## 스킬 베이스 클래스
 ## 새 스킬은 이 클래스를 상속하고 execute(player) 만 오버라이드하면 됩니다.
 
-@export var skill_name: String  = "스킬"
-@export var cooldown:   float   = 3.0
-@export var icon:       Texture2D = null
+@export var skill_name:     String    = "스킬"
+@export var cooldown:       float     = 3.0
+@export var icon:           Texture2D = null
+## true 이면 Player._handle_skill_input() 를 우회하고 스킬 자신이 직접 입력을 감지합니다.
+## (SkillSwordSpin 처럼 특정 키를 누르는 동안 유지해야 하는 스킬에 사용)
+var self_triggered: bool = false
 
 var _cd_remaining: float = 0.0
 

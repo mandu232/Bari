@@ -26,6 +26,8 @@ const DIRECTIONAL_ANIMS: Array[String] = [
 	"attack_sheathe",
 	"faint",
 	"block_unsheathe", "block_idle", "block_sheathe",
+	"charge_start_white", "charge_release_white",
+	"sword_spin_white", "charge_end_white",
 ]
 
 # ───────────────────────────────
@@ -42,7 +44,7 @@ const HIT_FRAMES: Dictionary = {
 # ───────────────────────────────
 #  STATE
 # ───────────────────────────────
-enum State { IDLE, MOVE, DASH, ATTACK, HIT, DEAD, BLOCK }
+enum State { IDLE, MOVE, DASH, ATTACK, HIT, DEAD, BLOCK, SPIN }
 var state: State        = State.IDLE
 var facing: Vector2     = Vector2.DOWN
 var is_invincible: bool = false
@@ -60,6 +62,9 @@ var _sheathing: bool     = false  # 검 집어넣기 재생 중
 
 # ── 막기 (우클릭 — 프로젝트 입력 설정에서 "block" 액션을 MOUSE_BUTTON_RIGHT 에 매핑)
 var _block_release_pending: bool = false  # unsheathe 도중 우클릭을 떼면 true
+
+## SkillSwordSpin 등 스킬이 스핀 루프 종료 여부를 감지하는 플래그
+var is_spinning: bool = false
 
 # ── 장착 스킬
 var equipped_skill: Skill = null
@@ -146,6 +151,9 @@ func _physics_process(delta: float) -> void:
 			velocity = Vector2.ZERO
 			move_and_slide()
 			_handle_block_hold()
+		State.SPIN:   # 스킬이 비동기로 관리 — 여기선 이동만 차단
+			velocity = Vector2.ZERO
+			move_and_slide()
 
 # ───────────────────────────────
 #  MOVE
@@ -339,6 +347,8 @@ func _set_attack_box(active: bool) -> void:
 	attack_shape.set_deferred("disabled", not active)
 
 func _on_attack_hit(body: Node2D) -> void:
+	if is_spinning:
+		return   # 스핀 데미지는 SkillSwordSpin 의 폴링으로 처리
 	if body.has_method("take_damage"):
 		body.take_damage(attack_damage, global_position)
 
@@ -351,6 +361,7 @@ func take_damage(amount: int, source_pos: Vector2 = Vector2.ZERO) -> void:
 
 	if _attack_active:
 		_cancel_attack()
+	is_spinning = false   # SkillSwordSpin 의 스핀 루프가 이 플래그로 종료를 감지
 
 	health = max(0, health - max(1, amount - defense))
 	health_changed.emit(health, max_health)
@@ -450,12 +461,32 @@ func set_synergy_bonus(atk: int, atk_spd: int, def_val: int, spd: float, hp: int
 	health_changed.emit(health, max_health)
 
 # ───────────────────────────────
+#  스킬용 공개 API  (SkillSwordSpin 등이 호출)
+# ───────────────────────────────
+## SPIN 상태 진입 — 다른 행동 캔슬 + 이동 차단
+func enter_spin() -> void:
+	if _attack_active: _cancel_attack()
+	_sheathing             = false
+	_block_release_pending = false
+	is_spinning            = true
+	state                  = State.SPIN
+
+## SPIN 상태 종료 — IDLE 복귀
+func exit_spin() -> void:
+	is_spinning = false
+	if state == State.SPIN:
+		state = State.IDLE
+		_play_anim("idle")
+
+## 방향 포함 애니메이션 재생 공개 래퍼 (스킬에서 호출)
+func play_anim(base: String) -> void:
+	_play_anim(base)
+
+# ───────────────────────────────
 #  스킬
 # ───────────────────────────────
 func _handle_skill_input() -> void:
 	if equipped_skill == null:
-		return
-	if not GameManager.current_run_active:
 		return
 	if Input.is_action_just_pressed("skill"):
 		equipped_skill.execute(self)

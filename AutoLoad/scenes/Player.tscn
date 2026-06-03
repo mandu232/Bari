@@ -19,7 +19,8 @@ script = ExtResource("1_u4nha")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=704528494]
 sprite_frames = ExtResource("1_gqo85")
-animation = &"block_sheathe_side"
+animation = &"stand_charge_loop_front"
+frame_progress = 0.19908468
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=307869615]
 position = Vector2(0, 3.5)

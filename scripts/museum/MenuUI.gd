@@ -1391,6 +1391,7 @@ func _build_dog_building(item: BuildableItem) -> void:
 const AVAILABLE_SKILL_PATHS: Array[String] = [
 	"res://scripts/skills/SkillDashAttack.gd",
 	"res://scripts/skills/SkillProjectile.gd",
+	"res://scripts/skills/SkillSwordSpin.gd",
 ]
 
 func _build_skill_content() -> void:
