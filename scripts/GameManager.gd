@@ -286,6 +286,7 @@ func add_artifact(artifact: ArtifactData) -> void:
 	var base_path := artifact.resource_path
 	var instance  := artifact.duplicate() as ArtifactData
 	instance.roll_bonuses()
+	instance.roll_equip_bonuses()
 	artifacts.append(instance)
 	artifact_added.emit(instance)
 	# 도감: 처음 획득한 유물은 발견 목록에 등록

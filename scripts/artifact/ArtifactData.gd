@@ -64,12 +64,19 @@ var bonus_defense:      int   = 0
 var bonus_move_speed:   float = 0.0
 var bonus_max_health:   int   = 0
 
-@export_group("장착 스탯 보너스")
-@export var equip_bonus_atk:      int   = 0    ## 유물 장착 시 고정 공격력 보너스
-@export var equip_bonus_atk_spd:  int   = 0    ## 유물 장착 시 고정 공격속도 보너스 (%)
-@export var equip_bonus_def:      int   = 0    ## 유물 장착 시 고정 방어력 보너스
-@export var equip_bonus_move_spd: float = 0.0  ## 유물 장착 시 고정 이동속도 보너스
-@export var equip_bonus_hp:       int   = 0    ## 유물 장착 시 고정 체력 보너스
+@export_group("장착 스탯 보너스 범위")
+@export var equip_bonus_atk_max:      int   = 0    ## 공격력 장착 보너스 상한 (획득 시 랜덤 결정)
+@export var equip_bonus_atk_spd_max:  int   = 0    ## 공격속도 장착 보너스 상한 (%)
+@export var equip_bonus_def_max:      int   = 0    ## 방어력 장착 보너스 상한
+@export var equip_bonus_move_spd_max: float = 0.0  ## 이동속도 장착 보너스 상한
+@export var equip_bonus_hp_max:       int   = 0    ## 체력 장착 보너스 상한
+
+## 획득 시 roll_equip_bonuses()로 결정되는 실제 수치
+var equip_bonus_atk:      int   = 0
+var equip_bonus_atk_spd:  int   = 0
+var equip_bonus_def:      int   = 0
+var equip_bonus_move_spd: float = 0.0
+var equip_bonus_hp:       int   = 0
 
 ## 합성 강화 레벨 (최대 MAX_ENHANCE_LEVEL)
 const MAX_ENHANCE_LEVEL: int = 5
@@ -129,3 +136,10 @@ func roll_bonuses() -> void:
 		&"def":     bonus_defense      = randi_range(1, bonus_def_max)
 		&"spd":     bonus_move_speed   = randf_range(1.0, bonus_move_spd_max)
 		&"hp":      bonus_max_health   = randi_range(1, bonus_hp_max)
+
+func roll_equip_bonuses() -> void:
+	equip_bonus_atk      = randi_range(1, equip_bonus_atk_max)           if equip_bonus_atk_max      > 0   else 0
+	equip_bonus_atk_spd  = randi_range(1, equip_bonus_atk_spd_max)       if equip_bonus_atk_spd_max  > 0   else 0
+	equip_bonus_def      = randi_range(1, equip_bonus_def_max)           if equip_bonus_def_max      > 0   else 0
+	equip_bonus_move_spd = randf_range(1.0, equip_bonus_move_spd_max)    if equip_bonus_move_spd_max > 0.0 else 0.0
+	equip_bonus_hp       = randi_range(1, equip_bonus_hp_max)             if equip_bonus_hp_max       > 0   else 0

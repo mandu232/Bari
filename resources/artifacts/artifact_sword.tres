@@ -21,4 +21,7 @@ stability_decay = 0.0
 output_decay = 0.1
 activity_decay = 0.0
 bonus_atk_max = 3
+equip_bonus_atk_max = 2
+equip_bonus_atk_spd_max = 5
+equip_bonus_move_spd_max = 1.0
 metadata/_custom_type_script = "uid://urkryft166ev"

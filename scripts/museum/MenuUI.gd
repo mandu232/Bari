@@ -39,7 +39,7 @@ const ALWAYS_DISCOVERED_BLUEPRINTS: Array[String] = [
 # ───────────────────────────────
 #  STATE
 # ───────────────────────────────
-enum Tab       { STATS, INVENTORY, ENHANCE, DOGGAM, SKILL }
+enum Tab       { STATS, INVENTORY, ENHANCE, DOGGAM }
 enum DoggamTab { ARTIFACT, ECHO, BUILDING }
 
 var _font: Font = null
@@ -162,7 +162,7 @@ func _build_layout() -> void:
 	left_vbox.add_child(HSeparator.new())
 
 	# 탭 버튼
-	var tab_labels := ["스탯", "인벤토리", "강화", "도감", "스킬"]
+	var tab_labels := ["스탯", "인벤토리", "강화", "도감"]
 	_tab_btns.clear()
 	for i in tab_labels.size():
 		var btn := Button.new()
@@ -241,12 +241,16 @@ func _switch_tab(tab: Tab) -> void:
 		Tab.INVENTORY: _build_inventory_content()
 		Tab.DOGGAM:    _build_doggam_content()
 		Tab.ENHANCE:   _build_enhance_content()
-		Tab.SKILL:     _build_skill_content()
 
 # ═══════════════════════════════
 #  ① 스탯 콘텐츠
 # ═══════════════════════════════
 func _build_stats_content() -> void:
+	# ── 피커 모드: 유물 장착 선택 화면
+	if _skill_picking:
+		_skill_show_picker()
+		return
+
 	_add_section_title(_content_vbox, "플레이어 스탯")
 
 	var player := get_tree().get_first_node_in_group("player")
@@ -263,19 +267,33 @@ func _build_stats_content() -> void:
 		"mana":    "res://AutoLoad/assets/Stats/icon_mana.png",
 	}
 
+	var equipped_art: ArtifactData = GameManager.equipped_artifact
+
+	# ── 상단: 스탯(왼쪽) + 유물 장착 버튼(오른쪽)
+	var top_hbox := HBoxContainer.new()
+	top_hbox.add_theme_constant_override("separation", 12)
+	_content_vbox.add_child(top_hbox)
+
+	# 왼쪽 스탯 VBox
+	var stat_vbox := VBoxContainer.new()
+	stat_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	stat_vbox.add_theme_constant_override("separation", 8)
+	top_hbox.add_child(stat_vbox)
+
+	# [icon_key, label, value_str, bonus_key]
 	var rows := [
-		["atk",     "공격력",   "%d"          % player.get("attack_damage")],
-		["atk_spd", "공격속도", "%d%%"        % player.get("attack_speed")],
-		["hp",      "체력",     "%d / %d"     % [player.get("health"), player.get("max_health")]],
-		["mana",    "마나",     "%.0f / %d"   % [player.get("mana"), player.get("max_mana")]],
-		["def",     "방어력",   "%d"          % player.get("defense")],
-		["spd",     "이동속도", "%.1f"        % player.get("move_speed")],
+		["atk",     "공격력",   "%d"        % player.get("attack_damage"),                       "atk"],
+		["atk_spd", "공격속도", "%d%%"      % player.get("attack_speed"),                       "atk_spd"],
+		["hp",      "체력",     "%d / %d"   % [player.get("health"), player.get("max_health")], "hp"],
+		["mana",    "마나",     "%.0f / %d" % [player.get("mana"),   player.get("max_mana")],   ""],
+		["def",     "방어력",   "%d"        % player.get("defense"),                             "def"],
+		["spd",     "이동속도", "%.1f"      % player.get("move_speed"),                          "spd"],
 	]
 
 	for row in rows:
 		var hbox := HBoxContainer.new()
 		hbox.add_theme_constant_override("separation", 12)
-		_content_vbox.add_child(hbox)
+		stat_vbox.add_child(hbox)
 
 		var tex := TextureRect.new()
 		tex.custom_minimum_size = Vector2(28, 28)
@@ -297,6 +315,123 @@ func _build_stats_content() -> void:
 		val_lbl.modulate = Color(0.85, 1.0, 0.65)
 		_set_font(val_lbl, 18)
 		hbox.add_child(val_lbl)
+
+		# 장착 보너스가 있는 스탯 옆에 (+N) 표시
+		var bonus_key: String = row[3]
+		if bonus_key != "" and equipped_art != null:
+			var bonus_txt := ""
+			match bonus_key:
+				"atk":
+					if equipped_art.equip_bonus_atk > 0:
+						bonus_txt = "(+%d)" % equipped_art.total_equip_atk()
+				"atk_spd":
+					if equipped_art.equip_bonus_atk_spd > 0:
+						bonus_txt = "(+%d%%)" % equipped_art.total_equip_atk_spd()
+				"hp":
+					if equipped_art.equip_bonus_hp > 0:
+						bonus_txt = "(+%d)" % equipped_art.total_equip_hp()
+				"def":
+					if equipped_art.equip_bonus_def > 0:
+						bonus_txt = "(+%d)" % equipped_art.total_equip_def()
+				"spd":
+					if equipped_art.equip_bonus_move_spd > 0.0:
+						bonus_txt = "(+%.1f)" % equipped_art.total_equip_move_spd()
+			if bonus_txt != "":
+				var bonus_lbl := Label.new()
+				bonus_lbl.text     = bonus_txt
+				bonus_lbl.modulate = Color(1.0, 0.82, 0.3)
+				_set_font(bonus_lbl, 14)
+				hbox.add_child(bonus_lbl)
+
+	# ── 오른쪽: 유물 장착 버튼 (클릭 → 피커 열림)
+	top_hbox.add_child(VSeparator.new())
+
+	var equip_btn := Button.new()
+	equip_btn.custom_minimum_size = Vector2(185, 0)
+	equip_btn.focus_mode          = Control.FOCUS_NONE
+	equip_btn.pressed.connect(func():
+		_skill_picking = true
+		_rebuild_skill())
+	if equipped_art != null:
+		equip_btn.modulate = Color(0.55, 0.95, 0.65)
+	top_hbox.add_child(equip_btn)
+
+	var equip_vbox := VBoxContainer.new()
+	equip_vbox.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	equip_vbox.add_theme_constant_override("separation", 5)
+	equip_vbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	equip_btn.add_child(equip_vbox)
+
+	var panel_hdr := Label.new()
+	panel_hdr.text                 = "유물 장착"
+	panel_hdr.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	panel_hdr.modulate             = Color(0.85, 0.85, 0.85)
+	panel_hdr.mouse_filter         = Control.MOUSE_FILTER_IGNORE
+	_set_font(panel_hdr, 14)
+	equip_vbox.add_child(panel_hdr)
+	equip_vbox.add_child(_make_mouse_ignore_sep())
+
+	if equipped_art != null and GameManager.equipped_skill_path != "":
+		if equipped_art.texture:
+			var img := TextureRect.new()
+			img.texture               = equipped_art.texture
+			img.custom_minimum_size   = Vector2(56, 56)
+			img.stretch_mode          = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			img.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+			img.mouse_filter          = Control.MOUSE_FILTER_IGNORE
+			equip_vbox.add_child(img)
+
+		var art_lbl := Label.new()
+		art_lbl.text                 = equipped_art.artifact_name
+		art_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		art_lbl.mouse_filter         = Control.MOUSE_FILTER_IGNORE
+		_set_font(art_lbl, 14)
+		equip_vbox.add_child(art_lbl)
+
+		var info := _get_skill_info(GameManager.equipped_skill_path)
+		var skill_lbl := Label.new()
+		skill_lbl.text                 = "스킬: %s" % info.get("name", "???")
+		skill_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		skill_lbl.modulate             = Color(0.6, 0.9, 1.0)
+		skill_lbl.mouse_filter         = Control.MOUSE_FILTER_IGNORE
+		_set_font(skill_lbl, 13)
+		equip_vbox.add_child(skill_lbl)
+
+		var has_bonus := (equipped_art.equip_bonus_atk > 0 or equipped_art.equip_bonus_atk_spd > 0
+			or equipped_art.equip_bonus_def > 0 or equipped_art.equip_bonus_move_spd > 0.0
+			or equipped_art.equip_bonus_hp > 0)
+		if has_bonus:
+			equip_vbox.add_child(_make_mouse_ignore_sep())
+			_add_to(equip_vbox, "장착 보너스", 12, Color(1.0, 0.9, 0.4))
+			if equipped_art.equip_bonus_atk      > 0:   _add_to(equip_vbox, "공격력    +%d"   % equipped_art.total_equip_atk(),       13, Color(1.0, 0.85, 0.3))
+			if equipped_art.equip_bonus_atk_spd  > 0:   _add_to(equip_vbox, "공격속도  +%d%%" % equipped_art.total_equip_atk_spd(),   13, Color(1.0, 0.85, 0.3))
+			if equipped_art.equip_bonus_hp       > 0:   _add_to(equip_vbox, "체력      +%d"   % equipped_art.total_equip_hp(),        13, Color(1.0, 0.85, 0.3))
+			if equipped_art.equip_bonus_def      > 0:   _add_to(equip_vbox, "방어력    +%d"   % equipped_art.total_equip_def(),       13, Color(1.0, 0.85, 0.3))
+			if equipped_art.equip_bonus_move_spd > 0.0: _add_to(equip_vbox, "이동속도  +%.1f" % equipped_art.total_equip_move_spd(),  13, Color(1.0, 0.85, 0.3))
+
+		var click_lbl := Label.new()
+		click_lbl.text                 = "클릭하여 변경"
+		click_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		click_lbl.modulate             = Color(0.42, 0.42, 0.42)
+		click_lbl.mouse_filter         = Control.MOUSE_FILTER_IGNORE
+		_set_font(click_lbl, 11)
+		equip_vbox.add_child(click_lbl)
+	else:
+		var empty_lbl := Label.new()
+		empty_lbl.text                 = "장착 없음"
+		empty_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		empty_lbl.modulate             = Color(0.4, 0.4, 0.4)
+		empty_lbl.mouse_filter         = Control.MOUSE_FILTER_IGNORE
+		_set_font(empty_lbl, 14)
+		equip_vbox.add_child(empty_lbl)
+
+		var hint_lbl := Label.new()
+		hint_lbl.text                 = "클릭하여 선택"
+		hint_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		hint_lbl.modulate             = Color(0.45, 0.45, 0.45)
+		hint_lbl.mouse_filter         = Control.MOUSE_FILTER_IGNORE
+		_set_font(hint_lbl, 13)
+		equip_vbox.add_child(hint_lbl)
 
 	# ── 시대 시너지 섹션 (버튼 + 우측 상세)
 	_content_vbox.add_child(HSeparator.new())
@@ -1413,17 +1548,17 @@ func _build_dog_artifact(data: ArtifactData) -> void:
 		_add_to(_dog_detail_vbox, "── 스킬 ──", 13, Color(0.6, 0.9, 1.0))
 		_add_to(_dog_detail_vbox, _resolve_skill_name(data.skill_script), 15, Color(0.6, 0.9, 1.0))
 
-	# ── 2. 장착 보너스
-	var has_equip := (data.equip_bonus_atk > 0 or data.equip_bonus_atk_spd > 0 or
-			data.equip_bonus_def > 0 or data.equip_bonus_move_spd > 0.0 or data.equip_bonus_hp > 0)
+	# ── 2. 장착 보너스 (랜덤 범위 표시 — 도감은 기본 리소스 기준)
+	var has_equip := (data.equip_bonus_atk_max > 0 or data.equip_bonus_atk_spd_max > 0 or
+			data.equip_bonus_def_max > 0 or data.equip_bonus_move_spd_max > 0.0 or data.equip_bonus_hp_max > 0)
 	if has_equip:
 		_add_padded_sep(_dog_detail_vbox)
-		_add_to(_dog_detail_vbox, "── 장착 보너스 ──", 13, Color(1.0, 0.9, 0.4))
-		if data.equip_bonus_atk      > 0:   _add_to(_dog_detail_vbox, "공격력     +%d"  % data.equip_bonus_atk,      14, Color(1.0, 0.85, 0.3))
-		if data.equip_bonus_atk_spd  > 0:   _add_to(_dog_detail_vbox, "공격속도  +%d%%" % data.equip_bonus_atk_spd,  14, Color(1.0, 0.85, 0.3))
-		if data.equip_bonus_hp       > 0:   _add_to(_dog_detail_vbox, "체력       +%d"  % data.equip_bonus_hp,       14, Color(1.0, 0.85, 0.3))
-		if data.equip_bonus_def      > 0:   _add_to(_dog_detail_vbox, "방어력     +%d"  % data.equip_bonus_def,      14, Color(1.0, 0.85, 0.3))
-		if data.equip_bonus_move_spd > 0.0: _add_to(_dog_detail_vbox, "이동속도  +%.1f" % data.equip_bonus_move_spd, 14, Color(1.0, 0.85, 0.3))
+		_add_to(_dog_detail_vbox, "── 장착 보너스 (최대) ──", 13, Color(1.0, 0.9, 0.4))
+		if data.equip_bonus_atk_max      > 0:   _add_to(_dog_detail_vbox, "공격력     최대 +%d"   % data.equip_bonus_atk_max,      14, Color(1.0, 0.85, 0.3))
+		if data.equip_bonus_atk_spd_max  > 0:   _add_to(_dog_detail_vbox, "공격속도   최대 +%d%%" % data.equip_bonus_atk_spd_max,  14, Color(1.0, 0.85, 0.3))
+		if data.equip_bonus_hp_max       > 0:   _add_to(_dog_detail_vbox, "체력       최대 +%d"   % data.equip_bonus_hp_max,       14, Color(1.0, 0.85, 0.3))
+		if data.equip_bonus_def_max      > 0:   _add_to(_dog_detail_vbox, "방어력     최대 +%d"   % data.equip_bonus_def_max,      14, Color(1.0, 0.85, 0.3))
+		if data.equip_bonus_move_spd_max > 0.0: _add_to(_dog_detail_vbox, "이동속도   최대 +%.1f" % data.equip_bonus_move_spd_max, 14, Color(1.0, 0.85, 0.3))
 
 	# ── 2. 전시 보너스 (랜덤 범위)
 	var has_exhibit := (data.bonus_atk_max > 0 or data.bonus_atk_spd_max > 0 or
@@ -1490,163 +1625,12 @@ func _build_dog_building(item: BuildableItem) -> void:
 	if item.power_output > 0:
 		_add_to(_dog_detail_vbox, "생산 전력: +%d" % item.power_output,     13, Color(1.0,  0.95, 0.4))
 
-# ═══════════════════════════════
-#  ⑤ 스킬 콘텐츠
-# ═══════════════════════════════
-func _build_skill_content() -> void:
-	_add_section_title(_content_vbox, "스킬 장착")
-	if _skill_picking:
-		_skill_show_picker()
-	else:
-		_skill_show_main()
-
-## 스킬 탭 내용 재빌드 (_switch_tab 없이 현재 모드 유지)
+## 스탯 탭 내용 재빌드 (피커 모드 포함)
 func _rebuild_skill() -> void:
 	for child in _content_vbox.get_children():
 		_content_vbox.remove_child(child)
 		child.queue_free()
-	_build_skill_content()
-
-# ── 메인 화면: 중앙 큰 박스 + 해제 버튼
-func _skill_show_main() -> void:
-	var equipped_path := GameManager.equipped_skill_path
-	var equipped_art  := GameManager.equipped_artifact
-
-	# 중앙 배치 래퍼
-	var center := CenterContainer.new()
-	center.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	center.size_flags_vertical   = Control.SIZE_EXPAND_FILL
-	_content_vbox.add_child(center)
-
-	# 큰 슬롯 버튼
-	var slot := Button.new()
-	slot.custom_minimum_size = Vector2(280, 220)
-	slot.focus_mode          = Control.FOCUS_NONE
-	slot.pressed.connect(func():
-		_skill_picking = true
-		_rebuild_skill())
-	if equipped_art != null:
-		slot.modulate = Color(0.45, 1.0, 0.6)
-	center.add_child(slot)
-
-	var vbox := VBoxContainer.new()
-	vbox.alignment   = BoxContainer.ALIGNMENT_CENTER
-	vbox.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	vbox.add_theme_constant_override("separation", 6)
-	vbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	slot.add_child(vbox)
-
-	if equipped_art != null and equipped_path != "":
-		# ── 장착 중인 유물 표시
-		if equipped_art.texture:
-			var img := TextureRect.new()
-			img.texture               = equipped_art.texture
-			img.custom_minimum_size   = Vector2(76, 76)
-			img.stretch_mode          = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-			img.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-			img.mouse_filter          = Control.MOUSE_FILTER_IGNORE
-			vbox.add_child(img)
-
-		var art_lbl := Label.new()
-		art_lbl.text                = equipped_art.artifact_name
-		art_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		art_lbl.modulate             = Color(0.78, 0.78, 0.78)
-		art_lbl.mouse_filter         = Control.MOUSE_FILTER_IGNORE
-		_set_font(art_lbl, 13)
-		vbox.add_child(art_lbl)
-
-		var info := _get_skill_info(equipped_path)
-		var skill_lbl := Label.new()
-		skill_lbl.text                = info.get("name", "???")
-		skill_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		skill_lbl.mouse_filter         = Control.MOUSE_FILTER_IGNORE
-		_set_font(skill_lbl, 21)
-		vbox.add_child(skill_lbl)
-
-		var cd_lbl := Label.new()
-		cd_lbl.text                = "쿨타임  %.1f초" % float(info.get("cooldown", 0.0))
-		cd_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		cd_lbl.modulate             = Color(0.65, 0.65, 0.65)
-		cd_lbl.mouse_filter         = Control.MOUSE_FILTER_IGNORE
-		_set_font(cd_lbl, 13)
-		vbox.add_child(cd_lbl)
-
-		var mc2: int   = info.get("mana_cost",  0)
-		var md2: float = info.get("mana_drain", 0.0)
-		if mc2 > 0 or md2 > 0.0:
-			var mt := ""
-			if mc2 > 0:   mt += "소모 %d" % mc2
-			if md2 > 0.0: mt += ("  유지 %.0f/초" % md2) if mc2 > 0 else "유지 %.0f/초" % md2
-			var mana_lbl := Label.new()
-			mana_lbl.text                = "마나  %s" % mt
-			mana_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-			mana_lbl.modulate             = Color(0.5, 0.7, 1.0)
-			mana_lbl.mouse_filter         = Control.MOUSE_FILTER_IGNORE
-			_set_font(mana_lbl, 12)
-			vbox.add_child(mana_lbl)
-
-		var bonus_parts: Array[String] = []
-		if equipped_art.equip_bonus_atk      > 0: bonus_parts.append("공격 +%d"       % equipped_art.total_equip_atk())
-		if equipped_art.equip_bonus_atk_spd  > 0: bonus_parts.append("공격속도 +%d%%" % equipped_art.total_equip_atk_spd())
-		if equipped_art.equip_bonus_def      > 0: bonus_parts.append("방어 +%d"       % equipped_art.total_equip_def())
-		if equipped_art.equip_bonus_move_spd > 0: bonus_parts.append("이동 +%.1f"     % equipped_art.total_equip_move_spd())
-		if equipped_art.equip_bonus_hp       > 0: bonus_parts.append("체력 +%d"       % equipped_art.total_equip_hp())
-		if not bonus_parts.is_empty():
-			var bonus_lbl := Label.new()
-			bonus_lbl.text                = "  ".join(bonus_parts)
-			bonus_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-			bonus_lbl.modulate             = Color(1.0, 0.85, 0.3)
-			bonus_lbl.mouse_filter         = Control.MOUSE_FILTER_IGNORE
-			_set_font(bonus_lbl, 12)
-			vbox.add_child(bonus_lbl)
-
-		var hint := Label.new()
-		hint.text                = "클릭하여 변경"
-		hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		hint.modulate             = Color(0.45, 0.45, 0.45)
-		hint.mouse_filter         = Control.MOUSE_FILTER_IGNORE
-		_set_font(hint, 12)
-		vbox.add_child(hint)
-	else:
-		# ── 빈 슬롯
-		var icon_ph := Label.new()
-		icon_ph.text                = "?"
-		icon_ph.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		icon_ph.modulate             = Color(0.35, 0.35, 0.35)
-		icon_ph.mouse_filter         = Control.MOUSE_FILTER_IGNORE
-		_set_font(icon_ph, 48)
-		vbox.add_child(icon_ph)
-
-		var ph := Label.new()
-		ph.text                = "유물을 선택하세요"
-		ph.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		ph.modulate             = Color(0.55, 0.55, 0.55)
-		ph.mouse_filter         = Control.MOUSE_FILTER_IGNORE
-		_set_font(ph, 16)
-		vbox.add_child(ph)
-
-		var hint := Label.new()
-		hint.text                = "클릭하여 선택"
-		hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		hint.modulate             = Color(0.38, 0.38, 0.38)
-		hint.mouse_filter         = Control.MOUSE_FILTER_IGNORE
-		_set_font(hint, 13)
-		vbox.add_child(hint)
-
-	# 해제 버튼 (장착 중일 때만)
-	if equipped_art != null:
-		var btn_row := HBoxContainer.new()
-		btn_row.alignment = BoxContainer.ALIGNMENT_CENTER
-		_content_vbox.add_child(btn_row)
-
-		var unequip_btn := Button.new()
-		unequip_btn.text             = "해제"
-		unequip_btn.custom_minimum_size = Vector2(120, 38)
-		unequip_btn.focus_mode       = Control.FOCUS_NONE
-		unequip_btn.modulate         = Color(1.0, 0.5, 0.5)
-		unequip_btn.pressed.connect(func(): _on_skill_card_pressed(equipped_art, equipped_path))
-		_set_font(unequip_btn, 15)
-		btn_row.add_child(unequip_btn)
+	_build_stats_content()
 
 # ── 피커 화면: 뒤로가기 | 왼쪽 카드 리스트 | 오른쪽 상세 + 장착 버튼
 func _skill_show_picker() -> void:
@@ -1794,6 +1778,21 @@ func _make_skill_picker_card(art: ArtifactData, is_equipped: bool) -> Control:
 	_set_font(skill_lbl, 16)
 	info_vbox.add_child(skill_lbl)
 
+	# 장착 스탯 보너스 요약
+	var bonus_parts: Array[String] = []
+	if art.equip_bonus_atk      > 0:   bonus_parts.append("공격+%d"      % art.total_equip_atk())
+	if art.equip_bonus_atk_spd  > 0:   bonus_parts.append("공격속도+%d%%" % art.total_equip_atk_spd())
+	if art.equip_bonus_hp       > 0:   bonus_parts.append("체력+%d"      % art.total_equip_hp())
+	if art.equip_bonus_def      > 0:   bonus_parts.append("방어+%d"      % art.total_equip_def())
+	if art.equip_bonus_move_spd > 0.0: bonus_parts.append("이동+%.1f"    % art.total_equip_move_spd())
+	if not bonus_parts.is_empty():
+		var bonus_lbl := Label.new()
+		bonus_lbl.text         = "  ".join(bonus_parts)
+		bonus_lbl.modulate     = Color(1.0, 0.82, 0.3)
+		bonus_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_set_font(bonus_lbl, 11)
+		info_vbox.add_child(bonus_lbl)
+
 	if is_equipped:
 		var eq_lbl := Label.new()
 		eq_lbl.text        = "장착 중"
@@ -1817,8 +1816,11 @@ func _on_skill_picker_card_pressed(pressed_btn: Button, art: ArtifactData) -> vo
 	_rebuild_skill_picker_detail(art)
 
 	if _skill_picker_equip_btn != null:
+		var is_eq := (art.skill_script != null and
+			GameManager.equipped_skill_path == art.skill_script.resource_path)
 		_skill_picker_equip_btn.disabled = false
-		_skill_picker_equip_btn.modulate = Color(0.45, 1.0, 0.6)
+		_skill_picker_equip_btn.text     = "해제" if is_eq else "장착"
+		_skill_picker_equip_btn.modulate = Color(1.0, 0.5, 0.5) if is_eq else Color(0.45, 1.0, 0.6)
 
 ## 우측 상세 패널 갱신
 func _rebuild_skill_picker_detail(art: ArtifactData) -> void:
@@ -1925,7 +1927,8 @@ func _on_skill_card_pressed(art: ArtifactData, skill_path: String) -> void:
 				player.call("equip_skill", script.new())
 			if player.has_method("apply_equip_bonus"):
 				player.call("apply_equip_bonus", art)
-	_switch_tab(Tab.SKILL)
+	_skill_picking = false
+	_switch_tab(Tab.STATS)
 
 # ───────────────────────────────
 #  헬퍼
