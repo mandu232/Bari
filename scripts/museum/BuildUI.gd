@@ -80,7 +80,8 @@ func _build_layout() -> void:
 	header.add_child(hint)
 
 	var close_btn := Button.new()
-	close_btn.text = "✕"
+	close_btn.text       = "✕"
+	close_btn.focus_mode = Control.FOCUS_NONE
 	_apply_font(close_btn, 16)
 	close_btn.pressed.connect(_on_cancel)
 	header.add_child(close_btn)
@@ -223,6 +224,7 @@ func _populate(items: Array[BuildableItem]) -> void:
 func _make_card(item: BuildableItem) -> Control:
 	var btn := Button.new()
 	btn.custom_minimum_size = Vector2(110, 110)
+	btn.focus_mode          = Control.FOCUS_NONE
 	btn.pressed.connect(func(): _on_item_pressed(item))
 	btn.mouse_entered.connect(func(): _show_tooltip(item))
 	btn.mouse_exited.connect(_hide_tooltip)

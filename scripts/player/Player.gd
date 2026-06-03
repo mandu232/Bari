@@ -24,6 +24,8 @@ const DIRECTIONAL_ANIMS: Array[String] = [
 	"idle", "walk", "dash",
 	"attack_1", "attack_2", "attack_3", "attack_4",
 	"attack_sheathe",
+	"faint",
+	"block_unsheathe", "block_idle", "block_sheathe",
 ]
 
 # ───────────────────────────────
@@ -40,7 +42,7 @@ const HIT_FRAMES: Dictionary = {
 # ───────────────────────────────
 #  STATE
 # ───────────────────────────────
-enum State { IDLE, MOVE, DASH, ATTACK, HIT, DEAD }
+enum State { IDLE, MOVE, DASH, ATTACK, HIT, DEAD, BLOCK }
 var state: State        = State.IDLE
 var facing: Vector2     = Vector2.DOWN
 var is_invincible: bool = false
@@ -55,6 +57,9 @@ var _combo_timer: float  = 0.0
 var _attack_active: bool = false
 var _combo_queued: bool  = false
 var _sheathing: bool     = false  # 검 집어넣기 재생 중
+
+# ── 막기 (우클릭 — 프로젝트 입력 설정에서 "block" 액션을 MOUSE_BUTTON_RIGHT 에 매핑)
+var _block_release_pending: bool = false  # unsheathe 도중 우클릭을 떼면 true
 
 # ───────────────────────────────
 #  SIGNALS
@@ -98,9 +103,16 @@ func _physics_process(delta: float) -> void:
 
 	match state:
 		State.IDLE, State.MOVE:
-			_handle_move(delta)
-			_handle_attack_input()
-			_handle_dash_input()
+			_handle_block_input()
+			# 막기 시작으로 state 가 BLOCK 으로 바뀌었으면 이동·공격 입력 무시
+			# (같은 프레임에 _handle_move() 가 실행되면 state=IDLE + play("idle") 로 덮어쓰기 때문)
+			if state == State.BLOCK:
+				velocity = Vector2.ZERO
+				move_and_slide()
+			else:
+				_handle_move(delta)
+				_handle_attack_input()
+				_handle_dash_input()
 		State.DASH:
 			_process_dash(delta)
 		State.ATTACK:
@@ -112,6 +124,10 @@ func _physics_process(delta: float) -> void:
 			move_and_slide()
 		State.DEAD:
 			pass
+		State.BLOCK:
+			velocity = Vector2.ZERO
+			move_and_slide()
+			_handle_block_hold()
 
 # ───────────────────────────────
 #  MOVE
@@ -166,6 +182,36 @@ func _process_dash(delta: float) -> void:
 		dash_particles.emitting = false
 
 	move_and_slide()
+
+# ───────────────────────────────
+#  BLOCK — 막기 (우클릭)
+#  흐름: block_unsheathe → block_idle (루프) → block_sheathe → IDLE
+# ───────────────────────────────
+func _handle_block_input() -> void:
+	if Input.is_action_just_pressed("block"):
+		_start_block()
+
+## 막기 유지 중 매 프레임 — 우클릭을 떼는 타이밍 감지
+func _handle_block_hold() -> void:
+	if not Input.is_action_pressed("block"):
+		var anim := sprite.animation
+		if anim.begins_with("block_idle"):
+			# block_idle 중 떼면 즉시 sheathe 전환
+			_play_anim("block_sheathe")
+		elif not anim.begins_with("block_sheathe"):
+			# block_unsheathe 재생 중 — 끝난 뒤 sheathe 로 넘어가도록 예약
+			# (이미 block_sheathe 중이면 중복 예약 방지)
+			_block_release_pending = true
+
+func _start_block() -> void:
+	if _attack_active:
+		_cancel_attack()
+	# 공격과 동일하게 마우스 방향 기준으로 facing 갱신 후 애니메이션 재생
+	facing                 = _get_mouse_facing()
+	state                  = State.BLOCK
+	_block_release_pending = false
+	_sheathing             = false
+	_play_anim("block_unsheathe")
 
 # ───────────────────────────────
 #  ATTACK
@@ -252,6 +298,23 @@ func _on_sprite_animation_finished() -> void:
 	if _sheathing and sprite.animation.begins_with("attack_sheathe"):
 		_sheathing = false
 		_play_anim("idle")
+	# 막기 block_unsheathe 끝 → idle 유지 or 즉시 sheathe (도중에 떼면)
+	if state == State.BLOCK and sprite.animation.begins_with("block_unsheathe"):
+		if _block_release_pending:
+			_block_release_pending = false
+			_play_anim("block_sheathe")
+		else:
+			_play_anim("block_idle")
+	# 막기 idle 끝 — 비루프 애니 대응: 아직 holding 중이면 다시 재생
+	if state == State.BLOCK and sprite.animation.begins_with("block_idle"):
+		if Input.is_action_pressed("block"):
+			_play_anim("block_idle")  # 루프 애니면 이미 자동 반복되므로 무해
+		else:
+			_play_anim("block_sheathe")
+	# 막기 sheathe 끝 → IDLE 복귀
+	if state == State.BLOCK and sprite.animation.begins_with("block_sheathe"):
+		state = State.IDLE
+		_play_anim("idle")
 
 func _set_attack_box(active: bool) -> void:
 	attack_box.monitoring      = active
@@ -292,7 +355,7 @@ func take_damage(amount: int, source_pos: Vector2 = Vector2.ZERO) -> void:
 func _die() -> void:
 	state = State.DEAD
 	player_died.emit()
-	sprite.play("death")
+	_play_anim("faint")
 
 # ───────────────────────────────
 #  HIT BOX
@@ -325,23 +388,23 @@ func _flash() -> void:
 #  플레이어 → 마우스 커서의 월드 좌표 방향 반환
 # ───────────────────────────────
 func apply_artifact_bonus(data: ArtifactData) -> void:
-	attack_damage += data.bonus_attack
-	attack_speed  += data.bonus_attack_speed
-	defense       += data.bonus_defense
-	move_speed    += data.bonus_move_speed
-	max_health    += data.bonus_max_health
-	health         = min(health + data.bonus_max_health, max_health)
-	if data.bonus_max_health != 0:
+	attack_damage += data.total_attack()
+	attack_speed  += data.total_attack_speed()
+	defense       += data.total_defense()
+	move_speed    += data.total_move_speed()
+	max_health    += data.total_max_health()
+	health         = min(health + data.total_max_health(), max_health)
+	if data.total_max_health() != 0:
 		health_changed.emit(health, max_health)
 
 func remove_artifact_bonus(data: ArtifactData) -> void:
-	attack_damage  = maxi(attack_damage - data.bonus_attack, 1)
-	attack_speed   = maxi(attack_speed  - data.bonus_attack_speed, 0)
-	defense        = maxi(defense       - data.bonus_defense, 0)
-	move_speed     = maxf(move_speed    - data.bonus_move_speed, 40.0)
-	max_health     = maxi(max_health    - data.bonus_max_health, 1)
+	attack_damage  = maxi(attack_damage - data.total_attack(),       1)
+	attack_speed   = maxi(attack_speed  - data.total_attack_speed(), 0)
+	defense        = maxi(defense       - data.total_defense(),      0)
+	move_speed     = maxf(move_speed    - data.total_move_speed(),   40.0)
+	max_health     = maxi(max_health    - data.total_max_health(),   1)
 	health         = mini(health, max_health)
-	if data.bonus_max_health != 0:
+	if data.total_max_health() != 0:
 		health_changed.emit(health, max_health)
 
 func _get_mouse_facing() -> Vector2:

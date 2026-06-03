@@ -70,6 +70,9 @@ func _ready() -> void:
 	
 	var artifact = load("res://resources/artifacts/artifact_sword.tres")
 	add_artifact(artifact)
+	add_artifact(artifact)
+	add_artifact(artifact)
+	add_artifact(artifact)
 	
 	var handaxe = load("res://resources/artifacts/artifact_handaxe.tres")
 	add_artifact(handaxe)

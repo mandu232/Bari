@@ -61,6 +61,26 @@ var bonus_defense:      int   = 0
 var bonus_move_speed:   float = 0.0
 var bonus_max_health:   int   = 0
 
+## 합성 강화 레벨 (최대 MAX_ENHANCE_LEVEL)
+const MAX_ENHANCE_LEVEL: int = 5
+var enhance_level: int = 0
+
+# ── 강화 레벨 포함 실제 보너스 (플레이어 적용 시 사용)
+func total_attack() -> int:
+	return bonus_attack + (enhance_level if bonus_attack > 0 else 0)
+
+func total_attack_speed() -> int:
+	return bonus_attack_speed + (enhance_level if bonus_attack_speed > 0 else 0)
+
+func total_defense() -> int:
+	return bonus_defense + (enhance_level if bonus_defense > 0 else 0)
+
+func total_move_speed() -> float:
+	return bonus_move_speed + (float(enhance_level) * 2.0 if bonus_move_speed > 0.0 else 0.0)
+
+func total_max_health() -> int:
+	return bonus_max_health + (enhance_level if bonus_max_health > 0 else 0)
+
 func roll_bonuses() -> void:
 	bonus_attack       = 0
 	bonus_attack_speed = 0
