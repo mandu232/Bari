@@ -39,7 +39,7 @@ const ALWAYS_DISCOVERED_BLUEPRINTS: Array[String] = [
 # ───────────────────────────────
 #  STATE
 # ───────────────────────────────
-enum Tab       { STATS, INVENTORY, ENHANCE, DOGGAM }
+enum Tab       { STATS, INVENTORY, ENHANCE, DOGGAM, SKILL }
 enum DoggamTab { ARTIFACT, ECHO, BUILDING }
 
 var _font: Font = null
@@ -155,7 +155,7 @@ func _build_layout() -> void:
 	left_vbox.add_child(HSeparator.new())
 
 	# 탭 버튼
-	var tab_labels := ["스탯", "인벤토리", "강화", "도감"]
+	var tab_labels := ["스탯", "인벤토리", "강화", "도감", "스킬"]
 	_tab_btns.clear()
 	for i in tab_labels.size():
 		var btn := Button.new()
@@ -229,6 +229,7 @@ func _switch_tab(tab: Tab) -> void:
 		Tab.INVENTORY: _build_inventory_content()
 		Tab.DOGGAM:    _build_doggam_content()
 		Tab.ENHANCE:   _build_enhance_content()
+		Tab.SKILL:     _build_skill_content()
 
 # ═══════════════════════════════
 #  ① 스탯 콘텐츠
@@ -1383,6 +1384,144 @@ func _build_dog_building(item: BuildableItem) -> void:
 		_add_to(_dog_detail_vbox, "소모 전력: %d" % item.power_consumption, 13, Color(0.55, 0.85, 1.0))
 	if item.power_output > 0:
 		_add_to(_dog_detail_vbox, "생산 전력: +%d" % item.power_output,     13, Color(1.0,  0.95, 0.4))
+
+# ═══════════════════════════════
+#  ⑤ 스킬 콘텐츠
+# ═══════════════════════════════
+const AVAILABLE_SKILL_PATHS: Array[String] = [
+	"res://scripts/skills/SkillDashAttack.gd",
+	"res://scripts/skills/SkillProjectile.gd",
+]
+
+func _build_skill_content() -> void:
+	_add_section_title(_content_vbox, "스킬 장착")
+
+	# 현재 장착 스킬 표시
+	var equipped := GameManager.equipped_skill_path
+	var cur_lbl  := Label.new()
+	if equipped == "":
+		cur_lbl.text    = "현재 장착: 없음"
+		cur_lbl.modulate = Color(0.55, 0.55, 0.55)
+	else:
+		var info := _get_skill_info(equipped)
+		cur_lbl.text    = "현재 장착: %s" % info.get("name", "???")
+		cur_lbl.modulate = Color(0.45, 1.0, 0.6)
+	_set_font(cur_lbl, 15)
+	_content_vbox.add_child(cur_lbl)
+	_content_vbox.add_child(HSeparator.new())
+
+	# 스킬 카드 목록
+	var scroll := ScrollContainer.new()
+	scroll.size_flags_vertical    = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_content_vbox.add_child(scroll)
+
+	var list := VBoxContainer.new()
+	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	list.add_theme_constant_override("separation", 10)
+	scroll.add_child(list)
+
+	for path in AVAILABLE_SKILL_PATHS:
+		var info := _get_skill_info(path)
+		if info.is_empty():
+			continue
+		list.add_child(_make_skill_card(info, path, path == equipped))
+
+## 스킬 스크립트를 임시 인스턴스로 메타데이터 읽기
+func _get_skill_info(path: String) -> Dictionary:
+	var script := load(path) as GDScript
+	if script == null:
+		return {}
+	var inst: Node = script.new()
+	var info := {
+		"name":     str(inst.get("skill_name")) if inst.get("skill_name") != null else "???",
+		"cooldown": float(inst.get("cooldown"))  if inst.get("cooldown")  != null else 0.0,
+		"icon":     inst.get("icon"),
+		"path":     path,
+	}
+	inst.free()
+	return info
+
+## 스킬 한 장의 카드 버튼 생성
+func _make_skill_card(info: Dictionary, path: String, is_equipped: bool) -> Control:
+	var btn := Button.new()
+	btn.custom_minimum_size = Vector2(0, 80)
+	btn.focus_mode          = Control.FOCUS_NONE
+	if is_equipped:
+		btn.modulate = Color(0.45, 1.0, 0.6)
+
+	var hbox := HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 12)
+	hbox.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	hbox.add_theme_constant_override("margin_left",  10)
+	hbox.add_theme_constant_override("margin_right", 10)
+	hbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	btn.add_child(hbox)
+
+	# 아이콘
+	var icon_tex: Texture2D = info.get("icon")
+	var icon_rect := TextureRect.new()
+	icon_rect.custom_minimum_size = Vector2(56, 56)
+	icon_rect.stretch_mode        = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon_rect.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	icon_rect.mouse_filter        = Control.MOUSE_FILTER_IGNORE
+	if icon_tex:
+		icon_rect.texture = icon_tex
+	hbox.add_child(icon_rect)
+
+	# 이름 + 쿨다운
+	var info_vbox := VBoxContainer.new()
+	info_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	info_vbox.size_flags_vertical   = Control.SIZE_SHRINK_CENTER
+	info_vbox.mouse_filter          = Control.MOUSE_FILTER_IGNORE
+	hbox.add_child(info_vbox)
+
+	var name_lbl := Label.new()
+	name_lbl.text        = info.get("name", "???")
+	name_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_set_font(name_lbl, 17)
+	info_vbox.add_child(name_lbl)
+
+	var cd_lbl := Label.new()
+	cd_lbl.text        = "쿨다운: %.1f초" % float(info.get("cooldown", 0.0))
+	cd_lbl.modulate    = Color(0.72, 0.72, 0.72)
+	cd_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_set_font(cd_lbl, 13)
+	info_vbox.add_child(cd_lbl)
+
+	# 장착 상태 라벨
+	var eq_lbl := Label.new()
+	eq_lbl.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	eq_lbl.mouse_filter        = Control.MOUSE_FILTER_IGNORE
+	if is_equipped:
+		eq_lbl.text    = "장착 중"
+		eq_lbl.modulate = Color(0.45, 1.0, 0.6)
+	else:
+		eq_lbl.text    = "장착"
+		eq_lbl.modulate = Color(0.75, 0.75, 0.75)
+	_set_font(eq_lbl, 14)
+	hbox.add_child(eq_lbl)
+
+	btn.pressed.connect(func(): _on_skill_card_pressed(path))
+	return btn
+
+## 스킬 카드 클릭 → 장착 처리
+func _on_skill_card_pressed(path: String) -> void:
+	if GameManager.equipped_skill_path == path:
+		# 이미 장착된 스킬 클릭 → 해제
+		GameManager.equipped_skill_path = ""
+		var player := get_tree().get_first_node_in_group("player")
+		if is_instance_valid(player) and player.has_method("unequip_skill"):
+			player.call("unequip_skill")
+	else:
+		GameManager.equipped_skill_path = path
+		var script := load(path) as GDScript
+		if script:
+			var player := get_tree().get_first_node_in_group("player")
+			if is_instance_valid(player) and player.has_method("equip_skill"):
+				player.call("equip_skill", script.new())
+	# UI 갱신
+	_switch_tab(Tab.SKILL)
 
 # ───────────────────────────────
 #  헬퍼

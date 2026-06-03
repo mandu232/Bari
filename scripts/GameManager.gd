@@ -100,6 +100,9 @@ var active_synergies:      Dictionary = {}
 ## 전시 중인 유물의 시대별 카운트 (era_int → count)
 var exhibited_era_counts:  Dictionary = {}
 
+## 장착된 스킬 스크립트 경로 ("" = 없음)
+var equipped_skill_path: String = ""
+
 # ───────────────────────────────
 #  READY
 # ───────────────────────────────

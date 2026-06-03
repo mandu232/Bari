@@ -61,6 +61,9 @@ var _sheathing: bool     = false  # 검 집어넣기 재생 중
 # ── 막기 (우클릭 — 프로젝트 입력 설정에서 "block" 액션을 MOUSE_BUTTON_RIGHT 에 매핑)
 var _block_release_pending: bool = false  # unsheathe 도중 우클릭을 떼면 true
 
+# ── 장착 스킬
+var equipped_skill: Skill = null
+
 # ── 시너지 보너스 (set_synergy_bonus 로 일괄 교체됨)
 var _synergy_atk:     int   = 0
 var _synergy_atk_spd: int   = 0
@@ -99,6 +102,12 @@ func _ready() -> void:
 	sprite.frame_changed.connect(_on_frame_changed)
 	sprite.animation_finished.connect(_on_sprite_animation_finished)
 
+	# 저장된 스킬이 있으면 자동 장착
+	if GameManager.equipped_skill_path != "":
+		var script := load(GameManager.equipped_skill_path) as GDScript
+		if script:
+			equip_skill(script.new() as Skill)
+
 # ───────────────────────────────
 #  PROCESS
 # ───────────────────────────────
@@ -120,10 +129,12 @@ func _physics_process(delta: float) -> void:
 				_handle_move(delta)
 				_handle_attack_input()
 				_handle_dash_input()
+				_handle_skill_input()
 		State.DASH:
 			_process_dash(delta)
 		State.ATTACK:
 			_handle_attack_input()
+			_handle_skill_input()
 			velocity = Vector2.ZERO
 			move_and_slide()
 		State.HIT:
@@ -437,6 +448,31 @@ func set_synergy_bonus(atk: int, atk_spd: int, def_val: int, spd: float, hp: int
 	if _synergy_hp > 0:
 		health = min(health + _synergy_hp, max_health)
 	health_changed.emit(health, max_health)
+
+# ───────────────────────────────
+#  스킬
+# ───────────────────────────────
+func _handle_skill_input() -> void:
+	if equipped_skill == null:
+		return
+	if not GameManager.current_run_active:
+		return
+	if Input.is_action_just_pressed("skill"):
+		equipped_skill.execute(self)
+
+## 스킬 장착 — 기존 스킬은 제거 후 새 스킬을 자식 노드로 추가
+func equip_skill(skill: Skill) -> void:
+	if equipped_skill != null:
+		equipped_skill.queue_free()
+	equipped_skill = skill
+	if skill != null:
+		add_child(skill)
+
+## 스킬 해제
+func unequip_skill() -> void:
+	if equipped_skill != null:
+		equipped_skill.queue_free()
+		equipped_skill = null
 
 func _get_mouse_facing() -> Vector2:
 	var mouse_world := get_global_mouse_position()
