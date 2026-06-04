@@ -33,6 +33,7 @@ const DIRECTIONAL_ANIMS: Array[String] = [
 	"block_unsheathe", "block_idle", "block_sheathe",
 	"charge_start_white", "charge_release_white",
 	"sword_spin_white", "charge_end_white",
+	"throw",
 ]
 
 # ───────────────────────────────
@@ -49,7 +50,7 @@ const HIT_FRAMES: Dictionary = {
 # ───────────────────────────────
 #  STATE
 # ───────────────────────────────
-enum State { IDLE, MOVE, DASH, ATTACK, HIT, DEAD, BLOCK, SPIN }
+enum State { IDLE, MOVE, DASH, ATTACK, HIT, DEAD, BLOCK, SPIN, SKILL }
 var state: State        = State.IDLE
 var facing: Vector2     = Vector2.DOWN
 var is_invincible: bool = false
@@ -182,6 +183,9 @@ func _physics_process(delta: float) -> void:
 					velocity = velocity.move_toward(Vector2.ZERO, move_speed * 12 * delta)
 			else:
 				velocity = Vector2.ZERO
+			move_and_slide()
+		State.SKILL:
+			# velocity 는 스킬 코루틴이 직접 설정 — 여기선 apply 만
 			move_and_slide()
 
 # ───────────────────────────────
@@ -563,6 +567,20 @@ func exit_spin() -> void:
 	is_spinning    = false
 	spin_can_move  = false
 	if state == State.SPIN:
+		state = State.IDLE
+		_play_anim("idle")
+
+## 스킬 전용 상태 진입 — 이동/애니메이션 오버라이드 차단
+func enter_skill() -> void:
+	if _attack_active: _cancel_attack()
+	_sheathing             = false
+	_block_release_pending = false
+	state                  = State.SKILL
+
+## 스킬 전용 상태 종료 — IDLE 복귀
+func exit_skill() -> void:
+	velocity = Vector2.ZERO
+	if state == State.SKILL:
 		state = State.IDLE
 		_play_anim("idle")
 

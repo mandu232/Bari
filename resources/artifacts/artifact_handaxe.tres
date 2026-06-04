@@ -3,6 +3,7 @@
 [ext_resource type="Script" uid="uid://urkryft166ev" path="res://scripts/artifact/ArtifactData.gd" id="1_2wb43"]
 [ext_resource type="SpriteFrames" uid="uid://bv6khxqbv6evh" path="res://AutoLoad/assets/Echo/Echo_moebi.tres" id="1_xjl2a"]
 [ext_resource type="Texture2D" uid="uid://cc43ox53n6v0l" path="res://AutoLoad/assets/Artifact/handaxe.png" id="3_528fe"]
+[ext_resource type="Script" uid="uid://dow3s776e2gh4" path="res://scripts/skills/SkillDashAttack.gd" id="4_punch"]
 
 [resource]
 script = ExtResource("1_2wb43")
@@ -15,6 +16,7 @@ echo_description = "먼 구석기 시대의 대지에서 깨어난 에코입니�
 echo_frames = ExtResource("1_xjl2a")
 echo_power = 2
 wander_radius = 70.0
+skill_script = ExtResource("4_punch")
 stability_decay = 0.0
 output_decay = 0.1
 activity_decay = 0.0

@@ -19,9 +19,7 @@ script = ExtResource("1_u4nha")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=704528494]
 sprite_frames = ExtResource("1_gqo85")
-animation = &"charge_start_white_back_side"
-frame = 13
-frame_progress = 1.0
+animation = &"throw_front_side"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=307869615]
 position = Vector2(0, 3.5)

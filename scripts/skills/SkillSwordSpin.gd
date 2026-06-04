@@ -38,35 +38,50 @@ func _run_spin(player: CharacterBody2D) -> void:
 	var atk_box   := player.get_node("AttackBox")        as Area2D
 	var atk_shape := atk_box.get_node("CollisionShape2D") as CollisionShape2D
 	var orig_pos  := atk_box.position
+	var cam       := player.get_tree().get_first_node_in_group("camera")
 
 	# 마우스 방향으로 facing 갱신 후 SPIN 상태 진입
 	player.set("facing", _get_mouse_dir(player))
 	player.call("enter_spin")
 
-	# ── 1. charge_start_white (원샷, 방향 있음)
+	# ── 1. charge_start_white — 줌인으로 집중감 연출
+	if cam and cam.has_method("zoom_punch"):
+		cam.zoom_punch(0.14, 0.35)
 	player.call("play_anim", "charge_start_white")
 	await sprite.animation_finished
 	if not _still_spinning(player): return
 
-	# ── 2. charge_release_white (원샷, 방향 있음)
+	# ── 2. charge_release_white
 	player.call("play_anim", "charge_release_white")
 	await sprite.animation_finished
 	if not _still_spinning(player): return
 
-	# ── 3. sword_spin_white (루프, Q 유지 중) — 이 구간만 이동 허용
+	# ── 3. sword_spin_white 돌입 — 줌인 강화 + 첫 충격 흔들기
+	if cam:
+		if cam.has_method("zoom_punch"):
+			cam.zoom_punch(0.20, 0.18)
+		if cam.has_method("screen_shake"):
+			cam.screen_shake(4.0, 0.28)
 	player.call("play_anim", "sword_spin_white")
 	player.set("spin_can_move", true)
 	atk_box.position = Vector2.ZERO          # 히트박스를 플레이어 중심으로
 	atk_box.monitoring = true
 	atk_shape.set_deferred("disabled", false)
 
-	var dmg_tick := damage_interval
+	var dmg_tick   := damage_interval
+	var rumble_acc := 0.0          # 스핀 중 미세 진동 타이머
 	while _still_spinning(player) and Input.is_action_pressed(spin_action):
 		var delta: float = player.get_physics_process_delta_time()
-		dmg_tick -= delta
+		dmg_tick   -= delta
+		rumble_acc -= delta
 		if dmg_tick <= 0.0:
 			dmg_tick = damage_interval
 			_apply_damage(player, atk_box)
+		# 0.35초마다 가벼운 진동 — 스핀 지속감 표현
+		if rumble_acc <= 0.0:
+			rumble_acc = 0.35
+			if cam and cam.has_method("screen_shake"):
+				cam.screen_shake(1.8, 0.38)
 		# 마나 드레인 — 마나가 0이 되면 스핀 강제 종료
 		if mana_drain > 0.0 and player.has_method("drain_mana"):
 			if not player.call("drain_mana", mana_drain * delta):
@@ -81,11 +96,15 @@ func _run_spin(player: CharacterBody2D) -> void:
 	atk_box.position = orig_pos
 
 	if not _still_spinning(player):
-		# 피격 등으로 이미 종료된 경우 — exit_spin 은 플레이어가 알아서 처리
-		player.call("exit_spin")   # 혹시 is_spinning 플래그가 남아 있을 때 보정
+		player.call("exit_spin")
 		return
 
-	# ── 4. charge_end_white (원샷, 방향 있음)
+	# ── 4. charge_end_white — 마무리 강타: 강한 흔들기 + 줌아웃
+	if cam:
+		if cam.has_method("screen_shake"):
+			cam.screen_shake(6.5, 0.30)
+		if cam.has_method("zoom_punch"):
+			cam.zoom_punch(-0.20, 0.22)
 	player.call("play_anim", "charge_end_white")
 	await sprite.animation_finished
 
