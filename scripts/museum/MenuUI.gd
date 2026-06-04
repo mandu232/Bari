@@ -352,8 +352,6 @@ func _build_stats_content() -> void:
 	equip_btn.pressed.connect(func():
 		_skill_picking = true
 		_rebuild_skill())
-	if equipped_art != null:
-		equip_btn.modulate = Color(0.55, 0.95, 0.65)
 	top_hbox.add_child(equip_btn)
 
 	var equip_vbox := VBoxContainer.new()

@@ -6106,7 +6106,7 @@ animations = [{
 }],
 "loop": true,
 "name": &"sword_spin_white_back",
-"speed": 20.0
+"speed": 25.0
 }, {
 "frames": [{
 "duration": 1.0,
@@ -6135,7 +6135,7 @@ animations = [{
 }],
 "loop": true,
 "name": &"sword_spin_white_back_side",
-"speed": 20.0
+"speed": 25.0
 }, {
 "frames": [{
 "duration": 1.0,
@@ -6164,7 +6164,7 @@ animations = [{
 }],
 "loop": true,
 "name": &"sword_spin_white_front",
-"speed": 20.0
+"speed": 25.0
 }, {
 "frames": [{
 "duration": 1.0,
@@ -6193,7 +6193,7 @@ animations = [{
 }],
 "loop": true,
 "name": &"sword_spin_white_front_side",
-"speed": 20.0
+"speed": 25.0
 }, {
 "frames": [{
 "duration": 1.0,
@@ -6222,7 +6222,7 @@ animations = [{
 }],
 "loop": true,
 "name": &"sword_spin_white_side",
-"speed": 20.0
+"speed": 25.0
 }, {
 "frames": [{
 "duration": 1.0,

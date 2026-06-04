@@ -3,16 +3,21 @@
 [ext_resource type="Script" uid="uid://urkryft166ev" path="res://scripts/artifact/ArtifactData.gd" id="1_cu2ck"]
 [ext_resource type="SpriteFrames" uid="uid://dgthslya54g07" path="res://AutoLoad/assets/Echo/Echo_gaon.tres" id="1_dx7vb"]
 [ext_resource type="Texture2D" uid="uid://hi0fribxo2ly" path="res://AutoLoad/assets/Artifact/hwandudaedo.png" id="3_5nw4u"]
+[ext_resource type="Script" uid="uid://b4s4e1lv03lmp" path="res://scripts/skills/SkillSwordSpin.gd" id="3_rtbu0"]
 
 [resource]
 script = ExtResource("1_cu2ck")
 artifact_name = "고리자루칼"
-era = 5
 description = "대가, 전장을 호령하던 대장군과 왕족들만이 소지할 수 있었던 최고 권력과 명예의 상징입니다. 칼자루 끝에 정교하게 새겨진 황금빛 고리 장식 속에는 나라를 수호하고 백성을 지키겠다던 무인들의 거대한 맹세가 서려 있습니다."
 texture = ExtResource("3_5nw4u")
+era = 5
 echo_name = "가온"
 echo_description = "삼국 시대 전장의 기백을 간직한 에코입니다. 한번 맡은 임무는 반드시 완수하는 충직하고 강직한 성격으로, 주인의 곁을 결코 떠나지 않습니다."
 echo_frames = ExtResource("1_dx7vb")
+skill_script = ExtResource("3_rtbu0")
 bonus_atk_max = 4
 bonus_move_spd_max = 8.0
+equip_bonus_atk_max = 6
+equip_bonus_atk_spd_max = 10
+equip_bonus_move_spd_max = 0.5
 metadata/_custom_type_script = "uid://urkryft166ev"

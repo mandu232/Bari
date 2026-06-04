@@ -70,6 +70,8 @@ var _block_release_pending: bool = false  # unsheathe 도중 우클릭을 떼면
 
 ## SkillSwordSpin 등 스킬이 스핀 루프 종료 여부를 감지하는 플래그
 var is_spinning: bool = false
+## sword_spin_white 루프 중일 때만 true — 이 구간에서만 이동 허용
+var spin_can_move: bool = false
 
 # ── 장착 스킬
 var equipped_skill: Skill = null
@@ -171,8 +173,15 @@ func _physics_process(delta: float) -> void:
 			velocity = Vector2.ZERO
 			move_and_slide()
 			_handle_block_hold()
-		State.SPIN:   # 스킬이 비동기로 관리 — 여기선 이동만 차단
-			velocity = Vector2.ZERO
+		State.SPIN:
+			if spin_can_move:
+				var input_dir := Input.get_vector("move_left", "move_right", "move_up", "move_down")
+				if input_dir != Vector2.ZERO:
+					velocity = input_dir.normalized() * move_speed
+				else:
+					velocity = velocity.move_toward(Vector2.ZERO, move_speed * 12 * delta)
+			else:
+				velocity = Vector2.ZERO
 			move_and_slide()
 
 # ───────────────────────────────
@@ -551,7 +560,8 @@ func enter_spin() -> void:
 
 ## SPIN 상태 종료 — IDLE 복귀
 func exit_spin() -> void:
-	is_spinning = false
+	is_spinning    = false
+	spin_can_move  = false
 	if state == State.SPIN:
 		state = State.IDLE
 		_play_anim("idle")

@@ -14,8 +14,8 @@ class_name SkillSwordSpin
 @export var spin_action: String = "skill"
 
 func _init() -> void:
-	skill_name  = "청동풍옥"
-	description = "가늘고 날카로운 청동의 칼날이 푸른 잔영이 되어 사방을 베어 넘깁니다.\n스킬 지속시 검을 빠르게 회전시켜 주변 적 전체를 지속적으로 공격합니다.\n회전 중에는 0.22초마다 기본 공격력의 65%에 해당하는 피해를 주며, \n초당 25의 마나를 지속적으로 소모합니다."
+	skill_name  = "환영무도"
+	description = "고리장식에서 깨어난 가온의 기운이 원형의 검풍이 되어 사방을 휩쓰빈다.\n주문을 유지하는 동안 대도의 회전은 지속되며,\n범위 내의 적들에게 0.22초당 공격력의 65%에 해당하는 피해를 가합니다.\n주문유지에 초당 마나 25를 소모합니다."
 	cooldown    = 8.0
 	mana_cost   = 20
 	mana_drain  = 25.0
@@ -53,8 +53,9 @@ func _run_spin(player: CharacterBody2D) -> void:
 	await sprite.animation_finished
 	if not _still_spinning(player): return
 
-	# ── 3. sword_spin_white (루프, Q 유지 중)
+	# ── 3. sword_spin_white (루프, Q 유지 중) — 이 구간만 이동 허용
 	player.call("play_anim", "sword_spin_white")
+	player.set("spin_can_move", true)
 	atk_box.position = Vector2.ZERO          # 히트박스를 플레이어 중심으로
 	atk_box.monitoring = true
 	atk_shape.set_deferred("disabled", false)
@@ -71,6 +72,8 @@ func _run_spin(player: CharacterBody2D) -> void:
 			if not player.call("drain_mana", mana_drain * delta):
 				break
 		await player.get_tree().physics_frame
+
+	player.set("spin_can_move", false)
 
 	# ── 히트박스 원위치 복원
 	atk_box.monitoring = false

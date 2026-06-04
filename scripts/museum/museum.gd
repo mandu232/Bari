@@ -66,9 +66,10 @@ func _ready() -> void:
 	# 영력 배율이 바뀌면 영력 레이트 재계산
 	GameManager.essence_multiplier_changed.connect(func(_m: float): _recalculate_essence_rate())
 
+	# 타일맵을 즉시 뒤로 고정 (Y < 0 이동 시 플레이어가 바닦 뒤로 들어가는 버그 방지)
+	_fix_tilemap_sort()
 	# 씬 트리가 완전히 구성된 뒤 z_index 초기화 + 초기 시너지 계산
 	call_deferred("_refresh_z_sort")
-	call_deferred("_fix_tilemap_sort")
 	call_deferred("_recalculate_synergies")
 
 # ───────────────────────────────
@@ -1000,19 +1001,26 @@ func _refresh_z_sort() -> void:
 	for entry in _dynamic_nodes:
 		_apply_y_sort(entry["node"] as Node2D)
 
-## 씬 내 모든 타일맵을 가장 뒤에 고정
-## Godot 4.3+ TileMapLayer 와 구버전 TileMap 모두 처리
+## 씬 내 모든 타일맵을 절대 최솟값 Z 로 고정 (-4096 은 Godot 4 z_index 하한)
 func _fix_tilemap_sort() -> void:
-	for node in find_children("*", "TileMap", true, false):
-		var ci := node as CanvasItem
-		if ci:
-			ci.z_as_relative = false
-			ci.z_index       = -1000
+	# 경로 직접 지정 — @onready 타입 어노테이션 없이 안전하게 접근
+	for path in ["TileMap/Floor", "TileMap/Wall"]:
+		var node := get_node_or_null(path)
+		if node is CanvasItem:
+			(node as CanvasItem).z_as_relative = false
+			(node as CanvasItem).z_index       = -4096
+	# 혹시 있을 다른 TileMapLayer 탐색
 	for node in find_children("*", "TileMapLayer", true, false):
 		var ci := node as CanvasItem
 		if ci:
 			ci.z_as_relative = false
-			ci.z_index       = -1000
+			ci.z_index       = -4096
+	# 구버전 TileMap 클래스 대응
+	for node in find_children("*", "TileMap", true, false):
+		var ci := node as CanvasItem
+		if ci:
+			ci.z_as_relative = false
+			ci.z_index       = -4096
 
 # ───────────────────────────────
 #  동적 전시대 저장 / 복원

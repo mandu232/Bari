@@ -3,7 +3,6 @@
 [ext_resource type="Script" uid="uid://urkryft166ev" path="res://scripts/artifact/ArtifactData.gd" id="1_lex6m"]
 [ext_resource type="SpriteFrames" uid="uid://bjxt1anbuuqeu" path="res://AutoLoad/assets/Echo/Echo_cheongryeong.tres" id="1_mw10j"]
 [ext_resource type="Texture2D" uid="uid://cxy3fgnn3xfhr" path="res://AutoLoad/assets/Artifact/artifact_sword.png" id="3_58cc4"]
-[ext_resource type="Script" uid="uid://b4s4e1lv03lmp" path="res://scripts/skills/SkillSwordSpin.gd" id="3_ihjgd"]
 
 [resource]
 script = ExtResource("1_lex6m")
@@ -16,7 +15,6 @@ echo_description = "청동기 시대의 신성한 기운을 품은 에코입니�
 echo_frames = ExtResource("1_mw10j")
 echo_power = 3
 wander_radius = 80.0
-skill_script = ExtResource("3_ihjgd")
 stability_decay = 0.0
 output_decay = 0.1
 activity_decay = 0.0

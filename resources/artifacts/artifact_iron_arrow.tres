@@ -14,6 +14,6 @@ echo_name = "시우"
 echo_description = "가야의 불꽃 같은 제철 기술로 단련된 에코입니다. 목표를 정하면 망설임 없이 돌진하는 직선적인 성격으로, 빠른 판단력과 거침없는 행동력이 특기입니다."
 echo_frames = ExtResource("1_arcco")
 bonus_atk_max = 3
-bonus_move_spd_max = 15.0
 bonus_atk_spd_max = 15
+bonus_move_spd_max = 15.0
 metadata/_custom_type_script = "uid://urkryft166ev"

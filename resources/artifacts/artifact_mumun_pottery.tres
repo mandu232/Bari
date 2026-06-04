@@ -7,12 +7,12 @@
 [resource]
 script = ExtResource("1_jiesj")
 artifact_name = "민무늬토기"
-era = 3
 description = "화려한 무늬나 장식은 없지만, 인류가 한곳에 정착해 따뜻한 밥을 짓고 곡식을 저장할 수 있게 해 준 청동기 시대의 가장 소중한 그릇입니다."
 texture = ExtResource("3_r344k")
+era = 3
 echo_name = "소담"
 echo_description = "청동기 시대 사람들의 삶의 온기를 머금은 에코입니다. 화려함보다 소박하고 정직한 것을 좋아하며, 작은 것들에서 기쁨을 찾을 줄 아는 따뜻한 성품을 지녔습니다."
 echo_frames = ExtResource("1_pve77")
-bonus_hp_max = 5
 bonus_def_max = 2
+bonus_hp_max = 5
 metadata/_custom_type_script = "uid://urkryft166ev"
