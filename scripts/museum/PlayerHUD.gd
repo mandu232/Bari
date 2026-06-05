@@ -15,6 +15,7 @@ func _ready() -> void:
 	layer        = 9
 	_font        = load("res://AutoLoad/assets/Font/DungGeunMo.ttf")
 	_build_layout()
+	add_to_group("player_hud")
 
 func _process(_delta: float) -> void:
 	if not _player_connected:

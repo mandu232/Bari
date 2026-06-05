@@ -32,6 +32,7 @@ var _player_stats_ui: PlayerStatsUI        = null   # 플레이어 스탯 패널
 var _doggam_ui:       DoggamUI             = null   # 도감 패널
 var _inventory_ui:    ArtifactInventoryUI  = null   # 보유 유물 인벤토리
 var _book_btn:        TextureButton        = null   # 우측 하단 책 버튼
+var _player_hud:      PlayerHUD            = null   # HP·MP 바 HUD
 
 func _ready() -> void:
 	for slot in slots.get_children():
@@ -56,8 +57,8 @@ func _ready() -> void:
 	_essence_ui = EssenceUI.new()
 	add_child(_essence_ui)
 
-	var player_hud := PlayerHUD.new()
-	add_child(player_hud)
+	_player_hud = PlayerHUD.new()
+	add_child(_player_hud)
 
 	_setup_book_button()
 
@@ -167,6 +168,8 @@ func _setup_book_button() -> void:
 	_menu_ui.stats_requested.connect(_on_stats_requested)
 	_menu_ui.doggam_requested.connect(_on_doggam_requested)
 	_menu_ui.inventory_requested.connect(_on_inventory_requested)
+	_menu_ui.opened.connect(func(): _set_hud_visible(false))
+	_menu_ui.closed.connect(func(): _set_hud_visible(true))
 	hud.add_child(_menu_ui)
 
 	# 플레이어 스탯 UI 인스턴스화
@@ -631,6 +634,8 @@ func _on_artifact_remove_requested() -> void:
 	_resume_player()
 
 func _set_hud_visible(visible: bool) -> void:
+	if is_instance_valid(_player_hud):
+		_player_hud.visible = visible
 	if is_instance_valid(_essence_ui):
 		_essence_ui.visible = visible
 	if not visible:

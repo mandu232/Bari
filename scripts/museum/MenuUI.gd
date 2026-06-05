@@ -9,6 +9,9 @@ signal stats_requested
 signal doggam_requested
 signal inventory_requested
 
+signal opened
+signal closed
+
 # ───────────────────────────────
 #  도감 카탈로그 경로 (DoggamUI 에서 이관)
 # ───────────────────────────────
@@ -107,9 +110,11 @@ func _ready() -> void:
 func open() -> void:
 	_switch_tab(_current_tab)
 	show()
+	opened.emit()
 
 func close() -> void:
 	hide()
+	closed.emit()
 
 # ───────────────────────────────
 #  레이아웃 빌드

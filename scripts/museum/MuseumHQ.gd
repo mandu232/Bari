@@ -169,6 +169,8 @@ func _open_ui() -> void:
 	var player := get_tree().get_first_node_in_group("player")
 	if player:
 		player.set_physics_process(false)
+	for hud in get_tree().get_nodes_in_group("player_hud"):
+		hud.hide()
 	_hq_ui.open()
 
 func _on_ui_closed() -> void:
@@ -177,6 +179,8 @@ func _on_ui_closed() -> void:
 	var player := get_tree().get_first_node_in_group("player")
 	if player:
 		player.set_physics_process(true)
+	for hud in get_tree().get_nodes_in_group("player_hud"):
+		hud.show()
 
 # ─── 입력 ────────────────────────────────────────────────────────────
 func _unhandled_input(event: InputEvent) -> void:
