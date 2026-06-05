@@ -34,6 +34,7 @@ const DIRECTIONAL_ANIMS: Array[String] = [
 	"charge_start_white", "charge_release_white",
 	"sword_spin_white", "charge_end_white",
 	"throw",
+	"bow_pull", "bow_base", "bow_release",
 ]
 
 # ───────────────────────────────

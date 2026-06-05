@@ -1,0 +1,20 @@
+[gd_scene format=3 uid="uid://c8m3p7x2ns1v4"]
+
+[ext_resource type="Texture2D" uid="uid://bp8qp7b8ltf7o" path="res://AutoLoad/assets/Effect/arrow.png" id="1_texture"]
+[ext_resource type="Script" uid="uid://x7cv2pp4btfu" path="res://scripts/skills/BowArrow.gd" id="2_script"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_bow"]
+radius = 4.0
+height = 18.0
+
+[node name="BowArrow" type="Area2D" unique_id=1635868450]
+collision_layer = 0
+collision_mask = 2
+script = ExtResource("2_script")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=636625873]
+texture = ExtResource("1_texture")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1464486990]
+rotation = 1.5708
+shape = SubResource("CapsuleShape2D_bow")

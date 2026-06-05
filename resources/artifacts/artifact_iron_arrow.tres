@@ -3,6 +3,7 @@
 [ext_resource type="SpriteFrames" uid="uid://dfpqv2o4suvd4" path="res://AutoLoad/assets/Echo/Echo_siwoo.tres" id="1_arcco"]
 [ext_resource type="Script" uid="uid://urkryft166ev" path="res://scripts/artifact/ArtifactData.gd" id="1_xgge7"]
 [ext_resource type="Texture2D" uid="uid://rwistamrkx5h" path="res://AutoLoad/assets/Artifact/iron_arrow.png" id="3_8kubh"]
+[ext_resource type="Script" uid="uid://btooj2ef32hex" path="res://scripts/skills/SkillBowShot.gd" id="3_mvj8e"]
 
 [resource]
 script = ExtResource("1_xgge7")
@@ -13,7 +14,11 @@ era = 5
 echo_name = "시우"
 echo_description = "가야의 불꽃 같은 제철 기술로 단련된 에코입니다. 목표를 정하면 망설임 없이 돌진하는 직선적인 성격으로, 빠른 판단력과 거침없는 행동력이 특기입니다."
 echo_frames = ExtResource("1_arcco")
+skill_script = ExtResource("3_mvj8e")
 bonus_atk_max = 3
 bonus_atk_spd_max = 15
 bonus_move_spd_max = 15.0
+equip_bonus_atk_max = 2
+equip_bonus_atk_spd_max = 10
+equip_bonus_move_spd_max = 1.5
 metadata/_custom_type_script = "uid://urkryft166ev"
