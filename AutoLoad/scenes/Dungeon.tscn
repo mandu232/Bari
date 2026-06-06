@@ -1,0 +1,13 @@
+[gd_scene format=3 uid="uid://55papvs75wac"]
+
+[ext_resource type="PackedScene" uid="uid://byaoe511y6y0g" path="res://AutoLoad/scenes/Enemy.tscn" id="1_xx1bb"]
+[ext_resource type="PackedScene" uid="uid://dp1ttfewt20l4" path="res://AutoLoad/scenes/Player.tscn" id="2_3r20u"]
+[ext_resource type="Script" path="res://scripts/Dungeon.gd" id="3_script"]
+
+[node name="Dungeon" type="Node2D" unique_id=1553180979]
+script = ExtResource("3_script")
+
+[node name="Enemy" parent="." unique_id=1670133853 instance=ExtResource("1_xx1bb")]
+position = Vector2(123, 52)
+
+[node name="Player" parent="." unique_id=1103668238 instance=ExtResource("2_3r20u")]

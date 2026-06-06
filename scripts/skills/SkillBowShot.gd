@@ -18,9 +18,9 @@ const ARROW_SCENE := preload("res://AutoLoad/scenes/skills/BowArrow.tscn")
 
 func _init() -> void:
 	skill_name  = "삼연시"
-	description = "Q 를 꾹 눌러 활을 당기고 놓으면 화살 3발을 발사합니다.\n" \
-				+ "각 화살은 적을 관통합니다."
-	cooldown    = 1.5
+	description = "무거운 쇠화살 세발을 발사하여 적의 방어선을 무너뜨립니다.\n" \
+				+ "각 화살은 적을 최대 2명 관통합니다."
+	cooldown    = 1.0
 	mana_cost   = 25
 
 func execute(player: CharacterBody2D) -> void:

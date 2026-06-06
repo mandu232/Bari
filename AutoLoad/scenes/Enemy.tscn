@@ -1,20 +1,41 @@
 [gd_scene format=3 uid="uid://byaoe511y6y0g"]
 
+[ext_resource type="SpriteFrames" uid="uid://bhha7l7oeinwr" path="res://AutoLoad/assets/Enemy/sword_demon/Enemy_sword_demon.tres" id="1_wvtp4"]
+[ext_resource type="Script" uid="uid://ddc7h0jy3qjit" path="res://scripts/Enemy.gd" id="2_script"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_7bgwr"]
+size = Vector2(12, 26)
+
 [sub_resource type="CircleShape2D" id="CircleShape2D_8ljyg"]
+radius = 29.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_wvtp4"]
+radius = 98.005104
 
 [node name="Enemy" type="CharacterBody2D" unique_id=1670133853]
+collision_layer = 2
+collision_mask = 16
+script = ExtResource("2_script")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=705204279]
+sprite_frames = ExtResource("1_wvtp4")
+animation = &"attack"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=411800248]
+position = Vector2(0, 3)
+shape = SubResource("RectangleShape2D_7bgwr")
 
 [node name="NavigationAgent2D" type="NavigationAgent2D" parent="." unique_id=917629]
 
-[node name="DetectionArea" type="Area2D" parent="." unique_id=1986569163]
+[node name="AttackArea" type="Area2D" parent="." unique_id=1986569163]
+collision_layer = 0
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="DetectionArea" unique_id=2059989402]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="AttackArea" unique_id=2059989402]
 shape = SubResource("CircleShape2D_8ljyg")
 
-[node name="HealthBar" type="ProgressBar" parent="." unique_id=948385109]
-offset_right = 4.0
-offset_bottom = 27.0
+[node name="DetectionArea" type="Area2D" parent="." unique_id=124867338]
+collision_layer = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DetectionArea" unique_id=33076144]
+shape = SubResource("CircleShape2D_wvtp4")
+debug_color = Color(0.9817937, 0, 0.37205806, 0.41960785)

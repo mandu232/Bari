@@ -29,6 +29,7 @@ const DIRECTIONAL_ANIMS: Array[String] = [
 	"idle", "walk", "dash",
 	"attack_1", "attack_2", "attack_3", "attack_4",
 	"attack_sheathe",
+	"hit",
 	"faint",
 	"block_unsheathe", "block_idle", "block_sheathe",
 	"charge_start_white", "charge_release_white",
@@ -69,6 +70,8 @@ var _sheathing: bool     = false  # 검 집어넣기 재생 중
 
 # ── 막기 (우클릭 — 프로젝트 입력 설정에서 "block" 액션을 MOUSE_BUTTON_RIGHT 에 매핑)
 var _block_release_pending: bool = false  # unsheathe 도중 우클릭을 떼면 true
+var _parry_in_progress:     bool = false  # 막기 피격 넉백 중 — block_sheathe 재생 완료까지 유지
+var _parry_window_active:   bool = false  # block_unsheathe 첫 4프레임 이내면 패링 판정
 
 ## SkillSwordSpin 등 스킬이 스핀 루프 종료 여부를 감지하는 플래그
 var is_spinning: bool = false
@@ -114,7 +117,6 @@ signal essence_collected(amount: int)
 #  READY
 # ───────────────────────────────
 func _ready() -> void:
-	health = max_health
 	add_to_group("player")
 	_set_attack_box(false)
 
@@ -123,6 +125,14 @@ func _ready() -> void:
 	inv_timer.timeout.connect(_on_inv_timer_timeout)
 	sprite.frame_changed.connect(_on_frame_changed)
 	sprite.animation_finished.connect(_on_sprite_animation_finished)
+
+	# 던전 입장 시 영구 스탯 적용 (스킬·시너지 보너스 적용 전 베이스 확정)
+	if GameManager.current_run_active:
+		max_health    = GameManager.player_max_health
+		attack_damage += GameManager.player_damage_bonus
+		move_speed    += GameManager.player_speed_bonus
+
+	health = max_health
 
 	# 저장된 스킬 + 장착 보너스 복원
 	if GameManager.equipped_skill_path != "":
@@ -136,6 +146,10 @@ func _ready() -> void:
 				GameManager.equipped_artifact = art
 				apply_equip_bonus(art)
 				break
+
+	# 박물관 시너지 보너스 던전에 재적용
+	if GameManager.current_run_active:
+		GameManager.reapply_synergies_to_player(self)
 
 # ───────────────────────────────
 #  PROCESS
@@ -271,6 +285,7 @@ func _start_block() -> void:
 	state                  = State.BLOCK
 	_block_release_pending = false
 	_sheathing             = false
+	_parry_window_active   = true   # 패링 판정 창 열기
 	_play_anim("block_unsheathe")
 
 # ───────────────────────────────
@@ -341,6 +356,11 @@ func _cancel_attack() -> void:
 #  프레임별 히트박스
 # ───────────────────────────────
 func _on_frame_changed() -> void:
+	# block_unsheathe 4프레임 초과 시 패링 판정 창 종료
+	if _parry_window_active and sprite.animation.begins_with("block_unsheathe"):
+		if sprite.frame >= 4:
+			_parry_window_active = false
+
 	if state != State.ATTACK:
 		return
 
@@ -360,6 +380,7 @@ func _on_sprite_animation_finished() -> void:
 		_play_anim("idle")
 	# 막기 block_unsheathe 끝 → idle 유지 or 즉시 sheathe (도중에 떼면)
 	if state == State.BLOCK and sprite.animation.begins_with("block_unsheathe"):
+		_parry_window_active = false   # 애니 끝나면 패링 창 확실히 닫기
 		if _block_release_pending:
 			_block_release_pending = false
 			_play_anim("block_sheathe")
@@ -371,7 +392,7 @@ func _on_sprite_animation_finished() -> void:
 			_play_anim("block_idle")  # 루프 애니면 이미 자동 반복되므로 무해
 		else:
 			_play_anim("block_sheathe")
-	# 막기 sheathe 끝 → IDLE 복귀
+	# 막기 sheathe 끝 → IDLE 복귀 (일반 해제 + 파리 피격 모두 처리)
 	if state == State.BLOCK and sprite.animation.begins_with("block_sheathe"):
 		state = State.IDLE
 		_play_anim("idle")
@@ -389,9 +410,21 @@ func _on_attack_hit(body: Node2D) -> void:
 # ───────────────────────────────
 #  DAMAGE / DEATH
 # ───────────────────────────────
-func take_damage(amount: int, source_pos: Vector2 = Vector2.ZERO) -> void:
+func take_damage(amount: int, source_pos: Vector2 = Vector2.ZERO, source_node: Node = null) -> void:
 	if is_invincible or state == State.DEAD:
 		return
+
+	# 막기 중 피격 — 공격이 facing 방향 앞에서 오면 막기 성공
+	if state == State.BLOCK:
+		var blocked := true
+		if source_pos != Vector2.ZERO:
+			var attack_dir := (source_pos - global_position).normalized()
+			# facing 과 공격 방향의 내적이 0 이상이면 정면(90° 이내) → 막기 성공
+			blocked = facing.dot(attack_dir) > 0.0
+		if blocked:
+			_block_parried(source_pos, source_node)
+			return
+		# 방향이 맞지 않으면 막기 실패 → 일반 피해 처리 계속
 
 	if _attack_active:
 		_cancel_attack()
@@ -406,6 +439,24 @@ func take_damage(amount: int, source_pos: Vector2 = Vector2.ZERO) -> void:
 	is_invincible = true
 	state         = State.HIT
 	inv_timer.start(0.6)
+
+	# 공격 출처 방향 기준으로 방향성 hit 애니메이션 재생
+	var prev_facing := facing
+	if source_pos != Vector2.ZERO:
+		facing = (source_pos - global_position).normalized()
+	_play_anim("hit")
+	facing = prev_facing
+
+	# 화면 흔들기
+	var cam := get_tree().get_first_node_in_group("camera")
+	if is_instance_valid(cam) and cam.has_method("screen_shake"):
+		cam.screen_shake(6.0, 0.22)
+
+	# 히트 스탑 — time_scale=0 으로 순간 정지 (Tween 도 멈추므로 flash는 이후에 재생)
+	Engine.time_scale = 0.0
+	await get_tree().create_timer(0.07, true, false, true).timeout
+	Engine.time_scale = 1.0
+
 	_flash()
 
 	if health <= 0:
@@ -414,6 +465,49 @@ func take_damage(amount: int, source_pos: Vector2 = Vector2.ZERO) -> void:
 		await get_tree().create_timer(0.2).timeout
 		if state == State.HIT:
 			state = State.IDLE
+
+func _block_parried(source_pos: Vector2, source_node: Node = null) -> void:
+	var is_parry          := _parry_window_active   # block_unsheathe 4프레임 이내 = 패링
+	_parry_window_active   = false
+	_block_release_pending = false
+	_parry_in_progress     = true
+	# 공격 반대 방향으로 넉백
+	if source_pos != Vector2.ZERO:
+		velocity = (global_position - source_pos).normalized() * 280.0
+	# HIT 물리(넉백 감속)를 사용
+	state         = State.HIT
+	is_invincible = true
+	inv_timer.start(0.5)
+	# 막기 포즈 유지
+	_play_anim("block_idle")
+
+	# ── 패링 성공: 공격자 밀어내기
+	if is_parry and is_instance_valid(source_node) and source_node.has_method("take_parry_hit"):
+		source_node.take_parry_hit(global_position)
+
+	# ── 카메라 효과 — 패링이면 더 강한 충격감
+	var cam := get_tree().get_first_node_in_group("camera")
+	if is_instance_valid(cam):
+		if cam.has_method("screen_shake"):
+			cam.screen_shake(5.5 if is_parry else 3.0,  0.16 if is_parry else 0.12)
+		if cam.has_method("zoom_punch"):
+			cam.zoom_punch(-0.12 if is_parry else -0.07, 0.18 if is_parry else 0.14)
+
+	# ── 히트 스탑 — 패링은 조금 더 길게
+	Engine.time_scale = 0.0
+	await get_tree().create_timer(0.09 if is_parry else 0.06, true, false, true).timeout
+	Engine.time_scale = 1.0
+
+	# 히트 스탑 해제 후 가벼운 플래시
+	_block_flash()
+
+	# 넉백이 가라앉을 때까지 대기 후 막기 해제
+	await get_tree().create_timer(0.25).timeout
+	if not _parry_in_progress or state == State.DEAD:
+		return
+	_parry_in_progress = false
+	state = State.BLOCK   # block_sheathe → IDLE 전환은 _on_sprite_animation_finished 가 처리
+	_play_anim("block_sheathe")
 
 func _die() -> void:
 	state = State.DEAD
@@ -450,6 +544,13 @@ func _flash() -> void:
 	for _i in range(5):
 		tw.tween_property(sprite, "modulate:a", 0.15, 0.06)
 		tw.tween_property(sprite, "modulate:a", 1.00, 0.06)
+
+## 막기 성공 플래시 — 순간 새하얗게 밝아졌다가 서서히 복귀
+func _block_flash() -> void:
+	sprite.modulate = Color(2.8, 2.8, 2.8, 1.0)
+	var tw := create_tween()
+	tw.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_EXPO)
+	tw.tween_property(sprite, "modulate", Color.WHITE, 0.14)
 
 # ───────────────────────────────
 #  마우스 방향 계산

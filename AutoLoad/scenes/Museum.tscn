@@ -6,6 +6,9 @@
 [ext_resource type="PackedScene" uid="uid://mps44d3ngo5l" path="res://AutoLoad/scenes/ArtifactSelectUI.tscn" id="3_ucdta"]
 [ext_resource type="PackedScene" uid="uid://rgwsso76s5aa" path="res://AutoLoad/scenes/MuseumHQ.tscn" id="4_mhq"]
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_48dbl"]
+size = Vector2(48, 48)
+
 [node name="Museum" type="Node2D" unique_id=808153977]
 script = ExtResource("1_qnho5")
 
@@ -24,12 +27,12 @@ tile_set = ExtResource("2_ucdta")
 [node name="MuseumHQ" parent="." unique_id=11559575 instance=ExtResource("4_mhq")]
 
 [node name="DungeonEntrance" type="Node2D" parent="." unique_id=964808947]
-
-[node name="Sprite2D" type="Sprite2D" parent="DungeonEntrance" unique_id=1750300204]
+position = Vector2(200, -616)
 
 [node name="TriggerArea" type="Area2D" parent="DungeonEntrance" unique_id=237684093]
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="DungeonEntrance/TriggerArea" unique_id=1898850758]
+shape = SubResource("RectangleShape2D_48dbl")
 
 [node name="PlayerSpawn" type="Marker2D" parent="." unique_id=1306126723]
 position = Vector2(0, 76)

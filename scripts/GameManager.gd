@@ -43,8 +43,8 @@ var player_speed_bonus: float        = 0.0
 # ───────────────────────────────
 #  씬 경로
 # ───────────────────────────────
-const MUSEUM_SCENE  := "res://scenes/Museum.tscn"
-const DUNGEON_SCENE := "res://scenes/Dungeon.tscn"
+const MUSEUM_SCENE  := "res://AutoLoad/scenes/Museum.tscn"
+const DUNGEON_SCENE := "res://AutoLoad/scenes/Dungeon.tscn"
 
 # ───────────────────────────────
 #  SIGNALS
@@ -373,6 +373,24 @@ func start_dungeon_run() -> void:
 	current_run_active = true
 	run_started.emit(dungeon_depth)
 	get_tree().change_scene_to_file(DUNGEON_SCENE)
+
+## 박물관에서 계산된 시너지 보너스를 던전 플레이어에게 재적용
+func reapply_synergies_to_player(player: Node) -> void:
+	var total_atk:     int   = 0
+	var total_atk_spd: int   = 0
+	var total_def:     int   = 0
+	var total_spd:     float = 0.0
+	var total_hp:      int   = 0
+	for era_int in active_synergies.keys():
+		var best: Dictionary = active_synergies[era_int]
+		if not best.is_empty():
+			total_atk     += int(best.get("atk",     0))
+			total_atk_spd += int(best.get("atk_spd", 0))
+			total_def     += int(best.get("def",      0))
+			total_spd     += float(best.get("spd",    0.0))
+			total_hp      += int(best.get("hp",       0))
+	if player.has_method("set_synergy_bonus"):
+		player.call("set_synergy_bonus", total_atk, total_atk_spd, total_def, total_spd, total_hp)
 
 func return_to_museum(run_success: bool = true) -> void:
 	current_run_active = false

@@ -81,7 +81,7 @@ func _run_spin(player: CharacterBody2D) -> void:
 		if rumble_acc <= 0.0:
 			rumble_acc = 0.35
 			if cam and cam.has_method("screen_shake"):
-				cam.screen_shake(1.8, 0.38)
+				cam.screen_shake(1.2, 0.38)
 		# 마나 드레인 — 마나가 0이 되면 스핀 강제 종료
 		if mana_drain > 0.0 and player.has_method("drain_mana"):
 			if not player.call("drain_mana", mana_drain * delta):

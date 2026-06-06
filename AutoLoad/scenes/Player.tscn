@@ -35,6 +35,7 @@ shape = SubResource("RectangleShape2D_yewid")
 debug_color = Color(0.9949663, 0, 0.21634322, 0.41960785)
 
 [node name="AttackBox" type="Area2D" parent="." unique_id=718810469]
+collision_mask = 3
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="AttackBox" unique_id=1769750563]
 position = Vector2(0, -2)

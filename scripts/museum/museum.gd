@@ -34,6 +34,9 @@ var _inventory_ui:    ArtifactInventoryUI  = null   # 보유 유물 인벤토리
 var _book_btn:        TextureButton        = null   # 우측 하단 책 버튼
 var _player_hud:      PlayerHUD            = null   # HP·MP 바 HUD
 
+var _player_near_dungeon: bool  = false
+var _dungeon_label:       Label = null
+
 func _ready() -> void:
 	for slot in slots.get_children():
 		if slot is ArtifactSlot:
@@ -42,10 +45,12 @@ func _ready() -> void:
 			slot.wire_requested.connect(_on_wire_requested)
 
 	dungeon_trigger.body_entered.connect(_on_dungeon_trigger_entered)
+	dungeon_trigger.body_exited.connect(_on_dungeon_trigger_exited)
 	artifact_select.artifact_selected.connect(_on_artifact_selected)
 	artifact_select.cancelled.connect(_on_select_cancelled)
 	artifact_select.remove_requested.connect(_on_artifact_remove_requested)
 
+	_setup_dungeon_label()
 	_setup_build_manager()
 	_place_player()
 	_restore_pedestals()          # 동적 전시대 먼저 복원
@@ -216,6 +221,16 @@ func _setup_build_manager() -> void:
 	_build_ui.cancelled.connect(_on_build_cancelled)
 
 func _unhandled_input(event: InputEvent) -> void:
+	# 던전 입구 근처에서 F 키 → 던전 입장
+	if event.is_action_pressed("sub_interact") and _player_near_dungeon:
+		_player_near_dungeon = false
+		if is_instance_valid(_dungeon_label):
+			_dungeon_label.visible = false
+		get_viewport().set_input_as_handled()
+		GameManager.save_game()
+		GameManager.start_dungeon_run()
+		return
+
 	# 배선 중 ESC → 취소 (건설 모드 상태와 무관하게 최우선 처리)
 	if _is_wiring and event.is_action_pressed("ui_cancel"):
 		_cancel_wire()
@@ -979,12 +994,45 @@ func _on_power_changed_museum(_used: int, _total: int) -> void:
 		call_deferred("_reallocate_power")
 
 # ───────────────────────────────
+#  던전 입장 라벨
+# ───────────────────────────────
+func _setup_dungeon_label() -> void:
+	var hud := $HUD as CanvasLayer
+	_dungeon_label = Label.new()
+	_dungeon_label.text = "[F] 그림으로 들어가기"
+	var dungeon_font := load("res://AutoLoad/assets/Font/DungGeunMo.ttf") as FontFile
+	if dungeon_font:
+		_dungeon_label.add_theme_font_override("font", dungeon_font)
+	_dungeon_label.add_theme_font_size_override("font_size", 20)
+	_dungeon_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_dungeon_label.vertical_alignment   = VERTICAL_ALIGNMENT_CENTER
+	_dungeon_label.modulate             = Color(0.6,  0.92, 1.0)
+	# 화면 하단 중앙 고정
+	_dungeon_label.anchor_left   = 0.5
+	_dungeon_label.anchor_right  = 0.5
+	_dungeon_label.anchor_top    = 1.0
+	_dungeon_label.anchor_bottom = 1.0
+	_dungeon_label.offset_left   = -100
+	_dungeon_label.offset_right  = 100
+	_dungeon_label.offset_top    = -100
+	_dungeon_label.offset_bottom = -70
+	_dungeon_label.visible       = false
+	hud.add_child(_dungeon_label)
+
+# ───────────────────────────────
 #  던전 입장
 # ───────────────────────────────
 func _on_dungeon_trigger_entered(body: Node2D) -> void:
 	if body.is_in_group("player"):
-		GameManager.save_game()
-		GameManager.start_dungeon_run()
+		_player_near_dungeon = true
+		if is_instance_valid(_dungeon_label):
+			_dungeon_label.visible = true
+
+func _on_dungeon_trigger_exited(body: Node2D) -> void:
+	if body.is_in_group("player"):
+		_player_near_dungeon = false
+		if is_instance_valid(_dungeon_label):
+			_dungeon_label.visible = false
 
 # ───────────────────────────────
 #  Y-소팅 — 탑다운 뷰 앞뒤 정렬
