@@ -27,6 +27,8 @@ var spawn_position: Vector2
 var target: Node2D = null
 
 var _attack_cooldown_timer: float = 0.0
+# 현재 HIT 감속도 — 강공격은 낮춰서 멀리 미끄러지는 물리감 부여
+var _hit_decel: float = 600.0
 
 # 순찰
 var _patrol_timer:      float   = 0.0
@@ -90,7 +92,7 @@ func _physics_process(delta: float) -> void:
 			velocity = Vector2.ZERO
 			move_and_slide()
 		State.HIT:
-			velocity = velocity.move_toward(Vector2.ZERO, 600.0 * delta)
+			velocity = velocity.move_toward(Vector2.ZERO, _hit_decel * delta)
 			move_and_slide()
 		State.DEAD:
 			pass
@@ -284,14 +286,16 @@ func _face_direction(dir: Vector2) -> void:
 # ─────────────────────────────
 #  DAMAGE / DEATH
 # ─────────────────────────────
-func take_damage(amount: int, source_pos: Vector2 = Vector2.ZERO) -> void:
+func take_damage(amount: int, source_pos: Vector2 = Vector2.ZERO, knockback_force: float = 200.0) -> void:
 	if state == State.DEAD:
 		return
 
 	health = max(0, health - amount)
 
 	if source_pos != Vector2.ZERO:
-		velocity = (global_position - source_pos).normalized() * 200.0
+		velocity = (global_position - source_pos).normalized() * knockback_force
+		# 강공격(150+)은 감속을 낮춰 플레이어 넉백과 비슷한 물리감 부여
+		_hit_decel = 280.0 if knockback_force >= 150.0 else 600.0
 
 	# 카메라 타격감 — 피격 시 화면 흔들기 + 줌 펀치
 	var cam := get_tree().get_first_node_in_group("camera")
@@ -330,8 +334,9 @@ func take_parry_hit(parry_pos: Vector2) -> void:
 	_attack_hit_done       = true
 	_attack_cooldown_timer = attack_cooldown * 1.5
 	# 강한 넉백 — idle 포즈로 밀려남
-	velocity = (global_position - parry_pos).normalized() * 380.0
-	state    = State.HIT
+	velocity   = (global_position - parry_pos).normalized() * 130.0
+	_hit_decel = 320.0   # 패링: 튕겨나가되 자연스럽게 감속
+	state      = State.HIT
 	sprite.play("idle")     # hit 애니 없이 idle 유지하며 밀려남
 	_hit_flash()            # 모듈레이트 플래시만 (애니메이션 변경 없음)
 	# 넉백이 가라앉으면 상태 복귀 (HIT → animation_finished 미사용이므로 타이머로 처리)

@@ -30,6 +30,7 @@ const DIRECTIONAL_ANIMS: Array[String] = [
 	"attack_1", "attack_2", "attack_3", "attack_4",
 	"attack_sheathe",
 	"hit",
+	"sword_hack",
 	"faint",
 	"block_unsheathe", "block_idle", "block_sheathe",
 	"charge_start_white", "charge_release_white",
@@ -37,6 +38,9 @@ const DIRECTIONAL_ANIMS: Array[String] = [
 	"throw",
 	"bow_pull", "bow_base", "bow_release",
 ]
+
+# sword_hack 히트 판정 프레임 (애니메이션 확인 후 필요 시 조정)
+const SWORD_HACK_HIT_FRAMES: Array[int] = [3, 4, 5]
 
 # ───────────────────────────────
 #  프레임 히트박스 설정
@@ -61,17 +65,25 @@ var health: int
 var _dash_timer: float    = 0.0
 var _dash_cd_timer: float = 0.0
 var _dash_dir: Vector2    = Vector2.ZERO
+# HIT 상태 감속도 — 막기 넉백은 낮춰서 물리감 있게 미끄러짐
+var _hit_decel: float     = 800.0
 
 var _combo_index: int    = 0
 var _combo_timer: float  = 0.0
 var _attack_active: bool = false
 var _combo_queued: bool  = false
 var _sheathing: bool     = false  # 검 집어넣기 재생 중
+var _lunge_velocity: Vector2 = Vector2.ZERO  # 공격 시 전진 런지 속도
 
 # ── 막기 (우클릭 — 프로젝트 입력 설정에서 "block" 액션을 MOUSE_BUTTON_RIGHT 에 매핑)
 var _block_release_pending: bool = false  # unsheathe 도중 우클릭을 떼면 true
 var _parry_in_progress:     bool = false  # 막기 피격 넉백 중 — block_sheathe 재생 완료까지 유지
-var _parry_window_active:   bool = false  # block_unsheathe 첫 4프레임 이내면 패링 판정
+var _parry_window_active:   bool    = false   # block_unsheathe 첫 4프레임 이내면 패링 판정
+# ── 패링 후 추적 찍기 공격
+var _parry_followup_window: float   = 0.0    # 남은 입력 허용 시간
+var _parry_followup_target: Node2D  = null   # 패링한 적
+var _in_hack_followup:      bool    = false  # sword_hack 실행 중
+var _hack_hit_done:         bool    = false  # 한 번만 피해
 
 ## SkillSwordSpin 등 스킬이 스핀 루프 종료 여부를 감지하는 플래그
 var is_spinning: bool = false
@@ -160,6 +172,17 @@ func _physics_process(delta: float) -> void:
 	z_index       = int(global_position.y)
 	_tick_timers(delta)
 
+	# 패링 후 추적 찍기 공격 — 모든 상태에서 입력 감지 (DEAD·SKILL 제외)
+	if _parry_followup_window > 0.0 \
+			and state != State.DEAD and state != State.SKILL \
+			and Input.is_action_just_pressed("attack") \
+			and is_instance_valid(_parry_followup_target):
+		var _tgt := _parry_followup_target
+		_parry_followup_window = 0.0
+		_parry_followup_target = null
+		_start_hack_followup(_tgt)
+		return
+
 	match state:
 		State.IDLE, State.MOVE:
 			_handle_block_input()
@@ -178,10 +201,11 @@ func _physics_process(delta: float) -> void:
 		State.ATTACK:
 			_handle_attack_input()
 			_handle_skill_input()
-			velocity = Vector2.ZERO
+			_lunge_velocity = _lunge_velocity.move_toward(Vector2.ZERO, 900.0 * delta)
+			velocity = _lunge_velocity
 			move_and_slide()
 		State.HIT:
-			velocity = velocity.move_toward(Vector2.ZERO, 800 * delta)
+			velocity = velocity.move_toward(Vector2.ZERO, _hit_decel * delta)
 			move_and_slide()
 		State.DEAD:
 			pass
@@ -314,6 +338,7 @@ func _start_attack() -> void:
 
 	state          = State.ATTACK
 	_attack_active = true
+	_lunge_velocity = facing * 130.0  # 공격 방향으로 전진 런지
 
 	attack_box.position = facing * 36.0
 	_set_attack_box(false)
@@ -345,10 +370,11 @@ func _end_attack() -> void:
 		_play_anim("attack_sheathe")
 
 func _cancel_attack() -> void:
-	_attack_active = false
-	_combo_queued  = false
-	_combo_timer   = 0.0
-	_sheathing     = false
+	_attack_active  = false
+	_combo_queued   = false
+	_combo_timer    = 0.0
+	_sheathing      = false
+	_lunge_velocity = Vector2.ZERO
 	_set_attack_box(false)
 	state = State.IDLE
 
@@ -360,6 +386,30 @@ func _on_frame_changed() -> void:
 	if _parry_window_active and sprite.animation.begins_with("block_unsheathe"):
 		if sprite.frame >= 4:
 			_parry_window_active = false
+
+	# sword_hack 히트 프레임 — 범위 내 적에게 데미지 + 카메라 임팩트
+	if _in_hack_followup and sprite.animation.begins_with("sword_hack"):
+		if sprite.frame in SWORD_HACK_HIT_FRAMES and not _hack_hit_done:
+			_hack_hit_done = true
+			# 카메라: 줌아웃 펀치 + 화면 흔들기
+			var cam_node := get_tree().get_first_node_in_group("camera")
+			if is_instance_valid(cam_node):
+				if cam_node.has_method("zoom_punch"):
+					cam_node.zoom_punch(-0.65, 0.25)
+				if cam_node.has_method("screen_shake"):
+					cam_node.screen_shake(6.0, 0.20)
+			# 히트 스탑
+			Engine.time_scale = 0.0
+			await get_tree().create_timer(0.08, true, false, true).timeout
+			Engine.time_scale = 1.0
+			# 데미지
+			for enemy in get_tree().get_nodes_in_group("enemies"):
+				var e := enemy as Node2D
+				if not is_instance_valid(e):
+					continue
+				if global_position.distance_to(e.global_position) <= 52.0:
+					if e.has_method("take_damage"):
+						e.take_damage(int(attack_damage * 1.8), global_position, 180.0)
 
 	if state != State.ATTACK:
 		return
@@ -404,6 +454,8 @@ func _set_attack_box(active: bool) -> void:
 func _on_attack_hit(body: Node2D) -> void:
 	if is_spinning:
 		return   # 스핀 데미지는 SkillSwordSpin 의 폴링으로 처리
+	if state == State.SKILL:
+		return   # 스킬 데미지는 각 스킬 스크립트에서 직접 처리 (중복 피격 방지)
 	if body.has_method("take_damage"):
 		body.take_damage(attack_damage, global_position)
 
@@ -435,6 +487,7 @@ func take_damage(amount: int, source_pos: Vector2 = Vector2.ZERO, source_node: N
 
 	if source_pos != Vector2.ZERO:
 		velocity = (global_position - source_pos).normalized() * 320.0
+	_hit_decel    = 800.0   # 일반 피격은 빠른 감속 유지
 
 	is_invincible = true
 	state         = State.HIT
@@ -471,9 +524,10 @@ func _block_parried(source_pos: Vector2, source_node: Node = null) -> void:
 	_parry_window_active   = false
 	_block_release_pending = false
 	_parry_in_progress     = true
-	# 공격 반대 방향으로 넉백
+	# 공격 반대 방향으로 넉백 — 살짝 밀리는 느낌으로 힘을 줄이고 감속도 낮춤
 	if source_pos != Vector2.ZERO:
-		velocity = (global_position - source_pos).normalized() * 280.0
+		velocity   = (global_position - source_pos).normalized() * 160.0
+		_hit_decel = 260.0   # 낮은 감속 → 물리감 있게 서서히 정지
 	# HIT 물리(넉백 감속)를 사용
 	state         = State.HIT
 	is_invincible = true
@@ -481,17 +535,24 @@ func _block_parried(source_pos: Vector2, source_node: Node = null) -> void:
 	# 막기 포즈 유지
 	_play_anim("block_idle")
 
-	# ── 패링 성공: 공격자 밀어내기
+	# ── 패링 성공: 공격자 밀어내기 + 추적 찍기 공격 창 열기
 	if is_parry and is_instance_valid(source_node) and source_node.has_method("take_parry_hit"):
 		source_node.take_parry_hit(global_position)
+		_parry_followup_window = 0.5
+		_parry_followup_target = source_node as Node2D
 
-	# ── 카메라 효과 — 패링이면 더 강한 충격감
+	# ── 카메라 효과
 	var cam := get_tree().get_first_node_in_group("camera")
 	if is_instance_valid(cam):
 		if cam.has_method("screen_shake"):
-			cam.screen_shake(5.5 if is_parry else 3.0,  0.16 if is_parry else 0.12)
-		if cam.has_method("zoom_punch"):
-			cam.zoom_punch(-0.12 if is_parry else -0.07, 0.18 if is_parry else 0.14)
+			cam.screen_shake(5.5 if is_parry else 3.0, 0.16 if is_parry else 0.12)
+		if is_parry:
+			# 패링: 줌아웃 → 줌인 → 복귀 (충격 후 포커스 연출)
+			if cam.has_method("zoom_out_then_in"):
+				cam.zoom_out_then_in(0.9, 0.55, 0.06, 0.18, 0.32)
+		else:
+			if cam.has_method("zoom_punch"):
+				cam.zoom_punch(-0.07, 0.14)
 
 	# ── 히트 스탑 — 패링은 조금 더 길게
 	Engine.time_scale = 0.0
@@ -527,6 +588,10 @@ func _on_hurt_box_area_entered(area: Area2D) -> void:
 func _tick_timers(delta: float) -> void:
 	if _dash_cd_timer > 0.0:
 		_dash_cd_timer -= delta
+	if _parry_followup_window > 0.0:
+		_parry_followup_window -= delta
+		if _parry_followup_window <= 0.0:
+			_parry_followup_target = null
 	if _combo_timer > 0.0:
 		_combo_timer -= delta
 	if mana < float(max_mana):
@@ -544,6 +609,53 @@ func _flash() -> void:
 	for _i in range(5):
 		tw.tween_property(sprite, "modulate:a", 0.15, 0.06)
 		tw.tween_property(sprite, "modulate:a", 1.00, 0.06)
+
+## 패링 후 추적 찍기 공격 — 멀리서 적 앞으로 대시 후 sword_hack 재생
+func _start_hack_followup(target: Node2D) -> void:
+	if not is_instance_valid(target):
+		return
+	# 진행 중인 행동 정리
+	if _attack_active:  _cancel_attack()
+	_parry_in_progress     = false
+	_block_release_pending = false
+	_sheathing             = false
+	_in_hack_followup      = true
+	_hack_hit_done         = false
+	state                  = State.SKILL
+	velocity               = Vector2.ZERO
+
+	var dir := (target.global_position - global_position).normalized()
+	facing        = dir
+	sprite.flip_h = dir.x < 0.0
+
+	# 최소 시작 거리 보장 — 가까우면 뒤로 물러나서 멀리서 날아오는 연출
+	const MIN_DASH_DIST := 160.0
+	if global_position.distance_to(target.global_position) < MIN_DASH_DIST:
+		global_position = target.global_position - dir * MIN_DASH_DIST
+
+	# ── 대시 트윈 (EXPO Out — 폭발적 가속 후 급감속)
+	var dest := target.global_position - dir * 45.0
+	var tw   := create_tween()
+	tw.tween_property(self, "global_position", dest, 0.13) \
+		.set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_OUT)
+	await tw.finished
+
+	if state != State.SKILL:
+		_in_hack_followup = false
+		return
+
+	# 최종 facing 보정 후 sword_hack 재생
+	if is_instance_valid(target):
+		facing        = (target.global_position - global_position).normalized()
+		sprite.flip_h = facing.x < 0.0
+	_play_anim("sword_hack")
+
+	await sprite.animation_finished
+
+	_in_hack_followup = false
+	if state == State.SKILL:
+		state = State.IDLE
+		_play_anim("idle")
 
 ## 막기 성공 플래시 — 순간 새하얗게 밝아졌다가 서서히 복귀
 func _block_flash() -> void:

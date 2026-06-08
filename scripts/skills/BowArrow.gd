@@ -1,12 +1,9 @@
 extends Area2D
 class_name BowArrow
-## 활 스킬 화살 투사체
-## BowArrow.tscn 씬으로 관리됩니다.
-## direction / speed / damage / pierce_count 를 주입받아 독립 비행합니다.
 
 var direction:    Vector2 = Vector2.RIGHT
 var speed:        float   = 650.0
-var damage:       int     = 1
+var damage:       float   = 0.5
 var max_range:    float   = 700.0
 var pierce_count: int     = 2
 

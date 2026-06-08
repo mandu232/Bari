@@ -9,6 +9,7 @@ var _shake_intensity: float   = 0.0
 var _shake_decay:     float   = 0.0
 var _user_zoom:       Vector2 = BASE_ZOOM  # 사용자가 스크롤로 설정한 목표 줌
 var _zoom_punching:   bool    = false      # zoom_punch 진행 중 → lerp 일시 중단
+var _zoom_tween:      Tween   = null       # 현재 실행 중인 zoom 트윈 (중복 방지용)
 
 func _ready() -> void:
 	add_to_group("camera")
@@ -20,7 +21,6 @@ func _ready() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if not (event is InputEventMouseButton):
 		return
-	# 박물관 씬에서만 줌 허용
 	if not (get_tree().current_scene is Museum):
 		return
 	var mb := event as InputEventMouseButton
@@ -50,21 +50,54 @@ func _process(delta: float) -> void:
 			offset = Vector2.ZERO
 
 # ── 화면 흔들기
-# intensity : 최대 픽셀 흔들림 (카메라 좌표 기준)
-# duration  : 흔들림 지속 시간 (초)
 func screen_shake(intensity: float = 5.0, duration: float = 0.25) -> void:
 	_shake_intensity = intensity
 	_shake_decay     = intensity / maxf(duration, 0.01)
 
-# ── 줌 펀치 (zoom_delta > 0 이면 확대, < 0 이면 축소)
-# 사용자 줌(_user_zoom) 기준으로 튀었다 복귀
+# ── 줌 펀치 — 기존 트윈을 취소하고 새로 시작 (zoom_delta > 0 확대 / < 0 축소)
+# 연출용이므로 MIN_ZOOM 미만도 일시적으로 허용 (클램프 없음)
 func zoom_punch(zoom_delta: float = 0.2, duration: float = 0.18) -> void:
-	_zoom_punching  = true
-	var target      := (_user_zoom + Vector2(zoom_delta, zoom_delta)).clamp(MIN_ZOOM, MAX_ZOOM)
-	var tw          := create_tween()
-	tw.set_parallel(false)
-	tw.tween_property(self, "zoom", target,      duration * 0.35) \
+	if is_instance_valid(_zoom_tween):
+		_zoom_tween.kill()
+	_zoom_punching = true
+	var target     := _user_zoom + Vector2(zoom_delta, zoom_delta)   # 클램프 없음
+	_zoom_tween    = create_tween()
+	_zoom_tween.set_parallel(false)
+	_zoom_tween.tween_property(self, "zoom", target,      duration * 0.35) \
 		.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
-	tw.tween_property(self, "zoom", _user_zoom,  duration * 0.65) \
+	_zoom_tween.tween_property(self, "zoom", _user_zoom,  duration * 0.65) \
 		.set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_CUBIC)
-	tw.tween_callback(func() -> void: _zoom_punching = false)
+	_zoom_tween.tween_callback(func() -> void: _zoom_punching = false)
+
+# ── 특정 줌 값으로 이동 후 duration 동안 유지, 이후 _user_zoom 으로 복귀
+func zoom_to(target_zoom: Vector2, approach_time: float, hold_time: float, return_time: float) -> void:
+	if is_instance_valid(_zoom_tween):
+		_zoom_tween.kill()
+	_zoom_punching = true
+	_zoom_tween    = create_tween()
+	_zoom_tween.set_parallel(false)
+	_zoom_tween.tween_property(self, "zoom", target_zoom, approach_time) \
+		.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
+	_zoom_tween.tween_interval(hold_time)
+	_zoom_tween.tween_property(self, "zoom", _user_zoom,  return_time) \
+		.set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_CUBIC)
+	_zoom_tween.tween_callback(func() -> void: _zoom_punching = false)
+
+# ── 줌아웃 → 줌인 → 복귀 (패링 등 임팩트 순간 연출용)
+# MIN_ZOOM 미만도 허용 (연출 효과이므로 일시적으로 클램프 제외)
+func zoom_out_then_in(out_delta: float, in_delta: float,
+		out_dur: float, in_dur: float, return_dur: float) -> void:
+	if is_instance_valid(_zoom_tween):
+		_zoom_tween.kill()
+	_zoom_punching  = true
+	var out_target  := _user_zoom - Vector2(out_delta, out_delta)
+	var in_target   := _user_zoom + Vector2(in_delta, in_delta)
+	_zoom_tween     = create_tween()
+	_zoom_tween.set_parallel(false)
+	_zoom_tween.tween_property(self, "zoom", out_target, out_dur) \
+		.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
+	_zoom_tween.tween_property(self, "zoom", in_target,  in_dur) \
+		.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_EXPO)
+	_zoom_tween.tween_property(self, "zoom", _user_zoom, return_dur) \
+		.set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_CUBIC)
+	_zoom_tween.tween_callback(func() -> void: _zoom_punching = false)

@@ -6,8 +6,8 @@ class_name SkillDashAttack
 
 @export var dash_speed:      float = 500.0   ## 돌진 속도 (px/s)
 @export var dash_duration:   float = 0.1    ## 돌진 지속 시간 (초)
-@export var damage_mult:     float = 2.5     ## 기본 공격력 대비 데미지 배율
-@export var knockback_force: float = 520.0   ## 피격 적을 밀어내는 힘
+@export var damage_mult:     float = 1.2     ## 기본 공격력 대비 데미지 배율
+@export var knockback_force: float = 120.0   ## 피격 적을 밀어내는 힘
 
 func _init() -> void:
 	skill_name  = "주먹 돌진"
