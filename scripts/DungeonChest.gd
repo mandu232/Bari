@@ -105,30 +105,69 @@ func _open_chest() -> void:
 	tw.tween_property(self, "scale", Vector2(1.15, 0.85), 0.06).set_ease(Tween.EASE_OUT)
 	tw.tween_property(self, "scale", Vector2(0.90, 1.10), 0.08).set_ease(Tween.EASE_IN_OUT)
 	tw.tween_property(self, "scale", Vector2.ONE,          0.10).set_ease(Tween.EASE_OUT)
-	tw.tween_callback(_spawn_artifacts)
+	tw.tween_callback(_spawn_loot)
 
 # ────────────────────────────────────────
-#  아이템 스폰
+#  아이템 스폰 — 유물 + 코인 + 물약 포물선 발사
 # ────────────────────────────────────────
-func _spawn_artifacts() -> void:
+func _spawn_loot() -> void:
+	var items:   Array = []
+	var targets: Array[Vector2] = []
+
+	# 유물 3개
 	var pool  := ARTIFACT_POOL.duplicate()
 	pool.shuffle()
 	var count := mini(DROP_COUNT, pool.size())
-
 	for i in count:
 		var res := load(pool[i]) as ArtifactData
 		if res == null:
 			continue
-
 		var pickup := ArtifactPickup.new()
 		pickup.setup(res)
 		get_parent().add_child(pickup)
+		pickup.global_position = global_position
+		pickup.collision_mask  = 0   # 착지 전 흡인 차단
+		items.append(pickup)
+		var angle := (float(i) / float(count)) * TAU
+		targets.append(global_position + Vector2(cos(angle), sin(angle)) * randf_range(44.0, 62.0))
 
-		var angle := (float(i) / float(count)) * TAU - PI * 0.5
-		var dist  := randf_range(44.0, 60.0)
-		pickup.global_position = global_position + Vector2(cos(angle), sin(angle)) * dist
+	# 코인 8~12개
+	for _i in randi_range(8, 12):
+		var coin := DungeonCoin.new()
+		get_parent().add_child(coin)
+		coin.global_position = global_position
+		items.append(coin)
+		var angle := randf() * TAU
+		targets.append(global_position + Vector2(cos(angle), sin(angle)) * randf_range(24.0, 58.0))
 
-		pickup.modulate.a = 0.0
-		var dt := create_tween()
-		dt.tween_interval(i * 0.12)
-		dt.tween_property(pickup, "modulate:a", 1.0, 0.18)
+	# 회복 물약 1~2개
+	for _i in randi_range(1, 2):
+		var potion := HealthPotion.new()
+		get_parent().add_child(potion)
+		potion.global_position = global_position
+		items.append(potion)
+		var angle := randf() * TAU
+		targets.append(global_position + Vector2(cos(angle), sin(angle)) * randf_range(30.0, 52.0))
+
+	for i in items.size():
+		_launch_arc(items[i], targets[i], i * 0.03)
+
+func _launch_arc(item: Node2D, target: Vector2, delay: float) -> void:
+	var start := global_position
+	var arc   := randf_range(45.0, 70.0)
+	var dur   := randf_range(0.28, 0.40)
+	var tw    := create_tween()
+	if delay > 0.0:
+		tw.tween_interval(delay)
+	tw.tween_method(func(t: float) -> void:
+		if not is_instance_valid(item):
+			return
+		item.global_position = Vector2(
+			lerpf(start.x, target.x, t),
+			lerpf(start.y, target.y, t) - arc * 4.0 * t * (1.0 - t)
+		)
+	, 0.0, 1.0, dur).set_trans(Tween.TRANS_LINEAR)
+	tw.tween_callback(func() -> void:
+		if is_instance_valid(item) and item.has_method("land"):
+			item.land()
+	)

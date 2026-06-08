@@ -4,7 +4,16 @@
 [ext_resource type="Texture2D" uid="uid://bly7revcmgqo5" path="res://AutoLoad/assets/Dungeon/dungeondoor.png" id="2_tex"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_col"]
-size = Vector2(56, 48)
+size = Vector2(56, 33)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_7olw7"]
+size = Vector2(56, 43)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_j8615"]
+size = Vector2(10, 12)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_5vnme"]
+size = Vector2(10, 12)
 
 [node name="DungeonDoor" type="Node2D" unique_id=1787560372]
 script = ExtResource("1_door")
@@ -28,5 +37,24 @@ horizontal_alignment = 1
 collision_layer = 0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="InteractArea" unique_id=1977663768]
-position = Vector2(0, 16)
+position = Vector2(0, 23.5)
 shape = SubResource("RectangleShape2D_col")
+
+[node name="StaticBody2D" type="StaticBody2D" parent="." unique_id=159149659]
+collision_layer = 17
+collision_mask = 17
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D" unique_id=1303228970]
+position = Vector2(0, -3.5)
+shape = SubResource("RectangleShape2D_7olw7")
+debug_color = Color(0.7027782, 0.4909801, 5.7756904e-07, 0.41960785)
+
+[node name="CollisionShape2D2" type="CollisionShape2D" parent="StaticBody2D" unique_id=1254098484]
+position = Vector2(19, 24)
+shape = SubResource("RectangleShape2D_j8615")
+debug_color = Color(0.7019608, 0.49019608, 0, 0.41960785)
+
+[node name="CollisionShape2D3" type="CollisionShape2D" parent="StaticBody2D" unique_id=1198593406]
+position = Vector2(-19, 24)
+shape = SubResource("RectangleShape2D_5vnme")
+debug_color = Color(0.7019608, 0.49019608, 0, 0.41960785)

@@ -10,6 +10,9 @@ var total_echoes: int               = 0
 var artifacts: Array[ArtifactData]   = []
 var dungeon_depth: int               = 1
 var current_run_active: bool         = false
+var player_current_health: int       = -1   # -1 = 미저장 (최대 체력으로 시작)
+var run_artifacts: Array[ArtifactData] = []  # 현재 런에서 획득한 유물 추적
+var dungeon_coins: int = 0                   # 던전 전용 코인 (런 종료 시 소멸)
 
 var unlocked_blueprints: Array[BuildableItem] = []
 var essence_rate: float = 0.0
@@ -255,6 +258,8 @@ func add_artifact(artifact: ArtifactData) -> void:
 	instance.roll_bonuses()
 	instance.roll_equip_bonuses()
 	artifacts.append(instance)
+	if current_run_active:
+		run_artifacts.append(instance)
 	artifact_added.emit(instance)
 	# 도감: 처음 획득한 유물은 발견 목록에 등록
 	if base_path != "" and base_path not in discovered_artifact_paths:
@@ -359,7 +364,17 @@ func reapply_synergies_to_player(player: Node) -> void:
 	if player.has_method("set_synergy_bonus"):
 		player.call("set_synergy_bonus", total_atk, total_atk_spd, total_def, total_spd, total_hp)
 
+func fail_run() -> void:
+	# 런 중 획득한 유물 제거
+	for art in run_artifacts:
+		artifacts.erase(art)
+	run_artifacts.clear()
+	player_current_health = -1
+	return_to_museum(false)
+
 func return_to_museum(run_success: bool = true) -> void:
+	run_artifacts.clear()
+	dungeon_coins      = 0
 	current_run_active = false
 	if run_success:
 		dungeon_depth += 1

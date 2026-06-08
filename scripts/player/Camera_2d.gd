@@ -101,3 +101,15 @@ func zoom_out_then_in(out_delta: float, in_delta: float,
 	_zoom_tween.tween_property(self, "zoom", _user_zoom, return_dur) \
 		.set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_CUBIC)
 	_zoom_tween.tween_callback(func() -> void: _zoom_punching = false)
+
+# ── 이미 확대된 상태에서 시작해 _user_zoom 으로 복귀 (던전 입장 연출용)
+func zoom_from_to_normal(start_zoom: Vector2, duration: float) -> void:
+	if is_instance_valid(_zoom_tween):
+		_zoom_tween.kill()
+	_zoom_punching = true
+	zoom = start_zoom
+	_zoom_tween = create_tween()
+	_zoom_tween.set_parallel(false)
+	_zoom_tween.tween_property(self, "zoom", _user_zoom, duration) \
+		.set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_CUBIC)
+	_zoom_tween.tween_callback(func() -> void: _zoom_punching = false)

@@ -51,6 +51,10 @@ func _ready() -> void:
 	tw.tween_property(_sprite, "scale", Vector2.ONE, 0.08) \
 		.set_ease(Tween.EASE_IN)
 
+# 포물선 착지 후 호출 — 흡인 활성화
+func land() -> void:
+	collision_mask = 1
+
 func _build_nodes() -> void:
 	# 아이템 스프라이트
 	_sprite = Sprite2D.new()

@@ -32,6 +32,17 @@ var _attack_cooldown_timer: float = 0.0
 # 현재 HIT 감속도 — 강공격은 낮춰서 멀리 미끄러지는 물리감 부여
 var _hit_decel: float = 600.0
 
+var _pending_death: bool = false   # hit 애니+넉백 후 사망 대기 플래그
+
+# ── 경직 저항 (포이즈)
+const POISE_THRESHOLD: int   = 3     # 이 횟수 연속 피격 시 저항 발동
+const POISE_DURATION:  float = 2.0   # 저항 지속 시간
+const POISE_WINDOW:    float = 1.2   # 연속 피격 판정 시간 창
+
+var _poise_count:  int   = 0   # 시간 창 내 피격 횟수
+var _poise_window: float = 0.0 # 마지막 피격 후 경과 타이머
+var _poise_timer:  float = 0.0 # > 0 이면 경직 저항 중
+
 # 순찰
 var _patrol_timer:      float   = 0.0
 var _patrol_idle_timer: float   = 0.0
@@ -82,6 +93,13 @@ func _physics_process(delta: float) -> void:
 
 	if _attack_cooldown_timer > 0.0:
 		_attack_cooldown_timer -= delta
+
+	if _poise_window > 0.0:
+		_poise_window -= delta
+		if _poise_window <= 0.0:
+			_poise_count = 0
+	if _poise_timer > 0.0:
+		_poise_timer -= delta
 
 	match state:
 		State.PATROL:
@@ -228,6 +246,9 @@ func _on_animation_finished() -> void:
 			else:
 				_enter_patrol()
 		"hit":
+			if _pending_death:
+				_die()
+				return
 			if state == State.HIT:
 				if (_player_in_detection or _is_alerted) and target != null and is_instance_valid(target):
 					_enter_chase()
@@ -294,12 +315,7 @@ func take_damage(amount: int, source_pos: Vector2 = Vector2.ZERO, knockback_forc
 
 	health = max(0, health - amount)
 
-	if source_pos != Vector2.ZERO:
-		velocity = (global_position - source_pos).normalized() * knockback_force
-		# 강공격(150+)은 감속을 낮춰 플레이어 넉백과 비슷한 물리감 부여
-		_hit_decel = 280.0 if knockback_force >= 300.0 else 600.0
-
-	# 카메라 타격감 — 피격 시 화면 흔들기 + 줌 펀치
+	# 카메라 타격감 (항상 적용)
 	var cam := get_tree().get_first_node_in_group("camera")
 	if is_instance_valid(cam):
 		if cam.has_method("screen_shake"):
@@ -308,20 +324,29 @@ func take_damage(amount: int, source_pos: Vector2 = Vector2.ZERO, knockback_forc
 			cam.zoom_punch(-0.06, 0.15)
 
 	if health <= 0:
-		_die()
-		return
-
-	# 피격 어그로 — 감지 범위 밖에서 맞아도 플레이어를 추적
-	_is_alerted = true
-	if target == null or not is_instance_valid(target):
-		target = get_tree().get_first_node_in_group("player") as Node2D
-	if state == State.PATROL or state == State.HIT:
-		if target != null and is_instance_valid(target):
-			_enter_chase()
+		_pending_death = true
+	else:
+		# 피격 어그로 — 감지 범위 밖에서 맞아도 플레이어를 추적
+		_is_alerted = true
+		if target == null or not is_instance_valid(target):
+			target = get_tree().get_first_node_in_group("player") as Node2D
+		if state == State.PATROL or state == State.HIT:
+			if target != null and is_instance_valid(target):
+				_enter_chase()
 
 	if _is_attacking:
 		_is_attacking          = false
 		_attack_cooldown_timer = attack_cooldown
+
+	# 경직 저항 — 죽음 대기 중이면 무시하고 경직 처리
+	if not _pending_death and _check_poise_resist():
+		_hit_flash()
+		return
+
+	# 넉백 + 경직
+	if source_pos != Vector2.ZERO:
+		velocity   = (global_position - source_pos).normalized() * knockback_force
+		_hit_decel = 280.0 if knockback_force >= 300.0 else 600.0
 
 	state = State.HIT
 	sprite.play("hit")
@@ -344,6 +369,9 @@ func take_parry_hit(parry_pos: Vector2) -> void:
 	# 넉백이 가라앉으면 상태 복귀 (HIT → animation_finished 미사용이므로 타이머로 처리)
 	await get_tree().create_timer(0.4).timeout
 	if state == State.HIT:
+		if _pending_death:
+			_die()
+			return
 		if (_player_in_detection or _is_alerted) and target != null and is_instance_valid(target):
 			_enter_chase()
 		else:
@@ -355,7 +383,22 @@ func _die() -> void:
 	sprite.play("dead")
 	$CollisionShape2D.set_deferred("disabled", true)
 	died.emit()   # 전멸 감지용 시그널
-	get_tree().create_timer(2.0).timeout.connect(queue_free)
+	await get_tree().create_timer(1.5).timeout
+	var tw := create_tween()
+	tw.tween_property(sprite, "modulate:a", 0.0, 0.5)
+	tw.tween_callback(queue_free)
+
+# 포이즈 카운터 갱신 — 저항 중이면 true 반환
+func _check_poise_resist() -> bool:
+	if _poise_timer > 0.0:
+		return true
+	_poise_count  += 1
+	_poise_window  = POISE_WINDOW
+	if _poise_count >= POISE_THRESHOLD:
+		_poise_timer = POISE_DURATION
+		_poise_count = 0
+		return true
+	return false
 
 func _hit_flash() -> void:
 	sprite.modulate = Color(4.0, 4.0, 4.0, 1.0)

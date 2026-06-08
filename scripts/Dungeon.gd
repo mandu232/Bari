@@ -2,7 +2,6 @@ extends Node2D
 
 const FONT        := preload("res://AutoLoad/assets/Font/DungGeunMo.ttf")
 const CHEST_SCENE := preload("res://AutoLoad/scenes/DungeonChest.tscn")
-const DOOR_SCENE  := preload("res://AutoLoad/scenes/DungeonDoor.tscn")
 
 # ────────────────────────────────────────
 #  적 전멸 감지 & 보물 상자 스폰
@@ -19,9 +18,41 @@ func _ready() -> void:
 	# TileMap을 최하위 레이어로 고정 — 플레이어/적이 음수 y에서도 타일 앞에 렌더링되도록
 	$TileMap.z_index = -4096
 
-	# 한 프레임 대기 후 적 등록 (씬 트리 초기화 완료 대기)
+	# 한 프레임 대기 후 초기화 (씬 트리 초기화 완료 대기)
 	await get_tree().process_frame
+	_play_entry_animation()
 	_register_enemies()
+
+	var player := get_tree().get_first_node_in_group("player")
+	if is_instance_valid(player):
+		player.player_died.connect(_on_player_died)
+
+# ────────────────────────────────────────
+#  던전 입장 연출 — 확대 상태에서 플레이어가 입구에서 올라오며 줌아웃
+# ────────────────────────────────────────
+func _play_entry_animation() -> void:
+	var player := get_tree().get_first_node_in_group("player")
+	if not is_instance_valid(player):
+		return
+
+	var is_first_room: bool = DungeonRunner.get_progress()["current"] == 1
+
+	var duration := 2.2 if is_first_room else 1.8
+	var distance := 120.0
+
+	if is_first_room:
+		# 줌아웃 시간을 이동 완료 시점에 맞춤
+		var camera := get_tree().get_first_node_in_group("camera")
+		if is_instance_valid(camera):
+			camera.zoom_from_to_normal(Vector2(5.5, 5.5), duration)
+
+	player.start_entry_walk()
+
+	var tw := create_tween()
+	tw.tween_property(player, "global_position:y",
+		player.global_position.y - distance, duration) \
+		.set_trans(Tween.TRANS_LINEAR)
+	tw.tween_callback(player.end_entry_walk)
 
 # ────────────────────────────────────────
 #  적 사망 시그널 연결
@@ -48,14 +79,14 @@ func _on_enemy_died() -> void:
 		_spawn_door()
 
 # ────────────────────────────────────────
-#  출구 문 스폰
+#  출구 문 열기 (씬에 배치된 DungeonDoor 사용)
 # ────────────────────────────────────────
 func _spawn_door() -> void:
 	await get_tree().create_timer(1.5).timeout
 
-	var door := DOOR_SCENE.instantiate() as DungeonDoor
-	add_child(door)
-	door.global_position = _get_door_pos()
+	var door := $DungeonDoor as DungeonDoor
+	if not is_instance_valid(door):
+		return
 
 	# 등장 연출
 	door.scale = Vector2.ZERO
@@ -67,15 +98,6 @@ func _spawn_door() -> void:
 	tw.tween_property(door, "scale", Vector2.ONE,        0.10) \
 		.set_ease(Tween.EASE_OUT)
 	tw.tween_callback(door.open)
-
-	_show_announce("출구가 열렸다!", door.global_position)
-
-# 문 위치: DoorSpwPoint 마커 → 기본 위치 폴백
-func _get_door_pos() -> Vector2:
-	var marker := find_child("DoorSpwPoint", true, false) as Node2D
-	if is_instance_valid(marker):
-		return marker.global_position
-	return Vector2(-8, -318)
 
 # ────────────────────────────────────────
 #  보물 상자 스폰
@@ -101,8 +123,6 @@ func _spawn_chest() -> void:
 	tw.tween_property(chest, "scale", Vector2.ONE,        0.10) \
 		.set_ease(Tween.EASE_OUT)
 
-	# 화면 알림 라벨
-	_show_announce("보물 상자가 나타났다!", chest.global_position)
 
 # ────────────────────────────────────────
 #  상자 스폰 위치 계산
@@ -140,3 +160,11 @@ func _show_announce(text: String, world_pos: Vector2) -> void:
 	tw.parallel().tween_property(lbl, "modulate:a", 0.0, 1.6) \
 		.set_ease(Tween.EASE_IN)
 	tw.tween_callback(lbl.queue_free)
+
+# ────────────────────────────────────────
+#  플레이어 사망 처리
+# ────────────────────────────────────────
+func _on_player_died() -> void:
+	# faint 애니 재생 후 박물관으로 복귀 (런 중 획득 유물 소실)
+	await get_tree().create_timer(1.8).timeout
+	GameManager.fail_run()

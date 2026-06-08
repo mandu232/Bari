@@ -8,6 +8,10 @@ var _mp_bar:   ProgressBar = null
 var _mp_label: Label       = null
 var _font:     Font        = null
 
+var _coin_label: Label        = null
+var _coin_panel: PanelContainer = null
+var _last_coins: int          = -1
+
 var _player_connected: bool = false
 
 func _ready() -> void:
@@ -15,11 +19,23 @@ func _ready() -> void:
 	layer        = 9
 	_font        = load("res://AutoLoad/assets/Font/DungGeunMo.ttf")
 	_build_layout()
+	_build_coin_counter()
 	add_to_group("player_hud")
 
 func _process(_delta: float) -> void:
 	if not _player_connected:
 		_try_connect_player()
+	# 코인 패널은 던전 런 중에만 표시
+	var in_run: bool = GameManager.current_run_active
+	if _coin_panel and _coin_panel.visible != in_run:
+		_coin_panel.visible = in_run
+	# 코인 수 변경 시 갱신
+	if in_run:
+		var coins: int = GameManager.dungeon_coins
+		if coins != _last_coins:
+			_last_coins = coins
+			if _coin_label:
+				_coin_label.text = "● %d" % coins
 
 # ───────────────────────────────
 #  레이아웃
@@ -148,3 +164,43 @@ func _apply_font(node: Control, size: int) -> void:
 	if _font:
 		node.add_theme_font_override("font", _font)
 		node.add_theme_font_size_override("font_size", size)
+
+# ───────────────────────────────
+#  코인 카운터 (우측 상단)
+# ───────────────────────────────
+func _build_coin_counter() -> void:
+	var panel := PanelContainer.new()
+	_coin_panel = panel
+	panel.visible = false   # 던전 런 중에만 표시
+	panel.anchor_left    = 1.0
+	panel.anchor_right   = 1.0
+	panel.anchor_top     = 0.0
+	panel.anchor_bottom  = 0.0
+	panel.offset_right   = -12
+	panel.offset_top     = 12
+	panel.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+
+	var bg := StyleBoxFlat.new()
+	bg.bg_color = Color(0.08, 0.06, 0.02, 0.82)
+	bg.set_corner_radius_all(5)
+	bg.border_color = Color(1.0, 0.78, 0.08, 0.7)
+	bg.set_border_width_all(1)
+	panel.add_theme_stylebox_override("panel", bg)
+	add_child(panel)
+
+	var margin := MarginContainer.new()
+	margin.add_theme_constant_override("margin_left",   12)
+	margin.add_theme_constant_override("margin_right",  12)
+	margin.add_theme_constant_override("margin_top",     8)
+	margin.add_theme_constant_override("margin_bottom",  8)
+	panel.add_child(margin)
+
+	_coin_label = Label.new()
+	_coin_label.text                 = "● 0"
+	_coin_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_coin_label.modulate             = Color(1.0, 0.85, 0.1)
+	_apply_font(_coin_label, 14)
+	_coin_label.add_theme_color_override("font_shadow_color",  Color(0.0, 0.0, 0.0, 0.9))
+	_coin_label.add_theme_constant_override("shadow_offset_x", 1)
+	_coin_label.add_theme_constant_override("shadow_offset_y", 1)
+	margin.add_child(_coin_label)

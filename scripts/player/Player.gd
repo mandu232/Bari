@@ -27,7 +27,7 @@ var mana: float = 100.0               # 현재 마나 (float으로 누적)
 # ───────────────────────────────
 const DIRECTIONAL_ANIMS: Array[String] = [
 	"idle", "walk", "dash",
-	"attack_1", "attack_2", "attack_3", "attack_4",
+	"attack_1", "attack_2",
 	"attack_sheathe",
 	"hit",
 	"sword_hack",
@@ -49,8 +49,6 @@ const SWORD_HACK_HIT_FRAMES: Array[int] = [3, 4, 5]
 const HIT_FRAMES: Dictionary = {
 	0: [0, 1, 2],       # attack_1
 	1: [1, 2, 3],       # attack_2
-	2: [0, 1, 2, 3],    # attack_3
-	3: [1, 2, 3, 4],    # attack_4
 }
 
 # ───────────────────────────────
@@ -144,7 +142,11 @@ func _ready() -> void:
 		attack_damage += GameManager.player_damage_bonus
 		move_speed    += GameManager.player_speed_bonus
 
-	health = max_health
+	if GameManager.player_current_health > 0:
+		health = GameManager.player_current_health
+		GameManager.player_current_health = -1
+	else:
+		health = max_health
 
 	# 저장된 스킬 + 장착 보너스 복원
 	if GameManager.equipped_skill_path != "":
@@ -334,7 +336,7 @@ func _start_attack() -> void:
 	if _combo_timer <= 0.0:
 		_combo_index = 0
 	else:
-		_combo_index = (_combo_index + 1) % 4
+		_combo_index = (_combo_index + 1) % 2
 
 	state          = State.ATTACK
 	_attack_active = true
@@ -569,6 +571,10 @@ func _block_parried(source_pos: Vector2, source_node: Node = null) -> void:
 	_parry_in_progress = false
 	state = State.BLOCK   # block_sheathe → IDLE 전환은 _on_sprite_animation_finished 가 처리
 	_play_anim("block_sheathe")
+
+func heal(amount: int) -> void:
+	health = mini(health + amount, max_health)
+	health_changed.emit(health, max_health)
 
 func _die() -> void:
 	state = State.DEAD
@@ -864,3 +870,21 @@ func _play_anim(base: String) -> void:
 
 	# side / front_side / back_side 는 오른쪽 기준 → 왼쪽이면 flip
 	sprite.flip_h = facing.x < 0.0
+
+# ───────────────────────────────
+#  던전 입장 연출 (Dungeon.gd 에서 호출)
+# ───────────────────────────────
+func start_entry_walk() -> void:
+	is_invincible = true
+	facing = Vector2.UP
+	_play_anim("walk")
+	set_physics_process(false)
+	set_process_unhandled_input(false)
+
+func end_entry_walk() -> void:
+	is_invincible = false
+	velocity = Vector2.ZERO
+	state = State.IDLE
+	set_physics_process(true)
+	set_process_unhandled_input(true)
+	_play_anim("idle")

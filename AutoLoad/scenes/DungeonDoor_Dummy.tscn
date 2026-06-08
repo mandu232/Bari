@@ -1,0 +1,26 @@
+[gd_scene format=3 uid="uid://df3lp3k6i7eh8"]
+
+[ext_resource type="Texture2D" uid="uid://bly7revcmgqo5" path="res://AutoLoad/assets/Dungeon/dungeondoor.png" id="1_blquw"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_s6ahh"]
+size = Vector2(11, 40)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_o1u8i"]
+size = Vector2(11, 40)
+
+[node name="DungeonDoorDummy" type="Node2D" unique_id=1085721591]
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1473242088]
+texture = ExtResource("1_blquw")
+region_enabled = true
+region_rect = Rect2(0, 0, 48, 64)
+
+[node name="StaticBody2D" type="StaticBody2D" parent="." unique_id=483503054]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D" unique_id=1763600690]
+position = Vector2(18.5, 10)
+shape = SubResource("RectangleShape2D_s6ahh")
+
+[node name="CollisionShape2D2" type="CollisionShape2D" parent="StaticBody2D" unique_id=1240889328]
+position = Vector2(-18.5, 10)
+shape = SubResource("RectangleShape2D_o1u8i")
