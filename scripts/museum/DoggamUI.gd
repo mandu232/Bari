@@ -10,11 +10,11 @@ const ALL_ARTIFACT_PATHS: Array[String] = [
 	"res://resources/artifacts/artifact_tanged_tool.tres",
 	"res://resources/artifacts/artifact_sword.tres",
 	"res://resources/artifacts/artifact_semilunar_stone_knife.tres",
+	"res://resources/artifacts/artifact_iron_arrow.tres",
 	"res://resources/artifacts/artifact_hwandudaedo.tres",
 	"res://resources/artifacts/artifact_mumun_pottery.tres",
 	"res://resources/artifacts/monster_mask_roof_tile.tres",
 	"res://resources/artifacts/white_porcelain_jar_cloud_dragon.tres",
-	"res://resources/artifacts/artifact_iron_arrow.tres",
 ]
 
 const ALL_BLUEPRINT_PATHS: Array[String] = [

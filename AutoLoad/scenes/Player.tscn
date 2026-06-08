@@ -5,7 +5,7 @@
 [ext_resource type="Script" uid="uid://b6ir2ftejax54" path="res://scripts/player/Camera_2d.gd" id="3_yewid"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_u4nha"]
-size = Vector2(12, 11)
+size = Vector2(12, 8)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_yewid"]
 size = Vector2(12, 23)
@@ -24,7 +24,7 @@ frame = 3
 frame_progress = 1.0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=307869615]
-position = Vector2(0, 3.5)
+position = Vector2(0, 5)
 shape = SubResource("RectangleShape2D_u4nha")
 
 [node name="HurtBox" type="Area2D" parent="." unique_id=1324718265]

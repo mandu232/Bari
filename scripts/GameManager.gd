@@ -339,7 +339,7 @@ func add_echo(count: int = 1) -> void:
 func start_dungeon_run() -> void:
 	current_run_active = true
 	run_started.emit(dungeon_depth)
-	get_tree().change_scene_to_file(DUNGEON_SCENE)
+	DungeonRunner.start_run()
 
 ## 박물관에서 계산된 시너지 보너스를 던전 플레이어에게 재적용
 func reapply_synergies_to_player(player: Node) -> void:

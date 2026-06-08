@@ -1,0 +1,32 @@
+[gd_scene format=3 uid="uid://cdoorscene001"]
+
+[ext_resource type="Script" uid="uid://buovh86gjfs2l" path="res://scripts/DungeonDoor.gd" id="1_door"]
+[ext_resource type="Texture2D" uid="uid://bly7revcmgqo5" path="res://AutoLoad/assets/Dungeon/dungeondoor.png" id="2_tex"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_col"]
+size = Vector2(56, 48)
+
+[node name="DungeonDoor" type="Node2D" unique_id=1787560372]
+script = ExtResource("1_door")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=214342733]
+texture = ExtResource("2_tex")
+region_enabled = true
+region_rect = Rect2(48, 0, 48, 64)
+
+[node name="HintLabel" type="Label" parent="." unique_id=1536995597]
+visible = false
+custom_minimum_size = Vector2(104, 0)
+offset_left = -52.0
+offset_top = -56.0
+offset_right = -52.0
+offset_bottom = -56.0
+text = "[ E ] 다음 방"
+horizontal_alignment = 1
+
+[node name="InteractArea" type="Area2D" parent="." unique_id=1878328352]
+collision_layer = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="InteractArea" unique_id=1977663768]
+position = Vector2(0, 16)
+shape = SubResource("RectangleShape2D_col")

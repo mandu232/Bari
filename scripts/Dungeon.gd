@@ -1,10 +1,14 @@
 extends Node2D
 
-const FONT := preload("res://AutoLoad/assets/Font/DungGeunMo.ttf")
+const FONT        := preload("res://AutoLoad/assets/Font/DungGeunMo.ttf")
+const CHEST_SCENE := preload("res://AutoLoad/scenes/DungeonChest.tscn")
+const DOOR_SCENE  := preload("res://AutoLoad/scenes/DungeonDoor.tscn")
 
 # ────────────────────────────────────────
 #  적 전멸 감지 & 보물 상자 스폰
 # ────────────────────────────────────────
+signal dungeon_cleared
+
 var _total_enemies: int  = 0
 var _dead_enemies:  int  = 0
 var _chest_spawned: bool = false
@@ -27,8 +31,9 @@ func _register_enemies() -> void:
 	_total_enemies = enemies.size()
 
 	if _total_enemies == 0:
-		# 적이 없으면 즉시 상자 스폰
+		dungeon_cleared.emit()
 		_spawn_chest()
+		_spawn_door()
 		return
 
 	for enemy in enemies:
@@ -38,7 +43,39 @@ func _register_enemies() -> void:
 func _on_enemy_died() -> void:
 	_dead_enemies += 1
 	if _dead_enemies >= _total_enemies and not _chest_spawned:
+		dungeon_cleared.emit()
 		_spawn_chest()
+		_spawn_door()
+
+# ────────────────────────────────────────
+#  출구 문 스폰
+# ────────────────────────────────────────
+func _spawn_door() -> void:
+	await get_tree().create_timer(1.5).timeout
+
+	var door := DOOR_SCENE.instantiate() as DungeonDoor
+	add_child(door)
+	door.global_position = _get_door_pos()
+
+	# 등장 연출
+	door.scale = Vector2.ZERO
+	var tw := create_tween()
+	tw.tween_property(door, "scale", Vector2(1.2, 0.8), 0.14) \
+		.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
+	tw.tween_property(door, "scale", Vector2(0.9, 1.1), 0.10) \
+		.set_ease(Tween.EASE_IN_OUT)
+	tw.tween_property(door, "scale", Vector2.ONE,        0.10) \
+		.set_ease(Tween.EASE_OUT)
+	tw.tween_callback(door.open)
+
+	_show_announce("출구가 열렸다!", door.global_position)
+
+# 문 위치: DoorSpwPoint 마커 → 기본 위치 폴백
+func _get_door_pos() -> Vector2:
+	var marker := find_child("DoorSpwPoint", true, false) as Node2D
+	if is_instance_valid(marker):
+		return marker.global_position
+	return Vector2(-8, -318)
 
 # ────────────────────────────────────────
 #  보물 상자 스폰
@@ -50,7 +87,7 @@ func _spawn_chest() -> void:
 	await get_tree().create_timer(0.9).timeout
 
 	# 상자 생성
-	var chest := DungeonChest.new()
+	var chest := CHEST_SCENE.instantiate()
 	add_child(chest)
 	chest.global_position = _get_dungeon_center()
 

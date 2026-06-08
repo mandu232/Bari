@@ -5,8 +5,8 @@ extends CharacterBody2D
 # ─────────────────────────────
 @export var max_health:      int   = 10
 @export var attack_damage:   int   = 2
-@export var move_speed:      float = 60.0
-@export var attack_cooldown: float = 1.5
+@export var move_speed:      float = 35.0
+@export var attack_cooldown: float = 1.0
 @export var patrol_radius:   float = 80.0
 # 피격 어그로 시 유지되는 최대 추적 거리 (DetectionArea 반지름보다 크게 설정)
 @export var alert_range:     float = 320.0
@@ -297,7 +297,7 @@ func take_damage(amount: int, source_pos: Vector2 = Vector2.ZERO, knockback_forc
 	if source_pos != Vector2.ZERO:
 		velocity = (global_position - source_pos).normalized() * knockback_force
 		# 강공격(150+)은 감속을 낮춰 플레이어 넉백과 비슷한 물리감 부여
-		_hit_decel = 280.0 if knockback_force >= 150.0 else 600.0
+		_hit_decel = 280.0 if knockback_force >= 300.0 else 600.0
 
 	# 카메라 타격감 — 피격 시 화면 흔들기 + 줌 펀치
 	var cam := get_tree().get_first_node_in_group("camera")
