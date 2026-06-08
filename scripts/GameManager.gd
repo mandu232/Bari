@@ -111,40 +111,7 @@ var equipped_artifact: ArtifactData = null
 func _ready() -> void:
 	load_game()
 	
-	#테스트용 아티펙트 지급
-	#─────────────────────────────────────────────────────────────────────────────────────────────
-	
-	var artifact = load("res://resources/artifacts/artifact_sword.tres")
-	add_artifact(artifact)
-	add_artifact(artifact)
-	add_artifact(artifact)
-	add_artifact(artifact)
-	
-	var handaxe = load("res://resources/artifacts/artifact_handaxe.tres")
-	add_artifact(handaxe)
-
-	var tanged_tool = load("res://resources/artifacts/artifact_tanged_tool.tres")
-	add_artifact(tanged_tool)
-
-	var semilunar_stone_knife = load("res://resources/artifacts/artifact_semilunar_stone_knife.tres")
-	add_artifact(semilunar_stone_knife)
-	
-	var iron_arrow = load("res://resources/artifacts/artifact_iron_arrow.tres")
-	add_artifact(iron_arrow)
-	
-	var hwandudaedo = load("res://resources/artifacts/artifact_hwandudaedo.tres")
-	add_artifact(hwandudaedo)
-	
-	var mumun_pottery = load("res://resources/artifacts/artifact_mumun_pottery.tres")
-	add_artifact(mumun_pottery)
-	
-	var monster_mask_roof_tile = load("res://resources/artifacts/monster_mask_roof_tile.tres")
-	add_artifact(monster_mask_roof_tile)
-	
-	var white_porcelain_jar_cloud_dragon = load("res://resources/artifacts/white_porcelain_jar_cloud_dragon.tres")
-	add_artifact(white_porcelain_jar_cloud_dragon)
-	
-	#─────────────────────────────────────────────────────────────────────────────────────────────
+	# ※ 유물은 던전 상자에서 획득 — 테스트 코드 제거됨
 
 	#테스트용 시작시 박물관 레벨 1레벨로 고정
 	hq_museum_level = 1

@@ -29,4 +29,13 @@ tile_set = ExtResource("2_xgva0")
 [node name="Enemy" parent="." unique_id=1670133853 instance=ExtResource("1_xx1bb")]
 position = Vector2(123, 52)
 
+[node name="Enemy2" parent="." unique_id=1939479417 instance=ExtResource("1_xx1bb")]
+position = Vector2(-145, -129)
+
+[node name="Enemy3" parent="." unique_id=1309686771 instance=ExtResource("1_xx1bb")]
+position = Vector2(141, -75)
+
 [node name="Player" parent="." unique_id=1103668238 instance=ExtResource("2_3r20u")]
+
+[node name="BoxSpwPoint" type="Marker2D" parent="." unique_id=1697768398]
+position = Vector2(-5, -87)

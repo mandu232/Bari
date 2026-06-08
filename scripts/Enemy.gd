@@ -22,6 +22,8 @@ const ATTACK_REACH: float = 40.0
 enum State { PATROL, CHASE, ATTACK, HIT, DEAD }
 var state: State = State.PATROL
 
+signal died   # 사망 애니 시작 시 발생 — Dungeon에서 전멸 감지에 사용
+
 var health: int
 var spawn_position: Vector2
 var target: Node2D = null
@@ -352,6 +354,7 @@ func _die() -> void:
 	velocity = Vector2.ZERO
 	sprite.play("dead")
 	$CollisionShape2D.set_deferred("disabled", true)
+	died.emit()   # 전멸 감지용 시그널
 	get_tree().create_timer(2.0).timeout.connect(queue_free)
 
 func _hit_flash() -> void:
