@@ -4,7 +4,7 @@
 [ext_resource type="Script" uid="uid://ddc7h0jy3qjit" path="res://scripts/Enemy.gd" id="2_script"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_7bgwr"]
-size = Vector2(12, 26)
+size = Vector2(12, 6)
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_8ljyg"]
 radius = 29.0
@@ -22,7 +22,7 @@ sprite_frames = ExtResource("1_wvtp4")
 animation = &"attack"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=411800248]
-position = Vector2(0, 3)
+position = Vector2(0, 13)
 shape = SubResource("RectangleShape2D_7bgwr")
 
 [node name="NavigationAgent2D" type="NavigationAgent2D" parent="." unique_id=917629]

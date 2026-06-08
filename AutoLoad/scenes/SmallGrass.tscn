@@ -1,0 +1,20 @@
+[gd_scene format=3 uid="uid://c5m3773aj0iyy"]
+
+[ext_resource type="Script" uid="uid://dfda06slujl7k" path="res://scripts/SmallGrass.gd" id="1_smgrass"]
+[ext_resource type="Texture2D" uid="uid://bg5twh62lmrtu" path="res://AutoLoad/assets/Grass/SmallGrass.png" id="2_7ally"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_smgrass"]
+size = Vector2(16, 7.5)
+
+[node name="SmallGrass" type="Node2D" unique_id=958732658]
+script = ExtResource("1_smgrass")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=903936451]
+texture = ExtResource("2_7ally")
+
+[node name="Area2D" type="Area2D" parent="." unique_id=1598046428]
+collision_mask = 3
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D" unique_id=1642269024]
+position = Vector2(0, 3.25)
+shape = SubResource("RectangleShape2D_smgrass")

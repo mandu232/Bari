@@ -15,6 +15,10 @@ var _chest_spawned: bool = false
 func _ready() -> void:
 	var hud := PlayerHUD.new()
 	add_child(hud)
+
+	var fx := load("res://scripts/ScreenEffects.gd").new() as Node
+	add_child(fx)
+
 	# TileMap을 최하위 레이어로 고정 — 플레이어/적이 음수 y에서도 타일 앞에 렌더링되도록
 	$TileMap.z_index = -4096
 
@@ -26,6 +30,21 @@ func _ready() -> void:
 	var player := get_tree().get_first_node_in_group("player")
 	if is_instance_valid(player):
 		player.player_died.connect(_on_player_died)
+		# HP 변화를 ScreenEffects 에 전달
+		if player.has_signal("health_changed"):
+			player.health_changed.connect(_on_player_health_changed)
+		# 초기 HP 비율 전달
+		var ratio := float(player.get("health")) / float(player.get("max_health"))
+		_update_vignette_hp(ratio)
+
+func _on_player_health_changed(current: int, maximum: int) -> void:
+	var ratio := float(current) / float(maximum) if maximum > 0 else 0.0
+	_update_vignette_hp(ratio)
+
+func _update_vignette_hp(ratio: float) -> void:
+	var sfx := get_tree().get_first_node_in_group("screen_effects")
+	if is_instance_valid(sfx) and sfx.has_method("update_hp_ratio"):
+		sfx.update_hp_ratio(ratio)
 
 # ────────────────────────────────────────
 #  던전 입장 연출 — 확대 상태에서 플레이어가 입구에서 올라오며 줌아웃

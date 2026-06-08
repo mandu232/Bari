@@ -5,8 +5,8 @@ extends CharacterBody2D
 # ───────────────────────────────
 @export_group("Movement")
 @export var move_speed: float    = 110.0
-@export var dash_speed: float    = 210.0
-@export var dash_duration: float = 0.57
+@export var dash_speed: float    = 200.0
+@export var dash_duration: float = 0.44
 @export var dash_cooldown: float = 1.0
 
 @export_group("Combat")
@@ -342,7 +342,7 @@ func _start_attack() -> void:
 	_attack_active = true
 	_lunge_velocity = facing * 130.0  # 공격 방향으로 전진 런지
 
-	attack_box.position = facing * 36.0
+	attack_box.position = facing * 20.0
 	_set_attack_box(false)
 
 	_play_anim("attack_%d" % (_combo_index + 1))
@@ -450,10 +450,12 @@ func _on_sprite_animation_finished() -> void:
 		_play_anim("idle")
 
 func _set_attack_box(active: bool) -> void:
-	attack_box.monitoring      = active
+	attack_box.set_deferred("monitoring", active)
 	attack_shape.set_deferred("disabled", not active)
 
 func _on_attack_hit(body: Node2D) -> void:
+	if body == self:
+		return   # 자기 자신은 공격 불가
 	if is_spinning:
 		return   # 스핀 데미지는 SkillSwordSpin 의 폴링으로 처리
 	if state == State.SKILL:

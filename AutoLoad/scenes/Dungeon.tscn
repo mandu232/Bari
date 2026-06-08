@@ -6,6 +6,10 @@
 [ext_resource type="Script" uid="uid://2mrn6qadtfp7" path="res://scripts/Dungeon.gd" id="3_script"]
 [ext_resource type="PackedScene" uid="uid://cdoorscene001" path="res://AutoLoad/scenes/DungeonDoor.tscn" id="5_sbwrq"]
 [ext_resource type="PackedScene" uid="uid://df3lp3k6i7eh8" path="res://AutoLoad/scenes/DungeonDoor_Dummy.tscn" id="6_d7uss"]
+[ext_resource type="PackedScene" uid="uid://cvtj3e5ivhc70" path="res://AutoLoad/scenes/Tree/Tree_type1.tscn" id="7_d3fkp"]
+[ext_resource type="PackedScene" uid="uid://y2elb4be8fa" path="res://AutoLoad/scenes/Tree/Tree_type2.tscn" id="8_ah4ee"]
+[ext_resource type="Script" uid="uid://dra251xn7nngy" path="res://scripts/GrassSpawner.gd" id="8_bl3o5"]
+[ext_resource type="Script" uid="uid://e7i7vh6agw4i" path="res://scripts/SmallGrassSpawner.gd" id="10_aukv5"]
 
 [node name="Dungeon" type="Node2D" unique_id=1553180979]
 script = ExtResource("3_script")
@@ -41,7 +45,7 @@ tile_map_data = PackedByteArray("AAD9/woAAgAEAAMAAAD9/wsAAgAEAAQAAAD9/wwAAgAEAAU
 tile_set = ExtResource("2_xgva0")
 
 [node name="Enemy" parent="." unique_id=1670133853 instance=ExtResource("1_xx1bb")]
-position = Vector2(123, 52)
+position = Vector2(138, 63)
 
 [node name="Enemy2" parent="." unique_id=1939479417 instance=ExtResource("1_xx1bb")]
 position = Vector2(-145, -129)
@@ -61,3 +65,45 @@ position = Vector2(-8, -318)
 [node name="DungeonDoorDummy" parent="." unique_id=1085721591 instance=ExtResource("6_d7uss")]
 z_index = 4000
 position = Vector2(-8, 162)
+
+[node name="TreeType1" parent="." unique_id=1055635900 instance=ExtResource("7_d3fkp")]
+position = Vector2(-147, 27)
+
+[node name="TreeType2" parent="." unique_id=777166463 instance=ExtResource("8_ah4ee")]
+position = Vector2(112, -255)
+
+[node name="GrassSpawner" type="Node2D" parent="." unique_id=1031700136]
+position = Vector2(-40, 64)
+script = ExtResource("8_bl3o5")
+area_size = Vector2(100, 100)
+count = 30
+grid_snap = 5
+
+[node name="GrassSpawner2" type="Node2D" parent="." unique_id=133472729]
+position = Vector2(22, -188)
+script = ExtResource("8_bl3o5")
+area_size = Vector2(100, 100)
+count = 30
+rand_seed = 2
+grid_snap = 5
+
+[node name="GrassSpawner3" type="Node2D" parent="." unique_id=1868781723]
+position = Vector2(-179, -216)
+script = ExtResource("8_bl3o5")
+area_size = Vector2(130, 100)
+count = 40
+rand_seed = 4
+
+[node name="GrassSpawner4" type="Node2D" parent="." unique_id=984757093]
+position = Vector2(120, 70)
+script = ExtResource("8_bl3o5")
+area_size = Vector2(130, 100)
+count = 40
+rand_seed = 4
+
+[node name="SmallGrassSpawner" type="Node2D" parent="." unique_id=1466971339]
+position = Vector2(-4, -73)
+script = ExtResource("10_aukv5")
+area_size = Vector2(400, 400)
+count = 50
+grid_snap = 10

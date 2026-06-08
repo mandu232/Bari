@@ -1,0 +1,95 @@
+[gd_scene format=3 uid="uid://cvtj3e5ivhc70"]
+
+[ext_resource type="Texture2D" uid="uid://h1b7habjois" path="res://AutoLoad/assets/Tree/Tree_Body_type1.png" id="1_px77q"]
+[ext_resource type="Texture2D" uid="uid://lfgxdyoaqeyq" path="res://AutoLoad/assets/Tree/Tree_Leaf_type5.png" id="3_o8ynf"]
+[ext_resource type="Script" uid="uid://cvp2ipy0kowkg" path="res://scripts/Tree_type1.gd" id="3_tree1"]
+[ext_resource type="Texture2D" uid="uid://s28mxkcdnujb" path="res://AutoLoad/assets/Tree/Tree_Leaf_type3.png" id="4_nn870"]
+[ext_resource type="Texture2D" uid="uid://yogk8b22ox38" path="res://AutoLoad/assets/Tree/Tree_Leaf_type4.png" id="5_mpp6q"]
+[ext_resource type="Texture2D" uid="uid://bx7broulrx15c" path="res://AutoLoad/assets/Tree/Tree_Leaf_type2.png" id="6_v3rua"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_px77q"]
+size = Vector2(10.5, 8.5)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_o8ynf"]
+size = Vector2(10, 15)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_nn870"]
+size = Vector2(50, 26)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_mpp6q"]
+size = Vector2(20, 58)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_v3rua"]
+size = Vector2(36, 20)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_r8mxm"]
+size = Vector2(29, 24)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_cvppy"]
+size = Vector2(14, 15)
+
+[node name="TreeType1" type="CharacterBody2D" unique_id=1055635900]
+collision_layer = 16
+collision_mask = 16
+script = ExtResource("3_tree1")
+
+[node name="Body" type="Sprite2D" parent="." unique_id=2139104718]
+texture = ExtResource("1_px77q")
+
+[node name="Leaf" type="Node2D" parent="." unique_id=2144319660]
+
+[node name="Leaf_1" type="Sprite2D" parent="Leaf" unique_id=289567705]
+position = Vector2(-20, -12)
+texture = ExtResource("3_o8ynf")
+
+[node name="Leaf_2" type="Sprite2D" parent="Leaf" unique_id=1797638472]
+position = Vector2(4, -27)
+texture = ExtResource("4_nn870")
+
+[node name="Leaf_3" type="Sprite2D" parent="Leaf" unique_id=544216245]
+position = Vector2(37, -7)
+texture = ExtResource("5_mpp6q")
+
+[node name="Leaf_4" type="Sprite2D" parent="Leaf" unique_id=1607159075]
+position = Vector2(9, 6)
+texture = ExtResource("6_v3rua")
+
+[node name="Leaf_5" type="Sprite2D" parent="Leaf" unique_id=971970033]
+position = Vector2(-34, 7)
+texture = ExtResource("5_mpp6q")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=288285065]
+position = Vector2(-3.25, 42.25)
+shape = SubResource("RectangleShape2D_px77q")
+
+[node name="Area2D" type="Area2D" parent="." unique_id=1906398920]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D" unique_id=745452308]
+position = Vector2(-3, 30.5)
+shape = SubResource("RectangleShape2D_o8ynf")
+debug_color = Color(0.72477967, 0.47722167, 0, 0.41960785)
+
+[node name="CollisionShape2D2" type="CollisionShape2D" parent="Area2D" unique_id=1935263287]
+position = Vector2(-23, 10)
+shape = SubResource("RectangleShape2D_nn870")
+debug_color = Color(0.7254902, 0.47843137, 0, 0.41960785)
+
+[node name="CollisionShape2D3" type="CollisionShape2D" parent="Area2D" unique_id=1347384641]
+position = Vector2(12, -9)
+shape = SubResource("RectangleShape2D_mpp6q")
+debug_color = Color(0.7254902, 0.47843137, 0, 0.41960785)
+
+[node name="CollisionShape2D4" type="CollisionShape2D" parent="Area2D" unique_id=1169155361]
+position = Vector2(-16, -13)
+shape = SubResource("RectangleShape2D_v3rua")
+debug_color = Color(0.7254902, 0.47843137, 0, 0.41960785)
+
+[node name="CollisionShape2D5" type="CollisionShape2D" parent="Area2D" unique_id=940422351]
+position = Vector2(36.5, -5)
+shape = SubResource("RectangleShape2D_r8mxm")
+debug_color = Color(0.7254902, 0.47843137, 0, 0.41960785)
+
+[node name="CollisionShape2D6" type="CollisionShape2D" parent="Area2D" unique_id=887311613]
+position = Vector2(-5, -30.5)
+shape = SubResource("RectangleShape2D_cvppy")
+debug_color = Color(0.7254902, 0.47843137, 0, 0.41960785)

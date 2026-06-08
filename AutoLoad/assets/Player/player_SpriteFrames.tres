@@ -5079,7 +5079,7 @@ animations = [{
 }],
 "loop": false,
 "name": &"dash_back",
-"speed": 15.0
+"speed": 20.0
 }, {
 "frames": [{
 "duration": 1.0,
@@ -5114,7 +5114,7 @@ animations = [{
 }],
 "loop": false,
 "name": &"dash_back_side",
-"speed": 15.0
+"speed": 20.0
 }, {
 "frames": [{
 "duration": 1.0,
@@ -5149,7 +5149,7 @@ animations = [{
 }],
 "loop": false,
 "name": &"dash_front",
-"speed": 15.0
+"speed": 20.0
 }, {
 "frames": [{
 "duration": 1.0,
@@ -5184,7 +5184,7 @@ animations = [{
 }],
 "loop": false,
 "name": &"dash_front_side",
-"speed": 15.0
+"speed": 20.0
 }, {
 "frames": [{
 "duration": 1.0,
@@ -5219,7 +5219,7 @@ animations = [{
 }],
 "loop": false,
 "name": &"dash_side",
-"speed": 15.0
+"speed": 20.0
 }, {
 "frames": [{
 "duration": 1.0,

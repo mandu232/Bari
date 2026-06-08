@@ -1,0 +1,49 @@
+[gd_scene format=3 uid="uid://y2elb4be8fa"]
+
+[ext_resource type="Script" uid="uid://720mu5kchia5" path="res://scripts/Tree.gd" id="1_affl5"]
+[ext_resource type="Texture2D" uid="uid://cggkx2wdwu67g" path="res://AutoLoad/assets/Tree/Tree_Body_type2.png" id="1_htn6h"]
+[ext_resource type="Texture2D" uid="uid://yogk8b22ox38" path="res://AutoLoad/assets/Tree/Tree_Leaf_type4.png" id="2_gc0o3"]
+[ext_resource type="Texture2D" uid="uid://bx7broulrx15c" path="res://AutoLoad/assets/Tree/Tree_Leaf_type2.png" id="3_affl5"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_trnt3"]
+size = Vector2(10.25, 8.25)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_rg1yf"]
+size = Vector2(10, 20)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_p3bxu"]
+size = Vector2(70, 40)
+
+[node name="TreeType2" type="CharacterBody2D" unique_id=777166463]
+collision_layer = 17
+collision_mask = 17
+script = ExtResource("1_affl5")
+
+[node name="Body" type="Sprite2D" parent="." unique_id=1213128054]
+texture = ExtResource("1_htn6h")
+
+[node name="Leaf" type="Node2D" parent="." unique_id=1203914405]
+
+[node name="Leaf_1" type="Sprite2D" parent="Leaf" unique_id=96259791]
+position = Vector2(21, -2)
+texture = ExtResource("2_gc0o3")
+
+[node name="Leaf_2" type="Sprite2D" parent="Leaf" unique_id=1256911582]
+position = Vector2(-19, -10)
+texture = ExtResource("3_affl5")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=294173545]
+position = Vector2(-1.125, 42.125)
+shape = SubResource("RectangleShape2D_trnt3")
+
+[node name="Area2D" type="Area2D" parent="." unique_id=1432196844]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D" unique_id=283968991]
+position = Vector2(-1, 28)
+shape = SubResource("RectangleShape2D_rg1yf")
+debug_color = Color(0.7254902, 0.47843137, 0, 0.41960785)
+
+[node name="CollisionShape2D2" type="CollisionShape2D" parent="Area2D" unique_id=93812695]
+position = Vector2(0, -2)
+shape = SubResource("RectangleShape2D_p3bxu")
+debug_color = Color(0.7254902, 0.47843137, 0, 0.41960785)
