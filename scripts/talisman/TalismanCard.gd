@@ -88,6 +88,8 @@ func _pick_charm_tex() -> Texture2D:
 		"파석부": return CHARM_RED
 		"신각부": return CHARM_BLUE
 		"철신부": return CHARM_GREEN
+		"호소부": return CHARM_PURPLE
+		"은영부": return CHARM_GREEN
 		_:        return CHARM_PURPLE
 
 func land() -> void:
@@ -114,6 +116,10 @@ func on_swap_confirmed(slot_index: int) -> void:
 			TalismanManager.replace(_data, slot_index)
 		else:
 			TalismanManager.equip(_data)
+		# 도감: 처음 획득한 부적은 발견 목록에 등록
+		var path := _data.resource_path
+		if path != "" and path not in GameManager.discovered_talisman_paths:
+			GameManager.discovered_talisman_paths.append(path)
 	_play_collect_anim()
 
 func _play_collect_anim() -> void:

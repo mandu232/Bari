@@ -1,14 +1,13 @@
-[gd_resource type="Resource" script_class="TalismanData" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="TalismanData" format=3 uid="uid://brfhvqj6t57ga"]
 
-[ext_resource type="Script" path="res://scripts/talisman/TalismanData.gd" id="1_tdata"]
-[ext_resource type="Texture2D" path="res://AutoLoad/assets/Charm/Iron_God_Charm.png" id="2_icon"]
+[ext_resource type="Script" uid="uid://cf45jkevrauye" path="res://scripts/talisman/TalismanData.gd" id="1_tdata"]
+[ext_resource type="Texture2D" uid="uid://ma0wa7dkpn7b" path="res://AutoLoad/assets/Charm/Iron_God_Charm.png" id="2_icon"]
 
 [resource]
 script = ExtResource("1_tdata")
 talisman_name = "철신부"
 description = "강철 신의 가호를 받은 부적. 몸을 단단하게 만들어 첫 번째 피격을 무효화한다."
 icon = ExtResource("2_icon")
-card_color = Color(0.6, 0.65, 0.75, 1)
+card_color = Color(0.23529412, 0.34901962, 0.3372549, 1)
 bonus_def = 2
 effect = 3
-effect_value = 0.0

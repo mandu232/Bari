@@ -1,13 +1,13 @@
-[gd_resource type="Resource" script_class="TalismanData" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="TalismanData" format=3 uid="uid://ctdgsi86tw5es"]
 
-[ext_resource type="Script" path="res://scripts/talisman/TalismanData.gd" id="1_tdata"]
-[ext_resource type="Texture2D" path="res://AutoLoad/assets/Charm/Life_Drain_Charm.png" id="2_icon"]
+[ext_resource type="Script" uid="uid://cf45jkevrauye" path="res://scripts/talisman/TalismanData.gd" id="1_tdata"]
+[ext_resource type="Texture2D" uid="uid://c2irx2767i01p" path="res://AutoLoad/assets/Charm/Life_Drain_Charm.png" id="2_icon"]
 
 [resource]
 script = ExtResource("1_tdata")
 talisman_name = "흡성부"
 description = "생명의 기운을 빨아들이는 부적. 적을 처치할 때마다 체력을 1 회복한다."
 icon = ExtResource("2_icon")
-card_color = Color(0.65, 0.08, 0.15, 1)
+card_color = Color(0.6627451, 0.23137255, 0.23137255, 1)
 effect = 1
 effect_value = 1.0

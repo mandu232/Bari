@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="TalismanData" format=3 uid="uid://nxdt22grbyp8"]
+
+[ext_resource type="Script" uid="uid://cf45jkevrauye" path="res://scripts/talisman/TalismanData.gd" id="1_tdata"]
+[ext_resource type="Texture2D" uid="uid://8ycnisye5ox6" path="res://AutoLoad/assets/Charm/Talisman_of_the_Gobiln_Hood.png" id="1_ugkkr"]
+
+[resource]
+script = ExtResource("1_tdata")
+talisman_name = "은영부"
+description = "도깨비 망토의 음기가 깃든 부적. 4초간 피격 없이 버티면 기습 준비 상태가 된다 — 순찰 중인 적을 공격하면 3배의 피해를 입힌다."
+icon = ExtResource("1_ugkkr")
+card_color = Color(0.5568628, 0.2784314, 0.54901963, 1)
+effect = 5
+effect_value = 4.0

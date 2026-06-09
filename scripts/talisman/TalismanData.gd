@@ -7,6 +7,9 @@ enum Effect {
 	LIFESTEAL,    # 적 처치 시 체력 회복
 	SPEED_BURST,  # 적 처치 시 이동속도 일시 증가
 	SHIELD,       # 첫 피격 1회 무효
+	HOWL_MIMIC,   # 적 처치 시 주변 적 이동속도 감소 (둔화)
+	GOBLIN_AMBUSH,   # 피격 없이 N초 경과 시 다음 기습 공격 3배 피해
+	MOUNTAIN_WEIGHT, # 막기 마나 소모 절감 + 패링 성공 시 마나 회복
 }
 
 @export var talisman_name:  String    = "이름 없는 부적"
@@ -35,4 +38,7 @@ func get_stat_summary() -> String:
 		Effect.LIFESTEAL:   parts.append("적 처치 시 HP 회복")
 		Effect.SPEED_BURST: parts.append("적 처치 시 속도 증가")
 		Effect.SHIELD:      parts.append("피격 1회 무효")
+		Effect.HOWL_MIMIC:   parts.append("적 처치 시 주변 적 둔화")
+		Effect.GOBLIN_AMBUSH:    parts.append("기습 공격 시 3배 피해")
+		Effect.MOUNTAIN_WEIGHT:  parts.append("막기 마나 절감 + 패링 시 마나 회복")
 	return "  ".join(parts)

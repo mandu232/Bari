@@ -52,9 +52,13 @@ func _ready() -> void:
 	_area_r.body_entered.connect(func(b): _on_bend(b, false))
 	_area_r.body_exited.connect(func(b):  _on_rise(b, false))
 
-	# 탑다운 Y축 정렬: Y가 클수록(아래쪽) 앞에 그려짐 (플레이어와 동일한 절대값 기준)
+	# 탑다운 Y축 정렬: 스프라이트가 origin 중앙 정렬이므로 바닥 = global_y + h/2
+	# 단순 global_position.y 를 쓰면 중심 기준이라 플레이어와 정렬이 어긋남
 	z_as_relative = false
-	z_index = int(global_position.y)
+	var foot_offset: float = 0.0
+	if is_instance_valid(_mesh_l) and _mesh_l.texture:
+		foot_offset = float(_mesh_l.texture.get_height()) / 2.0
+	z_index = int(global_position.y + foot_offset)
 
 # ── 공격 감지 ──────────────────────────────────────────────
 func _process(_delta: float) -> void:

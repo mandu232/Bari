@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="TalismanData" format=3 uid="uid://bvl5m5fkm7o36"]
+
+[ext_resource type="Texture2D" uid="uid://ptdn0vgbx3iw" path="res://AutoLoad/assets/Charm/Mountain_Weight_Talisman.png" id="1_dlk7n"]
+[ext_resource type="Script" uid="uid://cf45jkevrauye" path="res://scripts/talisman/TalismanData.gd" id="1_tdata"]
+
+[resource]
+script = ExtResource("1_tdata")
+talisman_name = "태산부"
+description = "태산의 무게를 담은 부적. 막기로 피격을 막을 때마다 마나 10을 소모한다 (기본 20에서 절감). 패링에 성공하면 마나 30을 즉시 회복한다."
+icon = ExtResource("1_dlk7n")
+card_color = Color(0.23529412, 0.34901962, 0.3372549, 1)
+bonus_def = 1
+effect = 6
+effect_value = 30.0

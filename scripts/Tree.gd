@@ -17,9 +17,10 @@ const WIND_SHADER := preload("res://AutoLoad/shaders/wind_leaf.gdshader")
 var _fade_tween: Tween = null
 
 func _ready() -> void:
-	# ── 탑다운 Y 정렬
+	# ── 탑다운 Y 정렬: CollisionShape2D(발) 위치 기준으로 정렬해야
+	# origin 이 나무 중심에 있어 단순 global_position.y 를 쓰면 틀림
 	z_as_relative = false
-	z_index = int(global_position.y)
+	_update_z_sort()
 
 	# ── 바람 셰이더: Leaf_* 이름의 Sprite2D 를 재귀 탐색
 	var leaves := find_children("Leaf_*", "Sprite2D", true, false)
@@ -37,6 +38,13 @@ func _ready() -> void:
 	if area:
 		area.body_entered.connect(_on_body_entered)
 		area.body_exited.connect(_on_body_exited)
+
+## CollisionShape2D(발) y 좌표를 기준으로 z_index 설정
+## origin 이 나무 중심에 있으므로 단순 global_position.y 를 쓰면 틀림
+func _update_z_sort() -> void:
+	var col := get_node_or_null("CollisionShape2D") as CollisionShape2D
+	var foot_y := col.position.y if is_instance_valid(col) else 0.0
+	z_index = int(global_position.y + foot_y)
 
 func _on_body_entered(body: Node) -> void:
 	if body.is_in_group("player"):

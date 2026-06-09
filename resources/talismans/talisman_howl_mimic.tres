@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="TalismanData" format=3 uid="uid://bv6q3gb2m357c"]
+
+[ext_resource type="Script" uid="uid://cf45jkevrauye" path="res://scripts/talisman/TalismanData.gd" id="1_tdata"]
+[ext_resource type="Texture2D" uid="uid://dsttryvivgx70" path="res://AutoLoad/assets/Charm/Howl_Mimic_Talisman.png" id="2_icon"]
+
+[resource]
+script = ExtResource("1_tdata")
+talisman_name = "호소부"
+description = "죽어가는 적의 비명을 메아리처럼 퍼뜨리는 부적. 적을 처치할 때 반경 내 모든 적의 이동속도를 3초간 절반으로 줄인다."
+icon = ExtResource("2_icon")
+card_color = Color(0.5568628, 0.2784314, 0.54901963, 1)
+effect = 4
+effect_value = 3.0

@@ -3,12 +3,17 @@ extends Node
 ## 던전 런 동안 장착된 부적 상태를 추적하고 플레이어에게 효과를 적용한다
 
 const MAX_SLOTS := 3
+const BLOCK_MANA_BASE_COST: int = 20   # 막기 1회 소모 마나 (기본값)
 
 var equipped: Array[TalismanData] = []
 
 var _shield_active:     bool  = false
 var _speed_burst_timer: float = 0.0
 var _speed_burst_amt:   float = 0.0
+
+# 은영부 — 그림자 기습 충전
+var _shadow_charge_timer: float = 0.0
+var _shadow_ready:        bool  = false
 
 signal talisman_changed   # equipped 배열 변화 시 발생 (HUD 갱신 트리거)
 
@@ -27,15 +32,27 @@ func _process(delta: float) -> void:
 			_speed_burst_timer = 0.0
 			_end_speed_burst()
 
+	# 은영부 — 그림자 기습 충전
+	if not _shadow_ready:
+		var charge_time := _get_ambush_charge_time()
+		if charge_time > 0.0:
+			_shadow_charge_timer += delta
+			if _shadow_charge_timer >= charge_time:
+				_shadow_charge_timer = 0.0
+				_shadow_ready = true
+				_on_shadow_charged()
+
 # ─────────────────────────────────────────────
 #  런 종료 시 전부 초기화
 # ─────────────────────────────────────────────
 func _on_run_ended(_success: bool) -> void:
 	_remove_all_bonuses()
 	equipped.clear()
-	_shield_active     = false
-	_speed_burst_timer = 0.0
-	_speed_burst_amt   = 0.0
+	_shield_active        = false
+	_speed_burst_timer    = 0.0
+	_speed_burst_amt      = 0.0
+	_shadow_charge_timer  = 0.0
+	_shadow_ready         = false
 	talisman_changed.emit()
 
 # ─────────────────────────────────────────────
@@ -86,6 +103,9 @@ func on_enemy_died(_enemy_pos: Vector2) -> void:
 			TalismanData.Effect.SPEED_BURST:
 				var dur := data.effect_value if data.effect_value > 0.0 else 2.0
 				_start_speed_burst(30.0, dur)
+			TalismanData.Effect.HOWL_MIMIC:
+				var dur := data.effect_value if data.effect_value > 0.0 else 3.0
+				_apply_howl_debuff(_enemy_pos, dur)
 
 # ─────────────────────────────────────────────
 #  방어막 소비 (Player.take_damage 에서 호출)
@@ -151,3 +171,71 @@ func _start_speed_burst(amount: float, duration: float) -> void:
 func _end_speed_burst() -> void:
 	_speed_burst_amt = 0.0
 	_recalc(null)
+
+# ─────────────────────────────────────────────
+#  호소부 — 주변 적 둔화 디버프
+# ─────────────────────────────────────────────
+func _apply_howl_debuff(origin: Vector2, duration: float) -> void:
+	const RADIUS := 160.0
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		if not is_instance_valid(enemy):
+			continue
+		if enemy.global_position.distance_to(origin) <= RADIUS:
+			if enemy.has_method("apply_slow"):
+				enemy.apply_slow(0.5, duration)
+
+# ─────────────────────────────────────────────
+#  은영부 — 그림자 기습
+# ─────────────────────────────────────────────
+func _get_ambush_charge_time() -> float:
+	for data: TalismanData in equipped:
+		if data.effect == TalismanData.Effect.GOBLIN_AMBUSH:
+			return data.effect_value if data.effect_value > 0.0 else 4.0
+	return 0.0
+
+## 충전 완료 시 플레이어에 보라빛 플래시
+func _on_shadow_charged() -> void:
+	var player := get_tree().get_first_node_in_group("player")
+	if not is_instance_valid(player):
+		return
+	var spr: AnimatedSprite2D = player.get_node_or_null("AnimatedSprite2D")
+	if not is_instance_valid(spr):
+		return
+	spr.modulate = Color(1.4, 0.3, 2.2, 1.0)
+	var tw := create_tween()
+	tw.tween_property(spr, "modulate", Color.WHITE, 0.7)
+
+## 플레이어 피격 시 충전 초기화 — Player.take_damage 에서 호출
+func on_player_took_damage() -> void:
+	_shadow_ready        = false
+	_shadow_charge_timer = 0.0
+
+## 공격 히트 시 기습 배율 반환 — Player._on_attack_hit 에서 호출
+## 충전 완료 + 순찰 중인 적이면 3.0 반환 후 소모, 아니면 1.0
+func consume_ambush_bonus(enemy: Node) -> float:
+	if not _shadow_ready:
+		return 1.0
+	if not is_instance_valid(enemy) or not enemy.has_method("is_unaware"):
+		return 1.0
+	if not enemy.is_unaware():
+		return 1.0
+	_shadow_ready        = false
+	_shadow_charge_timer = 0.0
+	return 3.0
+
+# ─────────────────────────────────────────────
+#  태산부 — 막기 마나 비용 / 패링 마나 회복
+# ─────────────────────────────────────────────
+## 이번 막기에 소모될 마나 반환 — 태산부 장착 시 절반
+func get_block_mana_cost() -> int:
+	for data: TalismanData in equipped:
+		if data.effect == TalismanData.Effect.MOUNTAIN_WEIGHT:
+			return BLOCK_MANA_BASE_COST / 2   # 20 → 10
+	return BLOCK_MANA_BASE_COST
+
+## 패링 성공 시 회복할 마나 반환 — 태산부 없으면 0
+func get_parry_mana_recovery() -> int:
+	for data: TalismanData in equipped:
+		if data.effect == TalismanData.Effect.MOUNTAIN_WEIGHT:
+			return int(data.effect_value) if data.effect_value > 0.0 else 30
+	return 0

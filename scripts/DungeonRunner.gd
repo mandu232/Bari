@@ -11,13 +11,19 @@ const ROOMS_PER_RUN := 3
 # ※ DungeonRoom 씬은 Dungeon.tscn을 복제해 AutoLoad/scenes/rooms/ 에 저장
 const ROOM_POOLS: Dictionary = {
 	1: [  # depth 1-3 (입문)
-		"res://AutoLoad/scenes/Dungeon.tscn",  # 임시: 추후 개별 방으로 교체
+		"res://AutoLoad/scenes/rooms/DungeonRoom_01.tscn",
+		"res://AutoLoad/scenes/rooms/DungeonRoom_02.tscn",
+		"res://AutoLoad/scenes/rooms/DungeonRoom_03.tscn",
 	],
 	2: [  # depth 4-6 (중급)
-		"res://AutoLoad/scenes/Dungeon.tscn",
+		"res://AutoLoad/scenes/rooms/DungeonRoom_01.tscn",
+		"res://AutoLoad/scenes/rooms/DungeonRoom_02.tscn",
+		"res://AutoLoad/scenes/rooms/DungeonRoom_03.tscn",
 	],
 	3: [  # depth 7+ (고급)
-		"res://AutoLoad/scenes/Dungeon.tscn",
+		"res://AutoLoad/scenes/rooms/DungeonRoom_01.tscn",
+		"res://AutoLoad/scenes/rooms/DungeonRoom_02.tscn",
+		"res://AutoLoad/scenes/rooms/DungeonRoom_03.tscn",
 	],
 }
 

@@ -1181,6 +1181,20 @@ func _save_slot_state() -> void:
 			continue
 		var path := slot.artifact.resource_path if slot.is_occupied and slot.artifact else ""
 		cfg.set_value("slots", str(i), path)
+		# 전시된 유물의 롤된 보너스 수치 보존 (복원 시 재사용)
+		if path != "" and slot.is_occupied and slot.artifact:
+			var a := slot.artifact
+			cfg.set_value("slots_bonus", str(i) + "_atk",        a.bonus_attack)
+			cfg.set_value("slots_bonus", str(i) + "_atk_spd",    a.bonus_attack_speed)
+			cfg.set_value("slots_bonus", str(i) + "_def",        a.bonus_defense)
+			cfg.set_value("slots_bonus", str(i) + "_spd",        a.bonus_move_speed)
+			cfg.set_value("slots_bonus", str(i) + "_hp",         a.bonus_max_health)
+			cfg.set_value("slots_bonus", str(i) + "_eq_atk",     a.equip_bonus_atk)
+			cfg.set_value("slots_bonus", str(i) + "_eq_atk_spd", a.equip_bonus_atk_spd)
+			cfg.set_value("slots_bonus", str(i) + "_eq_def",     a.equip_bonus_def)
+			cfg.set_value("slots_bonus", str(i) + "_eq_spd",     a.equip_bonus_move_spd)
+			cfg.set_value("slots_bonus", str(i) + "_eq_hp",      a.equip_bonus_hp)
+			cfg.set_value("slots_bonus", str(i) + "_enhance",    a.enhance_level)
 	cfg.save("user://museum_slots.cfg")
 
 func _restore_artifacts() -> void:
@@ -1192,9 +1206,25 @@ func _restore_artifacts() -> void:
 		var path: String = cfg.get_value("slots", str(i), "")
 		if path == "" or not ResourceLoader.exists(path):
 			continue
-		var data := ResourceLoader.load(path) as ArtifactData
-		if data:
-			(slot_list[i] as ArtifactSlot).place_artifact(data)
+		var base := ResourceLoader.load(path) as ArtifactData
+		if base == null:
+			continue
+		# 공유 리소스를 직접 수정하지 않도록 duplicate 후 resource_path 보존
+		var data := base.duplicate() as ArtifactData
+		data.resource_path = path
+		# 저장된 보너스 수치 복원 (없으면 0 기본값)
+		data.bonus_attack         = cfg.get_value("slots_bonus", str(i) + "_atk",        0)
+		data.bonus_attack_speed   = cfg.get_value("slots_bonus", str(i) + "_atk_spd",    0)
+		data.bonus_defense        = cfg.get_value("slots_bonus", str(i) + "_def",        0)
+		data.bonus_move_speed     = cfg.get_value("slots_bonus", str(i) + "_spd",        0.0)
+		data.bonus_max_health     = cfg.get_value("slots_bonus", str(i) + "_hp",         0)
+		data.equip_bonus_atk      = cfg.get_value("slots_bonus", str(i) + "_eq_atk",     0)
+		data.equip_bonus_atk_spd  = cfg.get_value("slots_bonus", str(i) + "_eq_atk_spd", 0)
+		data.equip_bonus_def      = cfg.get_value("slots_bonus", str(i) + "_eq_def",     0)
+		data.equip_bonus_move_spd = cfg.get_value("slots_bonus", str(i) + "_eq_spd",     0.0)
+		data.equip_bonus_hp       = cfg.get_value("slots_bonus", str(i) + "_eq_hp",      0)
+		data.enhance_level        = cfg.get_value("slots_bonus", str(i) + "_enhance",    0)
+		(slot_list[i] as ArtifactSlot).place_artifact(data)
 
 # ───────────────────────────────
 #  수동 배선 저장 / 복원

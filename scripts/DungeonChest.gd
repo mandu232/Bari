@@ -12,6 +12,10 @@ const TALISMAN_POOL: Array[String] = [
 	"res://resources/talismans/talisman_iron_god.tres",
 	"res://resources/talismans/talisman_stone_breaker.tres",
 	"res://resources/talismans/talisman_life_drain.tres",
+	"res://resources/talismans/talisman_goblin_hood.tres",
+	"res://resources/talismans/talisman_howl_mimic.tres",
+	"res://resources/talismans/talisman_mountain_weight.tres",
+	
 ]
 
 const ARTIFACT_POOL: Array[String] = [

@@ -175,9 +175,9 @@ func _ready() -> void:
 #  PROCESS
 # ───────────────────────────────
 func _physics_process(delta: float) -> void:
-	# 탑다운 뷰 Y-소팅 — y가 클수록 앞에 렌더링
+	# 탑다운 뷰 Y-소팅 — CollisionShape2D(발) 기준 (y=+5 오프셋)
 	z_as_relative = false
-	z_index       = int(global_position.y)
+	z_index       = int(global_position.y + 5)
 	_tick_timers(delta)
 
 	# 패링 후 추적 찍기 공격 — 모든 상태에서 입력 감지 (DEAD·SKILL 제외)
@@ -467,7 +467,15 @@ func _on_attack_hit(body: Node2D) -> void:
 	if state == State.SKILL:
 		return   # 스킬 데미지는 각 스킬 스크립트에서 직접 처리 (중복 피격 방지)
 	if body.has_method("take_damage"):
-		body.take_damage(attack_damage, global_position)
+		var ambush_mult := TalismanManager.consume_ambush_bonus(body)
+		body.take_damage(int(attack_damage * ambush_mult), global_position)
+		if ambush_mult > 1.0:
+			var cam := get_tree().get_first_node_in_group("camera")
+			if is_instance_valid(cam):
+				if cam.has_method("zoom_punch"):
+					cam.zoom_punch(-0.14, 0.22)
+				if cam.has_method("screen_shake"):
+					cam.screen_shake(8.0, 0.28)
 
 # ───────────────────────────────
 #  DAMAGE / DEATH
@@ -489,14 +497,19 @@ func take_damage(amount: int, source_pos: Vector2 = Vector2.ZERO, source_node: N
 			# facing 과 공격 방향의 내적이 0 이상이면 정면(90° 이내) → 막기 성공
 			blocked = facing.dot(attack_dir) > 0.0
 		if blocked:
-			_block_parried(source_pos, source_node)
-			return
+			var mana_cost := TalismanManager.get_block_mana_cost()
+			if mana >= float(mana_cost):
+				spend_mana(mana_cost)
+				_block_parried(source_pos, source_node)
+				return
+			# 마나 부족 → 막기 실패, 피해 계속
 		# 방향이 맞지 않으면 막기 실패 → 일반 피해 처리 계속
 
 	if _attack_active:
 		_cancel_attack()
 	is_spinning = false   # SkillSwordSpin 의 스핀 루프가 이 플래그로 종료를 감지
 
+	TalismanManager.on_player_took_damage()   # 은영부 기습 충전 해제
 	health = max(0, health - max(1, amount - defense))
 	health_changed.emit(health, max_health)
 
@@ -555,6 +568,11 @@ func _block_parried(source_pos: Vector2, source_node: Node = null) -> void:
 		source_node.take_parry_hit(global_position)
 		_parry_followup_window = 0.5
 		_parry_followup_target = source_node as Node2D
+		# 태산부: 패링 성공 시 마나 회복
+		var mana_recovery := TalismanManager.get_parry_mana_recovery()
+		if mana_recovery > 0:
+			mana = minf(mana + float(mana_recovery), float(max_mana))
+			mana_changed.emit(mana, max_mana)
 
 	# ── 카메라 효과
 	var cam := get_tree().get_first_node_in_group("camera")

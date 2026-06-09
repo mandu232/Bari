@@ -17,6 +17,16 @@ const ALL_ARTIFACT_PATHS: Array[String] = [
 	"res://resources/artifacts/white_porcelain_jar_cloud_dragon.tres",
 ]
 
+const ALL_TALISMAN_PATHS: Array[String] = [
+	"res://resources/talismans/talisman_divine_dash.tres",
+	"res://resources/talismans/talisman_iron_god.tres",
+	"res://resources/talismans/talisman_stone_breaker.tres",
+	"res://resources/talismans/talisman_life_drain.tres",
+	"res://resources/talismans/talisman_howl_mimic.tres",
+	"res://resources/talismans/talisman_goblin_hood.tres",
+	"res://resources/talismans/talisman_mountain_weight.tres",
+]
+
 const ALL_BLUEPRINT_PATHS: Array[String] = [
 	"res://resources/buildables/museum_hq.tres",
 	"res://resources/buildables/artifact_stand.tres",
@@ -32,7 +42,7 @@ const ALWAYS_DISCOVERED_BLUEPRINTS: Array[String] = [
 	"res://resources/buildables/museum_hq.tres",
 ]
 
-enum Tab { ARTIFACT, ECHO, BUILDING }
+enum Tab { ARTIFACT, ECHO, BUILDING, TALISMAN }
 
 @onready var _artifact_tab_btn: Button        = $Panel/VBox/TabHBox/ArtifactTabBtn
 @onready var _echo_tab_btn:     Button        = $Panel/VBox/TabHBox/EchoTabBtn
@@ -40,6 +50,8 @@ enum Tab { ARTIFACT, ECHO, BUILDING }
 @onready var _item_list:        ItemList      = $Panel/VBox/ContentHBox/LeftVBox/ItemScroll/ItemList
 @onready var _detail_vbox:      VBoxContainer = $Panel/VBox/ContentHBox/RightVBox/DetailScroll/DetailVBox
 @onready var _close_btn:        Button        = $Panel/VBox/TitleHBox/CloseButton
+
+var _talisman_tab_btn: Button = null   # _ready() 에서 코드로 생성
 
 var _current_tab:  Tab            = Tab.ARTIFACT
 var _index_to_path: Array[String] = []   # ItemList 인덱스 → 리소스 경로
@@ -49,10 +61,22 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	hide()
 	_font = load("res://AutoLoad/assets/Font/DungGeunMo.ttf")
+
+	# 부적 탭 버튼 코드로 생성 (씬 파일 의존 없이)
+	var tab_hbox := $Panel/VBox/TabHBox as HBoxContainer
+	_talisman_tab_btn = Button.new()
+	_talisman_tab_btn.text = "부적"
+	_talisman_tab_btn.custom_minimum_size = Vector2(90, 34)
+	if _font:
+		_talisman_tab_btn.add_theme_font_override("font", _font)
+		_talisman_tab_btn.add_theme_font_size_override("font_size", 17)
+	tab_hbox.add_child(_talisman_tab_btn)
+
 	_close_btn.pressed.connect(close)
 	_artifact_tab_btn.pressed.connect(func(): _switch_tab(Tab.ARTIFACT))
 	_echo_tab_btn.pressed.connect(func():     _switch_tab(Tab.ECHO))
 	_building_tab_btn.pressed.connect(func(): _switch_tab(Tab.BUILDING))
+	_talisman_tab_btn.pressed.connect(func(): _switch_tab(Tab.TALISMAN))
 	_item_list.item_selected.connect(_on_item_selected)
 
 func open() -> void:
@@ -73,6 +97,7 @@ func _switch_tab(tab: Tab) -> void:
 	_artifact_tab_btn.modulate = Color(0.45, 1.0, 0.6) if tab == Tab.ARTIFACT else Color(0.7, 0.7, 0.7)
 	_echo_tab_btn.modulate     = Color(0.45, 1.0, 0.6) if tab == Tab.ECHO     else Color(0.7, 0.7, 0.7)
 	_building_tab_btn.modulate = Color(0.45, 1.0, 0.6) if tab == Tab.BUILDING else Color(0.7, 0.7, 0.7)
+	_talisman_tab_btn.modulate = Color(0.45, 1.0, 0.6) if tab == Tab.TALISMAN else Color(0.7, 0.7, 0.7)
 
 # ───────────────────────────────
 #  목록 재구성
@@ -86,6 +111,7 @@ func _rebuild_list() -> void:
 		Tab.ARTIFACT: paths = ALL_ARTIFACT_PATHS
 		Tab.ECHO:     paths = ALL_ARTIFACT_PATHS   # 동일 리소스, 에코 정보를 표시
 		Tab.BUILDING: paths = ALL_BLUEPRINT_PATHS
+		Tab.TALISMAN: paths = ALL_TALISMAN_PATHS
 		_:            paths = ALL_ARTIFACT_PATHS
 
 	var idx := 1
@@ -101,6 +127,8 @@ func _rebuild_list() -> void:
 					label = "%d. %s" % [idx, (res as ArtifactData).echo_name]
 				Tab.BUILDING:
 					label = "%d. %s" % [idx, (res as BuildableItem).item_name]
+				Tab.TALISMAN:
+					label = "%d. %s" % [idx, (res as TalismanData).talisman_name]
 				_:
 					label = "%d. ???" % idx
 		else:
@@ -120,6 +148,8 @@ func _is_discovered(path: String) -> bool:
 				if (bp as Resource).resource_path == path:
 					return true
 			return false
+		Tab.TALISMAN:
+			return path in GameManager.discovered_talisman_paths
 	return false
 
 # ───────────────────────────────
@@ -152,6 +182,9 @@ func _build_detail(path: String, discovered: bool) -> void:
 		Tab.BUILDING:
 			if res is BuildableItem:
 				_build_building_detail(res as BuildableItem)
+		Tab.TALISMAN:
+			if res is TalismanData:
+				_build_talisman_detail(res as TalismanData)
 
 # ───────────────────────────────
 #  유물 상세
@@ -264,6 +297,30 @@ func _build_building_detail(item: BuildableItem) -> void:
 		_add_label("출력 회복:  %.2f/초" % item.output_bonus,    14, Color(0.65, 1.0, 0.85))
 	if item.activity_bonus > 0.0:
 		_add_label("활성도 회복: %.2f/초" % item.activity_bonus, 14, Color(0.65, 1.0, 0.85))
+
+# ───────────────────────────────
+#  부적 상세
+# ───────────────────────────────
+func _build_talisman_detail(data: TalismanData) -> void:
+	if data.icon:
+		var img := TextureRect.new()
+		img.texture               = data.icon
+		img.custom_minimum_size   = Vector2(100, 100)
+		img.stretch_mode          = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		img.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		_detail_vbox.add_child(img)
+		_add_spacer(4)
+
+	_add_label(data.talisman_name, 22, Color.WHITE, true)
+	_add_separator()
+
+	if data.description != "":
+		_add_label(data.description, 13, Color(0.82, 0.82, 0.82))
+		_add_separator()
+
+	var stat_str := data.get_stat_summary()
+	if stat_str.strip_edges() != "":
+		_add_label(stat_str, 14, Color(0.9, 1.0, 0.55))
 
 # ───────────────────────────────
 #  공통 헬퍼

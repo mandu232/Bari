@@ -19,6 +19,8 @@ var essence_rate: float = 0.0
 
 # 도감: 한 번이라도 획득한 유물의 베이스 리소스 경로
 var discovered_artifact_paths: Array[String] = []
+# 도감: 한 번이라도 획득한 부적의 베이스 리소스 경로
+var discovered_talisman_paths: Array[String] = []
 
 # ───────────────────────────────
 #  박물관 본관 (MuseumHQ)
@@ -255,6 +257,8 @@ func spend_essence(amount: int) -> bool:
 func add_artifact(artifact: ArtifactData) -> void:
 	var base_path := artifact.resource_path
 	var instance  := artifact.duplicate() as ArtifactData
+	# duplicate()는 resource_path를 복사하지 않으므로 수동으로 보존
+	instance.resource_path = base_path
 	instance.roll_bonuses()
 	instance.roll_equip_bonuses()
 	artifacts.append(instance)
@@ -411,6 +415,7 @@ func save_game() -> void:
 		})
 	cfg.set_value("player", "artifacts",            artifact_list)
 	cfg.set_value("player", "discovered_artifacts", discovered_artifact_paths)
+	cfg.set_value("player", "discovered_talismans", discovered_talisman_paths)
 	cfg.save(SAVE_PATH)
 
 func load_game() -> void:
@@ -427,6 +432,7 @@ func load_game() -> void:
 	hq_player_level     = cfg.get_value("museum", "hq_player_level", 0)
 
 	discovered_artifact_paths.assign(cfg.get_value("player", "discovered_artifacts", []))
+	discovered_talisman_paths.assign(cfg.get_value("player", "discovered_talismans", []))
 
 	var artifact_list = cfg.get_value("player", "artifacts", [])
 	for entry in artifact_list:
@@ -434,6 +440,8 @@ func load_game() -> void:
 		if base == null:
 			continue
 		var inst := base.duplicate() as ArtifactData
+		# duplicate()는 resource_path를 복사하지 않으므로 수동으로 보존
+		inst.resource_path      = entry["path"]
 		inst.bonus_attack       = entry.get("atk",     0)
 		inst.bonus_attack_speed = entry.get("atk_spd", 0)
 		inst.bonus_defense      = entry.get("def",     0)

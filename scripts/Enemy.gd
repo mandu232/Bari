@@ -34,6 +34,10 @@ var _hit_decel: float = 600.0
 
 var _pending_death: bool = false   # hit 애니+넉백 후 사망 대기 플래그
 
+# ── 둔화 디버프 (호소부)
+var _slow_timer: float = 0.0   # 남은 둔화 시간
+var _slow_ratio: float = 0.0   # 0.0 = 정상, 0.5 = 50% 감속
+
 # ── 경직 저항 (포이즈)
 const POISE_THRESHOLD: int   = 3     # 이 횟수 연속 피격 시 저항 발동
 const POISE_DURATION:  float = 2.0   # 저항 지속 시간
@@ -67,6 +71,9 @@ var _is_alerted:             bool = false
 @onready var attack_area:    Area2D = $AttackArea
 @onready var detection_area: Area2D = $DetectionArea
 
+# Y 정렬용: 발 오프셋 (CollisionShape2D 위치 + 형태 절반 높이)
+var _foot_offset: float = 0.0
+
 # ─────────────────────────────
 #  READY
 # ─────────────────────────────
@@ -74,6 +81,17 @@ func _ready() -> void:
 	health         = max_health
 	spawn_position = global_position
 	add_to_group("enemies")
+
+	# CollisionShape2D(발) 기준 Y 오프셋 캐시
+	var col := get_node_or_null("CollisionShape2D") as CollisionShape2D
+	if is_instance_valid(col):
+		_foot_offset = col.position.y
+		if col.shape is RectangleShape2D:
+			_foot_offset += (col.shape as RectangleShape2D).size.y / 2.0
+		elif col.shape is CapsuleShape2D:
+			_foot_offset += (col.shape as CapsuleShape2D).height / 2.0
+		elif col.shape is CircleShape2D:
+			_foot_offset += (col.shape as CircleShape2D).radius
 
 	detection_area.body_entered.connect(_on_detection_entered)
 	detection_area.body_exited.connect(_on_detection_exited)
@@ -89,7 +107,7 @@ func _ready() -> void:
 # ─────────────────────────────
 func _physics_process(delta: float) -> void:
 	z_as_relative = false
-	z_index       = int(global_position.y)
+	z_index       = int(global_position.y + _foot_offset)
 
 	if _attack_cooldown_timer > 0.0:
 		_attack_cooldown_timer -= delta
@@ -100,6 +118,12 @@ func _physics_process(delta: float) -> void:
 			_poise_count = 0
 	if _poise_timer > 0.0:
 		_poise_timer -= delta
+
+	if _slow_timer > 0.0:
+		_slow_timer -= delta
+		if _slow_timer <= 0.0:
+			_slow_timer = 0.0
+			_slow_ratio = 0.0
 
 	match state:
 		State.PATROL:
@@ -141,7 +165,7 @@ func _process_patrol(delta: float) -> void:
 		_pick_patrol_target()
 		return
 
-	_move_toward(_patrol_target, move_speed * 0.6)
+	_move_toward(_patrol_target, move_speed * 0.6 * (1.0 - _slow_ratio))
 
 func _pick_patrol_target() -> void:
 	var angle := randf() * TAU
@@ -172,7 +196,7 @@ func _process_chase() -> void:
 			_enter_patrol()
 			return
 
-	_move_toward(target.global_position, move_speed)
+	_move_toward(target.global_position, move_speed * (1.0 - _slow_ratio))
 
 # ─────────────────────────────
 #  MOVEMENT HELPER
@@ -405,3 +429,17 @@ func _hit_flash() -> void:
 	sprite.modulate = Color(4.0, 4.0, 4.0, 1.0)
 	var tw := create_tween()
 	tw.tween_property(sprite, "modulate", Color.WHITE, 0.15)
+
+## 은영부 기습 판정용 — 미탐지 순찰 상태인지 반환
+func is_unaware() -> bool:
+	return state == State.PATROL
+
+## 호소부 둔화 디버프 적용 — TalismanManager에서 호출
+func apply_slow(ratio: float, duration: float) -> void:
+	if state == State.DEAD:
+		return
+	_slow_ratio = clampf(ratio, 0.0, 0.9)
+	_slow_timer = maxf(duration, _slow_timer)   # 이미 걸려있으면 더 긴 쪽 유지
+	sprite.modulate = Color(0.3, 0.5, 2.5, 1.0)
+	var tw := create_tween()
+	tw.tween_property(sprite, "modulate", Color.WHITE, 0.5)

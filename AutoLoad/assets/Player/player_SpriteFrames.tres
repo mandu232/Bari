@@ -4856,7 +4856,7 @@ animations = [{
 }],
 "loop": false,
 "name": &"charge_start_white_back",
-"speed": 10.0
+"speed": 15.0
 }, {
 "frames": [{
 "duration": 1.0,
@@ -4903,7 +4903,7 @@ animations = [{
 }],
 "loop": false,
 "name": &"charge_start_white_back_side",
-"speed": 10.0
+"speed": 15.0
 }, {
 "frames": [{
 "duration": 1.0,
@@ -4950,7 +4950,7 @@ animations = [{
 }],
 "loop": false,
 "name": &"charge_start_white_front",
-"speed": 10.0
+"speed": 15.0
 }, {
 "frames": [{
 "duration": 1.0,
@@ -4997,7 +4997,7 @@ animations = [{
 }],
 "loop": false,
 "name": &"charge_start_white_front_side",
-"speed": 10.0
+"speed": 15.0
 }, {
 "frames": [{
 "duration": 1.0,
@@ -5044,7 +5044,7 @@ animations = [{
 }],
 "loop": false,
 "name": &"charge_start_white_side",
-"speed": 10.0
+"speed": 15.0
 }, {
 "frames": [{
 "duration": 1.0,
