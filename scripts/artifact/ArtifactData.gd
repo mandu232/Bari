@@ -25,6 +25,10 @@ static func era_label(e: Era) -> String:
 		Era.JOSEON:         return "조선"
 		_:                  return "미분류"
 
+## 원본 .tres 경로 — duplicate() 후 resource_path 를 덮어쓰지 않고 여기에 보존
+## (resource_path 직접 할당은 Godot 리소스 캐시 충돌 에러를 유발)
+var source_path: String = ""
+
 @export_group("기본 정보")
 @export var artifact_name: String       = "이름 없는 유물"
 @export var description: String         = ""

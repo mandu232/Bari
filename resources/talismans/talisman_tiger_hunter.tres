@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="TalismanData" format=3 uid="uid://c8k5px4w1vyly"]
+
+[ext_resource type="Script" uid="uid://cf45jkevrauye" path="res://scripts/talisman/TalismanData.gd" id="1_tdata"]
+[ext_resource type="Texture2D" uid="uid://45nm8k4c7wxx" path="res://AutoLoad/assets/Charm/Tiger_Hunter_Talisman.png" id="1_v4s23"]
+
+[resource]
+script = ExtResource("1_tdata")
+talisman_name = "착호부"
+description = "호랑이를 사냥하는 자의 기운이 담긴 부적. 공격 시 전진 돌진 거리가 크게 늘어나 적에게 빠르게 파고든다."
+icon = ExtResource("1_v4s23")
+card_color = Color(0.22352941, 0.47058824, 0.65882355, 1)
+bonus_atk = 1
+effect = 7
+effect_value = 150.0

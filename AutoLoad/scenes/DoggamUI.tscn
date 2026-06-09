@@ -79,6 +79,13 @@ theme_override_fonts/font = ExtResource("1_font")
 theme_override_font_sizes/font_size = 17
 text = "건물"
 
+[node name="TalismanTabBtn" type="Button" parent="Panel/VBox/TabHBox" unique_id=312847965]
+custom_minimum_size = Vector2(90, 34)
+layout_mode = 2
+theme_override_fonts/font = ExtResource("1_font")
+theme_override_font_sizes/font_size = 17
+text = "부적"
+
 [node name="TopSeparator" type="HSeparator" parent="Panel/VBox" unique_id=164282770]
 layout_mode = 2
 

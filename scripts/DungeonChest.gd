@@ -15,6 +15,7 @@ const TALISMAN_POOL: Array[String] = [
 	"res://resources/talismans/talisman_goblin_hood.tres",
 	"res://resources/talismans/talisman_howl_mimic.tres",
 	"res://resources/talismans/talisman_mountain_weight.tres",
+	"res://resources/talismans/talisman_tiger_hunter.tres",
 	
 ]
 

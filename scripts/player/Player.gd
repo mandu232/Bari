@@ -346,7 +346,7 @@ func _start_attack() -> void:
 
 	state          = State.ATTACK
 	_attack_active = true
-	_lunge_velocity = facing * 130.0  # 공격 방향으로 전진 런지
+	_lunge_velocity = facing * (130.0 + TalismanManager.get_lunge_bonus())  # 착호부: 런지 거리 증가
 
 	attack_box.position = facing * 20.0
 	_set_attack_box(false)

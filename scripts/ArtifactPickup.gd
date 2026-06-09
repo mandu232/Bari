@@ -10,7 +10,7 @@ var _collected:     bool         = false
 var _attracting:    bool         = false
 var _float_time:    float        = 0.0
 
-# 코드로 생성하므로 @onready 사용 안 함
+# 코드로 생성
 var _sprite:     Sprite2D
 var _name_label: Label
 
@@ -26,7 +26,7 @@ func _ready() -> void:
 	# ── 자식 노드 생성
 	_build_nodes()
 
-	# ── 충돌 영역 (흡인 감지용)
+	# ── 충돌 영역
 	var col  := CollisionShape2D.new()
 	var circ := CircleShape2D.new()
 	circ.radius = 40.0
@@ -39,7 +39,7 @@ func _ready() -> void:
 		_name_label.text = _artifact_data.artifact_name
 
 	collision_layer = 0
-	collision_mask  = 1   # Player 레이어(1)만 감지
+	collision_mask  = 1   #플레이어 레이어만 감지
 
 	body_entered.connect(_on_body_entered)
 
@@ -75,7 +75,7 @@ func _build_nodes() -> void:
 	add_child(_name_label)
 
 # ────────────────────────────────────────
-#  프로세스 — 둥둥 + 자석 흡인
+#  프로세스
 # ────────────────────────────────────────
 func _process(delta: float) -> void:
 	if _collected:
@@ -85,7 +85,7 @@ func _process(delta: float) -> void:
 	z_as_relative = false
 	z_index       = int(global_position.y) + 1
 
-	# 아이콘 둥둥 효果
+	# 아이콘 효과
 	_float_time        += delta * 2.8
 	_sprite.position.y  = sin(_float_time) * 4.0
 

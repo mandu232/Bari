@@ -90,6 +90,7 @@ func _pick_charm_tex() -> Texture2D:
 		"철신부": return CHARM_GREEN
 		"호소부": return CHARM_PURPLE
 		"은영부": return CHARM_GREEN
+		"착호부": return CHARM_RED
 		_:        return CHARM_PURPLE
 
 func land() -> void:

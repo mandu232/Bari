@@ -25,6 +25,7 @@ const ALL_TALISMAN_PATHS: Array[String] = [
 	"res://resources/talismans/talisman_howl_mimic.tres",
 	"res://resources/talismans/talisman_goblin_hood.tres",
 	"res://resources/talismans/talisman_mountain_weight.tres",
+	"res://resources/talismans/talisman_tiger_hunter.tres",
 ]
 
 const ALL_BLUEPRINT_PATHS: Array[String] = [
@@ -51,8 +52,7 @@ enum Tab { ARTIFACT, ECHO, BUILDING, TALISMAN }
 @onready var _detail_vbox:      VBoxContainer = $Panel/VBox/ContentHBox/RightVBox/DetailScroll/DetailVBox
 @onready var _close_btn:        Button        = $Panel/VBox/TitleHBox/CloseButton
 
-var _talisman_tab_btn: Button = null   # _ready() 에서 코드로 생성
-
+var _talisman_tab_btn: Button     = null
 var _current_tab:  Tab            = Tab.ARTIFACT
 var _index_to_path: Array[String] = []   # ItemList 인덱스 → 리소스 경로
 var _font:          Font          = null
@@ -62,15 +62,16 @@ func _ready() -> void:
 	hide()
 	_font = load("res://AutoLoad/assets/Font/DungGeunMo.ttf")
 
-	# 부적 탭 버튼 코드로 생성 (씬 파일 의존 없이)
-	var tab_hbox := $Panel/VBox/TabHBox as HBoxContainer
-	_talisman_tab_btn = Button.new()
-	_talisman_tab_btn.text = "부적"
-	_talisman_tab_btn.custom_minimum_size = Vector2(90, 34)
-	if _font:
-		_talisman_tab_btn.add_theme_font_override("font", _font)
-		_talisman_tab_btn.add_theme_font_size_override("font_size", 17)
-	tab_hbox.add_child(_talisman_tab_btn)
+	# 씬에 이미 있으면 재사용, 없으면 코드로 생성
+	_talisman_tab_btn = get_node_or_null("Panel/VBox/TabHBox/TalismanTabBtn") as Button
+	if _talisman_tab_btn == null:
+		_talisman_tab_btn = Button.new()
+		_talisman_tab_btn.text = "부적"
+		_talisman_tab_btn.custom_minimum_size = Vector2(90, 34)
+		if _font:
+			_talisman_tab_btn.add_theme_font_override("font", _font)
+			_talisman_tab_btn.add_theme_font_size_override("font_size", 17)
+		($Panel/VBox/TabHBox as HBoxContainer).add_child(_talisman_tab_btn)
 
 	_close_btn.pressed.connect(close)
 	_artifact_tab_btn.pressed.connect(func(): _switch_tab(Tab.ARTIFACT))

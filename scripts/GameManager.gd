@@ -255,10 +255,11 @@ func spend_essence(amount: int) -> bool:
 #  유물
 # ───────────────────────────────
 func add_artifact(artifact: ArtifactData) -> void:
-	var base_path := artifact.resource_path
+	var base_path := artifact.resource_path if artifact.resource_path != "" \
+					else artifact.source_path
 	var instance  := artifact.duplicate() as ArtifactData
-	# duplicate()는 resource_path를 복사하지 않으므로 수동으로 보존
-	instance.resource_path = base_path
+	# resource_path 직접 할당 시 Godot 캐시 충돌 에러 발생 → source_path 에 보존
+	instance.source_path = base_path
 	instance.roll_bonuses()
 	instance.roll_equip_bonuses()
 	artifacts.append(instance)
@@ -369,7 +370,7 @@ func reapply_synergies_to_player(player: Node) -> void:
 		player.call("set_synergy_bonus", total_atk, total_atk_spd, total_def, total_spd, total_hp)
 
 func fail_run() -> void:
-	# 런 중 획득한 유물 제거
+	# 탐험 중 획득한 유물 제거
 	for art in run_artifacts:
 		artifacts.erase(art)
 	run_artifacts.clear()
@@ -403,10 +404,11 @@ func save_game() -> void:
 
 	var artifact_list := []
 	for inst: ArtifactData in artifacts:
-		if inst.resource_path == "":
+		var path := inst.source_path if inst.source_path != "" else inst.resource_path
+		if path == "":
 			continue
 		artifact_list.append({
-			"path":    inst.resource_path,
+			"path":    path,
 			"atk":     inst.bonus_attack,
 			"atk_spd": inst.bonus_attack_speed,
 			"def":     inst.bonus_defense,
@@ -440,8 +442,7 @@ func load_game() -> void:
 		if base == null:
 			continue
 		var inst := base.duplicate() as ArtifactData
-		# duplicate()는 resource_path를 복사하지 않으므로 수동으로 보존
-		inst.resource_path      = entry["path"]
+		inst.source_path        = entry["path"]   # resource_path 대신 source_path 에 보존
 		inst.bonus_attack       = entry.get("atk",     0)
 		inst.bonus_attack_speed = entry.get("atk_spd", 0)
 		inst.bonus_defense      = entry.get("def",     0)

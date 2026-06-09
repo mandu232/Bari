@@ -10,6 +10,7 @@ enum Effect {
 	HOWL_MIMIC,   # 적 처치 시 주변 적 이동속도 감소 (둔화)
 	GOBLIN_AMBUSH,   # 피격 없이 N초 경과 시 다음 기습 공격 3배 피해
 	MOUNTAIN_WEIGHT, # 막기 마나 소모 절감 + 패링 성공 시 마나 회복
+	TIGER_HUNTER,    # 공격 시 돌진 거리 증가
 }
 
 @export var talisman_name:  String    = "이름 없는 부적"
@@ -41,4 +42,5 @@ func get_stat_summary() -> String:
 		Effect.HOWL_MIMIC:   parts.append("적 처치 시 주변 적 둔화")
 		Effect.GOBLIN_AMBUSH:    parts.append("기습 공격 시 3배 피해")
 		Effect.MOUNTAIN_WEIGHT:  parts.append("막기 마나 절감 + 패링 시 마나 회복")
+		Effect.TIGER_HUNTER:     parts.append("공격 돌진 거리 증가")
 	return "  ".join(parts)

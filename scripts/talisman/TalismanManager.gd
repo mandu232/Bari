@@ -239,3 +239,14 @@ func get_parry_mana_recovery() -> int:
 		if data.effect == TalismanData.Effect.MOUNTAIN_WEIGHT:
 			return int(data.effect_value) if data.effect_value > 0.0 else 30
 	return 0
+
+# ─────────────────────────────────────────────
+#  착호부 — 공격 돌진 거리 보너스
+# ─────────────────────────────────────────────
+## 공격 런지 초기 속도 보너스 반환 — 착호부 없으면 0.0
+func get_lunge_bonus() -> float:
+	var bonus := 0.0
+	for data: TalismanData in equipped:
+		if data.effect == TalismanData.Effect.TIGER_HUNTER:
+			bonus += data.effect_value if data.effect_value > 0.0 else 150.0
+	return bonus

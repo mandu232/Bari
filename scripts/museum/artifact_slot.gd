@@ -129,14 +129,15 @@ func _spawn_echo() -> void:
 	get_parent().add_child(echo)
 	echo.setup(artifact, global_position)
 	# 이전에 같은 유물을 전시했던 욕구 수치가 있으면 복원
-	var key := artifact.resource_path if artifact else ""
+	var key := (artifact.source_path if artifact.source_path != "" else artifact.resource_path) if artifact else ""
 	if key != "" and _needs_cache.has(key):
 		echo.needs.deserialize(_needs_cache[key])
 
 func _despawn_echo() -> void:
 	# 에코를 제거하기 전에 현재 욕구 수치를 캐시에 저장
 	if is_instance_valid(echo) and echo.needs != null and artifact != null:
-		_needs_cache[artifact.resource_path] = echo.needs.serialize()
+		var key := artifact.source_path if artifact.source_path != "" else artifact.resource_path
+		_needs_cache[key] = echo.needs.serialize()
 	if is_instance_valid(echo):
 		echo.queue_free()
 	echo = null

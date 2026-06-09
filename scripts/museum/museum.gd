@@ -1179,7 +1179,8 @@ func _save_slot_state() -> void:
 		var slot := slot_list[i] as ArtifactSlot
 		if slot == null:
 			continue
-		var path := slot.artifact.resource_path if slot.is_occupied and slot.artifact else ""
+		var _art := slot.artifact if slot.is_occupied and slot.artifact else null
+		var path := (_art.source_path if _art.source_path != "" else _art.resource_path) if _art else ""
 		cfg.set_value("slots", str(i), path)
 		# 전시된 유물의 롤된 보너스 수치 보존 (복원 시 재사용)
 		if path != "" and slot.is_occupied and slot.artifact:
@@ -1209,9 +1210,9 @@ func _restore_artifacts() -> void:
 		var base := ResourceLoader.load(path) as ArtifactData
 		if base == null:
 			continue
-		# 공유 리소스를 직접 수정하지 않도록 duplicate 후 resource_path 보존
+		# 공유 리소스를 직접 수정하지 않도록 duplicate 후 source_path 에 경로 보존
 		var data := base.duplicate() as ArtifactData
-		data.resource_path = path
+		data.source_path = path
 		# 저장된 보너스 수치 복원 (없으면 0 기본값)
 		data.bonus_attack         = cfg.get_value("slots_bonus", str(i) + "_atk",        0)
 		data.bonus_attack_speed   = cfg.get_value("slots_bonus", str(i) + "_atk_spd",    0)
