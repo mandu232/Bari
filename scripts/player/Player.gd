@@ -98,6 +98,12 @@ var _synergy_def:     int   = 0
 var _synergy_spd:     float = 0.0
 var _synergy_hp:      int   = 0
 
+# ── 부적 보너스 (set_talisman_bonus 로 일괄 교체됨)
+var _talisman_atk: int   = 0
+var _talisman_def: int   = 0
+var _talisman_spd: float = 0.0
+var _talisman_hp:  int   = 0
+
 # ── 유물 장착 보너스 (apply_equip_bonus / remove_equip_bonus 로 관리)
 var _equip_atk:     int   = 0
 var _equip_atk_spd: int   = 0
@@ -470,6 +476,11 @@ func take_damage(amount: int, source_pos: Vector2 = Vector2.ZERO, source_node: N
 	if is_invincible or state == State.DEAD:
 		return
 
+	# 부적 방어막 — 첫 피격 1회 무효
+	if TalismanManager.consume_shield():
+		_flash()   # 흡수 시각 피드백
+		return
+
 	# 막기 중 피격 — 공격이 facing 방향 앞에서 오면 막기 성공
 	if state == State.BLOCK:
 		var blocked := true
@@ -771,6 +782,27 @@ func set_synergy_bonus(atk: int, atk_spd: int, def_val: int, spd: float, hp: int
 	max_health     += _synergy_hp
 	if _synergy_hp > 0:
 		health = min(health + _synergy_hp, max_health)
+	health_changed.emit(health, max_health)
+
+## 부적 보너스 일괄 교체 — TalismanManager._recalc 에서 호출
+func set_talisman_bonus(atk: int, def_val: int, spd: float, hp: int) -> void:
+	# 이전 부적 보너스 제거
+	attack_damage = maxi(attack_damage - _talisman_atk, 1)
+	defense       = maxi(defense       - _talisman_def, 0)
+	move_speed    = maxf(move_speed    - _talisman_spd, 40.0)
+	max_health    = maxi(max_health    - _talisman_hp,  1)
+	health        = mini(health, max_health)
+	# 새 부적 보너스 저장 + 적용
+	_talisman_atk = atk
+	_talisman_def = def_val
+	_talisman_spd = spd
+	_talisman_hp  = hp
+	attack_damage  = maxi(attack_damage + _talisman_atk, 1)
+	defense        = maxi(defense       + _talisman_def, 0)
+	move_speed     = maxf(move_speed    + _talisman_spd, 40.0)
+	max_health     = maxi(max_health    + _talisman_hp,  1)
+	if _talisman_hp > 0:
+		health = mini(health + _talisman_hp, max_health)
 	health_changed.emit(health, max_health)
 
 # ───────────────────────────────

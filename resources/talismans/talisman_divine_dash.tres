@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="TalismanData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/talisman/TalismanData.gd" id="1_tdata"]
+[ext_resource type="Texture2D" path="res://AutoLoad/assets/Charm/Divine_Dash_Charm.png" id="2_icon"]
+
+[resource]
+script = ExtResource("1_tdata")
+talisman_name = "신각부"
+description = "신의 발걸음을 깃들인 부적. 적을 처치할 때마다 빠르게 질풍처럼 내달린다."
+icon = ExtResource("2_icon")
+card_color = Color(0.25, 0.75, 1, 1)
+bonus_speed = 12.0
+effect = 2
+effect_value = 3.0

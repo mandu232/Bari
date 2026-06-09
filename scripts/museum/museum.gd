@@ -221,14 +221,14 @@ func _setup_build_manager() -> void:
 	_build_ui.cancelled.connect(_on_build_cancelled)
 
 func _unhandled_input(event: InputEvent) -> void:
-	# 던전 입구 근처에서 F 키 → 던전 입장
+	# 던전 입구 근처에서 F 키 → 던전 입장 (화이트아웃+줌인 연출 후 씬 전환)
 	if event.is_action_pressed("sub_interact") and _player_near_dungeon:
 		_player_near_dungeon = false
 		if is_instance_valid(_dungeon_label):
 			_dungeon_label.visible = false
 		get_viewport().set_input_as_handled()
 		GameManager.save_game()
-		GameManager.start_dungeon_run()
+		SceneTransition.enter_dungeon(func(): GameManager.start_dungeon_run())
 		return
 
 	# 배선 중 ESC → 취소 (건설 모드 상태와 무관하게 최우선 처리)

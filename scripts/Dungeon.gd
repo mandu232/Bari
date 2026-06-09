@@ -1,7 +1,8 @@
 extends Node2D
 
-const FONT        := preload("res://AutoLoad/assets/Font/DungGeunMo.ttf")
-const CHEST_SCENE := preload("res://AutoLoad/scenes/DungeonChest.tscn")
+const FONT             := preload("res://AutoLoad/assets/Font/DungGeunMo.ttf")
+const CHEST_SCENE      := preload("res://AutoLoad/scenes/DungeonChest.tscn")
+const DUNGEON_MENU_SCR := preload("res://scripts/DungeonMenuUI.gd")
 
 # ────────────────────────────────────────
 #  적 전멸 감지 & 보물 상자 스폰
@@ -15,6 +16,10 @@ var _chest_spawned: bool = false
 func _ready() -> void:
 	var hud := PlayerHUD.new()
 	add_child(hud)
+
+	# 던전 전용 메뉴 (ESC 키)
+	var dungeon_menu := DUNGEON_MENU_SCR.new()
+	add_child(dungeon_menu)
 
 	var fx := load("res://scripts/ScreenEffects.gd").new() as Node
 	add_child(fx)

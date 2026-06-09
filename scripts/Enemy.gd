@@ -383,6 +383,7 @@ func _die() -> void:
 	sprite.play("dead")
 	$CollisionShape2D.set_deferred("disabled", true)
 	died.emit()   # 전멸 감지용 시그널
+	TalismanManager.on_enemy_died(global_position)  # 부적 특수 효과 트리거
 	await get_tree().create_timer(1.5).timeout
 	var tw := create_tween()
 	tw.tween_property(sprite, "modulate:a", 0.0, 0.5)

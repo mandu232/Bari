@@ -19,6 +19,8 @@ config/icon="res://icon.svg"
 
 GameManager="*uid://bkxr4rab3qtgt"
 DungeonRunner="*res://scripts/DungeonRunner.gd"
+SceneTransition="*res://scripts/SceneTransition.gd"
+TalismanManager="*res://scripts/talisman/TalismanManager.gd"
 
 [display]
 

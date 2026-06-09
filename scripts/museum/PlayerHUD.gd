@@ -12,7 +12,10 @@ var _coin_label: Label        = null
 var _coin_panel: PanelContainer = null
 var _last_coins: int          = -1
 
-var _player_connected: bool = false
+var _player_connected:   bool  = false
+var _talisman_panel:     Control = null
+var _talisman_cells:     Array  = []   # Array[Control], 슬롯 3개
+var _shield_indicator:   Label  = null
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -20,15 +23,21 @@ func _ready() -> void:
 	_font        = load("res://AutoLoad/assets/Font/DungGeunMo.ttf")
 	_build_layout()
 	_build_coin_counter()
+	_build_talisman_slots()
+	TalismanManager.talisman_changed.connect(_refresh_talisman_slots)
 	add_to_group("player_hud")
 
 func _process(_delta: float) -> void:
 	if not _player_connected:
 		_try_connect_player()
-	# 코인 패널은 던전 런 중에만 표시
+	# 코인/부적 패널은 던전 런 중에만 표시
 	var in_run: bool = GameManager.current_run_active
 	if _coin_panel and _coin_panel.visible != in_run:
 		_coin_panel.visible = in_run
+	# 부적 패널은 런 중이고 하나라도 장착됐을 때만 표시
+	var show_talisman: bool = in_run and not TalismanManager.equipped.is_empty()
+	if _talisman_panel and _talisman_panel.visible != show_talisman:
+		_talisman_panel.visible = show_talisman
 	# 코인 수 변경 시 갱신
 	if in_run:
 		var coins: int = GameManager.dungeon_coins
@@ -164,6 +173,70 @@ func _apply_font(node: Control, size: int) -> void:
 	if _font:
 		node.add_theme_font_override("font", _font)
 		node.add_theme_font_size_override("font_size", size)
+
+# ───────────────────────────────
+#  부적 슬롯 (우측 하단)
+# ───────────────────────────────
+func _build_talisman_slots() -> void:
+	# 배경 없는 VBoxContainer — 아이콘만 우측 하단에 세로로 쌓임
+	var container := HBoxContainer.new()
+	_talisman_panel = container
+	container.visible           = false
+	container.anchor_left       = 1.0
+	container.anchor_right      = 1.0
+	container.anchor_top        = 1.0
+	container.anchor_bottom     = 1.0
+	container.grow_horizontal   = Control.GROW_DIRECTION_BEGIN
+	container.grow_vertical     = Control.GROW_DIRECTION_BEGIN
+	container.offset_right      = -12
+	container.offset_bottom     = -12
+	container.add_theme_constant_override("separation", 5)
+	add_child(container)
+
+	_talisman_cells.clear()
+	for _i in TalismanManager.MAX_SLOTS:
+		var cell := _make_talisman_cell()
+		cell.visible = false
+		container.add_child(cell)
+		_talisman_cells.append(cell)
+
+	_refresh_talisman_slots()
+
+func _make_talisman_cell() -> TextureRect:
+	# 원본 36×64 의 3배(108×192), 비율 유지
+	var icon_rect := TextureRect.new()
+	icon_rect.stretch_mode       = TextureRect.STRETCH_KEEP_ASPECT
+	icon_rect.custom_minimum_size = Vector2(72, 128)
+	icon_rect.mouse_filter       = Control.MOUSE_FILTER_IGNORE
+	icon_rect.visible            = false
+	return icon_rect
+
+func _refresh_talisman_slots() -> void:
+	var equipped := TalismanManager.equipped
+
+	# 패널: 런 중이고 하나라도 장착됐을 때만
+	if _talisman_panel:
+		_talisman_panel.visible = GameManager.current_run_active and not equipped.is_empty()
+
+	for i in _talisman_cells.size():
+		var icon_rect := _talisman_cells[i] as TextureRect
+		if icon_rect == null:
+			continue
+
+		if i >= equipped.size():
+			icon_rect.visible = false
+			continue
+
+		# 장착됨 → 이미지 원본 크기로 표시
+		var data := equipped[i] as TalismanData
+		icon_rect.texture = data.icon
+		icon_rect.visible = (data.icon != null)
+		# 방어막 활성 시 황금 틴트, 소진 시 회색
+		if data.effect == TalismanData.Effect.SHIELD:
+			icon_rect.modulate = Color(1.0, 1.0, 0.4) if TalismanManager.is_shield_active() \
+							  else Color(0.45, 0.45, 0.45)
+		else:
+			icon_rect.modulate = Color.WHITE
 
 # ───────────────────────────────
 #  코인 카운터 (우측 상단)

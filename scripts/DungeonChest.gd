@@ -7,6 +7,13 @@ const FONT := preload("res://AutoLoad/assets/Font/DungGeunMo.ttf")
 
 const DROP_COUNT := 3
 
+const TALISMAN_POOL: Array[String] = [
+	"res://resources/talismans/talisman_divine_dash.tres",
+	"res://resources/talismans/talisman_iron_god.tres",
+	"res://resources/talismans/talisman_stone_breaker.tres",
+	"res://resources/talismans/talisman_life_drain.tres",
+]
+
 const ARTIFACT_POOL: Array[String] = [
 	"res://resources/artifacts/artifact_sword.tres",
 	"res://resources/artifacts/artifact_handaxe.tres",
@@ -130,6 +137,19 @@ func _spawn_loot() -> void:
 		items.append(pickup)
 		var angle := (float(i) / float(count)) * TAU
 		targets.append(global_position + Vector2(cos(angle), sin(angle)) * randf_range(44.0, 62.0))
+
+	# 부적 카드 1개 (랜덤)
+	var talisman_path := TALISMAN_POOL[randi() % TALISMAN_POOL.size()]
+	var talisman_res  := load(talisman_path) as TalismanData
+	if talisman_res != null:
+		var card := TalismanCard.new()
+		card.setup(talisman_res)
+		get_parent().add_child(card)
+		card.global_position = global_position
+		card.collision_mask  = 0   # 착지 전 흡인 차단
+		items.append(card)
+		var angle_t := randf() * TAU
+		targets.append(global_position + Vector2(cos(angle_t), sin(angle_t)) * randf_range(50.0, 70.0))
 
 	# 코인 8~12개
 	for _i in randi_range(8, 12):
