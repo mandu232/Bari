@@ -9,6 +9,7 @@
 [ext_resource type="Script" uid="uid://dra251xn7nngy" path="res://scripts/GrassSpawner.gd" id="6_nvptt"]
 [ext_resource type="Script" uid="uid://e7i7vh6agw4i" path="res://scripts/SmallGrassSpawner.gd" id="7_ml0ue"]
 [ext_resource type="PackedScene" uid="uid://cvtj3e5ivhc70" path="res://AutoLoad/scenes/Tree/Tree_type1.tscn" id="8_0hlsr"]
+[ext_resource type="Script" uid="uid://tdqhu3j6b6kd" path="res://scripts/TreeSpawner.gd" id="8_s60gj"]
 [ext_resource type="PackedScene" uid="uid://y2elb4be8fa" path="res://AutoLoad/scenes/Tree/Tree_type2.tscn" id="9_yccw6"]
 
 [node name="Dungeon" type="Node2D" unique_id=1553180979]
@@ -98,6 +99,48 @@ area_size = Vector2(80, 130)
 count = 40
 rand_seed = 4
 
+[node name="GrassSpawner5" type="Node2D" parent="." unique_id=369979973]
+position = Vector2(-120, 127)
+script = ExtResource("6_nvptt")
+area_size = Vector2(500, 130)
+count = 40
+rand_seed = 4
+
+[node name="GrassSpawner6" type="Node2D" parent="." unique_id=920211935]
+position = Vector2(419, -114)
+script = ExtResource("6_nvptt")
+area_size = Vector2(100, 300)
+count = 40
+rand_seed = 4
+
+[node name="GrassSpawner7" type="Node2D" parent="." unique_id=305620856]
+position = Vector2(-399, -113)
+script = ExtResource("6_nvptt")
+area_size = Vector2(100, 300)
+count = 40
+rand_seed = 4
+
+[node name="GrassSpawner8" type="Node2D" parent="." unique_id=47842157]
+position = Vector2(100, -380)
+script = ExtResource("6_nvptt")
+area_size = Vector2(400, 100)
+count = 40
+rand_seed = 4
+
+[node name="GrassSpawner9" type="Node2D" parent="." unique_id=1835889413]
+position = Vector2(-356, -370)
+script = ExtResource("6_nvptt")
+area_size = Vector2(200, 100)
+count = 40
+rand_seed = 4
+
+[node name="GrassSpawner10" type="Node2D" parent="." unique_id=780687473]
+position = Vector2(351, 120)
+script = ExtResource("6_nvptt")
+area_size = Vector2(200, 100)
+count = 40
+rand_seed = 4
+
 [node name="SmallGrassSpawner" type="Node2D" parent="." unique_id=1466971339]
 position = Vector2(115, -200)
 script = ExtResource("7_ml0ue")
@@ -118,6 +161,73 @@ script = ExtResource("7_ml0ue")
 area_size = Vector2(80, 40)
 count = 10
 grid_snap = 10
+
+[node name="SmallGrassSpawner4" type="Node2D" parent="." unique_id=1033984753]
+position = Vector2(-111, 124)
+script = ExtResource("7_ml0ue")
+area_size = Vector2(500, 100)
+count = 30
+grid_snap = 10
+
+[node name="SmallGrassSpawner5" type="Node2D" parent="." unique_id=1157907692]
+position = Vector2(467, -84)
+script = ExtResource("7_ml0ue")
+area_size = Vector2(200, 400)
+count = 30
+grid_snap = 10
+
+[node name="SmallGrassSpawner6" type="Node2D" parent="." unique_id=1882070843]
+position = Vector2(-433, -82)
+script = ExtResource("7_ml0ue")
+area_size = Vector2(200, 400)
+count = 30
+grid_snap = 10
+
+[node name="SmallGrassSpawner7" type="Node2D" parent="." unique_id=953592581]
+position = Vector2(95, -417)
+script = ExtResource("7_ml0ue")
+area_size = Vector2(400, 200)
+count = 30
+grid_snap = 10
+
+[node name="SmallGrassSpawner8" type="Node2D" parent="." unique_id=602261610]
+position = Vector2(-356, -382)
+script = ExtResource("7_ml0ue")
+area_size = Vector2(200, 150)
+count = 30
+grid_snap = 10
+
+[node name="SmallGrassSpawner9" type="Node2D" parent="." unique_id=551389880]
+position = Vector2(433, -400)
+script = ExtResource("7_ml0ue")
+area_size = Vector2(200, 150)
+count = 30
+grid_snap = 10
+
+[node name="TreeSpawner" type="Node2D" parent="." unique_id=1869529999]
+position = Vector2(-86, 114)
+script = ExtResource("8_s60gj")
+area_size = Vector2(400, 80)
+
+[node name="TreeSpawner2" type="Node2D" parent="." unique_id=1059262733]
+position = Vector2(450, -125)
+script = ExtResource("8_s60gj")
+area_size = Vector2(100, 400)
+
+[node name="TreeSpawner3" type="Node2D" parent="." unique_id=156270111]
+position = Vector2(81, -412)
+script = ExtResource("8_s60gj")
+area_size = Vector2(400, 200)
+
+[node name="TreeSpawner4" type="Node2D" parent="." unique_id=213546139]
+position = Vector2(-428, -107)
+script = ExtResource("8_s60gj")
+area_size = Vector2(200, 300)
+
+[node name="TreeSpawner5" type="Node2D" parent="." unique_id=1332801093]
+position = Vector2(447, -407)
+script = ExtResource("8_s60gj")
+area_size = Vector2(200, 200)
 
 [node name="TreeType1" parent="." unique_id=1055635900 instance=ExtResource("8_0hlsr")]
 position = Vector2(-186, -58)
@@ -141,7 +251,7 @@ position = Vector2(-246, -177)
 position = Vector2(109, -193)
 
 [node name="Enemy2" parent="." unique_id=1915338369 instance=ExtResource("3_ioml0")]
-position = Vector2(-244, -91)
+position = Vector2(-250, -82)
 
 [node name="Enemy3" parent="." unique_id=1539302441 instance=ExtResource("3_ioml0")]
 position = Vector2(-133, -194)

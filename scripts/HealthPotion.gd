@@ -2,27 +2,19 @@ extends Area2D
 class_name HealthPotion
 
 const HEAL_AMOUNT := 2
+const TEXTURE := preload("res://AutoLoad/assets/Item/heal_item.png")
 
 var _collected:  bool  = false
 var _attracting: bool  = false
 var _float_time: float = 0.0
-var _sprite: Polygon2D
+var _sprite: Sprite2D
 var _col:    CollisionShape2D
 
 func _ready() -> void:
 	set_process(false)   # 착지 전까지 비활성
 
-	# 빨간 십자(+) 모양
-	_sprite       = Polygon2D.new()
-	_sprite.color = Color(0.88, 0.15, 0.18)
-	_sprite.polygon = PackedVector2Array([
-		Vector2(-2, -8), Vector2( 2, -8),
-		Vector2( 2, -2), Vector2( 8, -2),
-		Vector2( 8,  2), Vector2( 2,  2),
-		Vector2( 2,  8), Vector2(-2,  8),
-		Vector2(-2,  2), Vector2(-8,  2),
-		Vector2(-8, -2), Vector2(-2, -2),
-	])
+	_sprite         = Sprite2D.new()
+	_sprite.texture = TEXTURE
 	add_child(_sprite)
 
 	_col          = CollisionShape2D.new()
