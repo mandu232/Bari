@@ -1,14 +1,14 @@
 [gd_scene format=3 uid="uid://cvtj3e5ivhc70"]
 
+[ext_resource type="Script" uid="uid://720mu5kchia5" path="res://scripts/Tree.gd" id="1_o8ynf"]
 [ext_resource type="Texture2D" uid="uid://h1b7habjois" path="res://AutoLoad/assets/Tree/Tree_Body_type1.png" id="1_px77q"]
 [ext_resource type="Texture2D" uid="uid://lfgxdyoaqeyq" path="res://AutoLoad/assets/Tree/Tree_Leaf_type5.png" id="3_o8ynf"]
-[ext_resource type="Script" uid="uid://cvp2ipy0kowkg" path="res://scripts/Tree_type1.gd" id="3_tree1"]
 [ext_resource type="Texture2D" uid="uid://s28mxkcdnujb" path="res://AutoLoad/assets/Tree/Tree_Leaf_type3.png" id="4_nn870"]
 [ext_resource type="Texture2D" uid="uid://yogk8b22ox38" path="res://AutoLoad/assets/Tree/Tree_Leaf_type4.png" id="5_mpp6q"]
 [ext_resource type="Texture2D" uid="uid://bx7broulrx15c" path="res://AutoLoad/assets/Tree/Tree_Leaf_type2.png" id="6_v3rua"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_px77q"]
-size = Vector2(10.5, 8.5)
+size = Vector2(10, 8.5)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_o8ynf"]
 size = Vector2(10, 15)
@@ -29,9 +29,9 @@ size = Vector2(29, 24)
 size = Vector2(14, 15)
 
 [node name="TreeType1" type="CharacterBody2D" unique_id=1055635900]
-collision_layer = 16
-collision_mask = 16
-script = ExtResource("3_tree1")
+collision_layer = 17
+collision_mask = 17
+script = ExtResource("1_o8ynf")
 
 [node name="Body" type="Sprite2D" parent="." unique_id=2139104718]
 texture = ExtResource("1_px77q")
@@ -59,7 +59,7 @@ position = Vector2(-34, 7)
 texture = ExtResource("5_mpp6q")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=288285065]
-position = Vector2(-3.25, 42.25)
+position = Vector2(-3, 42.25)
 shape = SubResource("RectangleShape2D_px77q")
 
 [node name="Area2D" type="Area2D" parent="." unique_id=1906398920]
